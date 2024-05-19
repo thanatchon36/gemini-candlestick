@@ -25,8 +25,7 @@ from PIL import Image
 import gc
 import talib
 import re
-# from plotly.subplots import make_subplots
-# from plotly.graph_objects import Scatter
+import yfinance as yf
 def reset(df):
     cols = df.columns
     return df.reset_index()[cols]
@@ -114,73 +113,6 @@ def comma_formatter_2(x, pos):
     return "{:,.2f}".format(x)
 def title_formatter(x):
     return "{:.2f}".format(x)
-def load_image_as_b64(pathname: str) -> str:
-    """Loads an image file and encodes it as base64 string."""
-    path = Path(pathname)
-    with open(path, "rb") as f:
-        image_bytes = f.read()
-    return base64.b64encode(image_bytes).decode("utf-8")
-def save_b64_to_png(b64_string: str, filename: str):
-    """Decodes a base64 string and saves it as a PNG image file."""
-    decoded_image_data = base64.b64decode(b64_string)
-    with open(filename, "wb") as f:
-        f.write(decoded_image_data)
-def calculate_rsi(prices, period=14):
-    deltas = [prices[i] - prices[i - 1] for i in range(1, len(prices))]
-    gains = [max(delta, 0) for delta in deltas]
-    losses = [max(-delta, 0) for delta in deltas]
-    avg_gain = sum(gains[:period]) / period
-    avg_loss = sum(losses[:period]) / period
-    rsi_values = [100 - (100 / (1 + avg_gain / avg_loss))]
-    for i in range(period, len(prices)):
-        try:
-            avg_gain = (avg_gain * (period - 1) + gains[i]) / period
-            avg_loss = (avg_loss * (period - 1) + losses[i]) / period
-            rsi = 100 - (100 / (1 + avg_gain / avg_loss))
-            rsi_values.append(rsi)
-        except:
-            pass
-    return [np.nan for i in range(period)] + rsi_values
-def calculate_sma(data, window=14):
-    sma_values = []
-    for i in range(len(data) - window + 1):
-        sma = sum(data[i:i + window]) / window
-        sma_values.append(sma)
-    return [np.nan for i in range(window-1)] + sma_values
-def exp_moving_avg(data, period):
-    ema = np.zeros_like(data)
-    ema[0] = data[0]
-    for i in range(1, len(data)):
-        ema[i] = (data[i] * (2 / (period + 1))) + ema[i - 1] * (1 - (2 / (period + 1)))
-    return ema
-def MACD(data, fast_period, slow_period, signal_period):
-    ema_fast = exp_moving_avg(data, fast_period)
-    ema_slow = exp_moving_avg(data, slow_period)
-    macd = np.zeros_like(data)
-    macd_signal = np.zeros_like(data)
-    macd_hist = np.zeros_like(data)
-    # Calculate MACD, skipping initial null values
-    for i in range(max(fast_period, slow_period) - 1, len(data)):
-        macd[i] = ema_fast[i] - ema_slow[i]
-    # Calculate MACD Signal and MACD Histogram, skipping initial null values
-    for i in range(max(fast_period, slow_period, signal_period) - 1, len(macd)):
-        macd_signal[i] = exp_moving_avg(macd[:i + 1], signal_period)[-1]
-        macd_hist[i] = macd[i] - macd_signal[i]
-    return macd, macd_signal, macd_hist
-def calc_k_d(data, N=14, M=3):
-    data['low_N'] = data['Low'].rolling(N).min()
-    data['high_N'] = data['High'].rolling(N).max()
-    data['K_STO'] = 100 * (data['Close'] - data['low_N']) / \
-        (data['high_N'] - data['low_N'])
-    data['D_STO'] = data['K_STO'].rolling(M).mean()
-    data.drop(columns = ['low_N','high_N'], inplace = True)
-    return data
-def calc_CMF(ask_series):
-    ask_series["cmfm"] = (((ask_series["Close"] - ask_series["Low"]) - (ask_series["High"] - ask_series["Close"])) / (ask_series["High"] - ask_series["Low"]))
-    ask_series["cmfv"] = ask_series["cmfm"] * ask_series["Volume"]
-    ask_series["CMF"] = ask_series['cmfv'].rolling(window=20).mean() / ask_series['Volume'].rolling(window=21).mean() 
-    ask_series.drop(columns = ['cmfm','cmfv'], inplace = True)
-    return ask_series
 def color_title(ax, labels, colors, textprops={'size': 15}, y=0.96,
                precision=10**-2):
     """Creates a left-aligned title with multiple colors. Don't change axes limits afterwards."""
@@ -234,6 +166,9 @@ def extend_search(text, span):
             if nest_count == 0:
                 return text[start:i+1]
     return text[start:end]
+def get_date_month_text(date_str):
+    date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+    return date_obj.strftime("%d %b")
 ####
 #### Start Class Here:
 ####
@@ -341,15 +276,22 @@ class autotrade:
             '30m': 0,
         }
         self.model = model
-        tf_list = ['1h', '2h', '4h', '6h', '8h', '12h', '1d', '3d', '1w']
-        self.include_tf_list = []
-        for each_tf in tf_list:
-            tf_sec = self.freq_dict[each_tf]
-            current_tf_sec = self.freq_dict[self.ori_freq_interval]
-            if tf_sec > current_tf_sec:
-                self.include_tf_list.append(each_tf)
         self.candlestick_chart_no = 168
         self.future_cloud_no = 26
+        self.nasdaq_100_df = pd.read_csv('data/csv/nasdaq100.csv')
+        self.nasdaq_100_tickers_list = list(self.nasdaq_100_df['Ticker'].values)
+        self.ticker_company_dict = dict(zip(self.nasdaq_100_df['Ticker'], self.nasdaq_100_df['Company']))
+        self.ticker_sector_dict_1 = dict(zip(self.nasdaq_100_df['Ticker'], self.nasdaq_100_df['GISC Sector']))
+        self.ticker_sector_dict_2 = dict(zip(self.nasdaq_100_df['Ticker'], self.nasdaq_100_df['GISC Sub-Industry']))
+    @property
+    def ticker_company(self):
+        return self.ticker_company_dict[self.ticker]   
+    @property
+    def ticker_sector_1(self):
+        return self.ticker_sector_dict_1[self.ticker]
+    @property
+    def ticker_sector_2(self):
+        return self.ticker_sector_dict_2[self.ticker]   
     @property
     def gc_collect_time(self):
         return self.gc_collect_time_dict[self.ori_freq_interval]
@@ -1267,347 +1209,40 @@ class autotrade:
                 pass
             execution_time = time.time() - start_time
             execution_time = round(execution_time, 2)
-            return temp_msg, execution_time, 'error'
-        
-    def get_gemini_response_2(self):
-        genai.configure(api_key=self.gemini_key)
-        # Set up the model
-        generation_config = {
-        "temperature": self.temperature,
-        "top_p": 0.95,
-        "top_k": 64,
-        "max_output_tokens": 8192,
-        "response_mime_type": "text/plain",
-        }
-        safety_settings = [
-        {
-            "category": "HARM_CATEGORY_HARASSMENT",
-            "threshold": "BLOCK_NONE"
-        },
-        {
-            "category": "HARM_CATEGORY_HATE_SPEECH",
-            "threshold": "BLOCK_NONE"
-        },
-        {
-            "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-            "threshold": "BLOCK_NONE"
-        },
-        {
-            "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-            "threshold": "BLOCK_NONE"
-        },
-        ]
-        start_time = time.time()
-        try:
-            for each_freq_interval in ['1w', '3d', '1d', '12h', '8h', '6h', '4h', '2h', '1h', '30m']:
-                self.freq_interval = each_freq_interval
-                self.get_candlestick_image()
-            self.freq_interval  = self.ori_freq_interval
-
-            for each_depth_limit_no in [1000, 500, 100, 50, 20, 10, 5]:
-                self.depth_limit_no = each_depth_limit_no
-                self.get_depth_image()
-            self.depth_limit_no  = self.ori_depth_limit_no
-
-            temp_file_1 = genai.upload_file(path="current_depth_top_5_bids_asks_chart.png", display_name=f"Current {self.symbol} Depth (The top 5 bids and asks from the order book.)")
-            temp_file_2 = genai.upload_file(path="current_depth_top_10_bids_asks_chart.png", display_name=f"f'Current {self.symbol} Depth (The top 10 bids and asks from the order book.)")
-            temp_file_3 = genai.upload_file(path="current_depth_top_20_bids_asks_chart.png", display_name=f"f'Current {self.symbol} Depth (The top 20 bids and asks from the order book.)")
-            temp_file_4 = genai.upload_file(path="current_depth_top_50_bids_asks_chart.png", display_name=f"f'Current {self.symbol} Depth (The top 50 bids and asks from the order book.)")
-            temp_file_5 = genai.upload_file(path="current_depth_top_100_bids_asks_chart.png", display_name=f"f'Current {self.symbol} Depth (The top 100 bids and asks from the order book.)")
-            temp_file_6 = genai.upload_file(path="current_depth_top_500_bids_asks_chart.png", display_name=f"f'Current {self.symbol} Depth (The top 500 bids and asks from the order book.)")
-            temp_file_7 = genai.upload_file(path="current_depth_top_1000_bids_asks_chart.png", display_name=f"f'Current {self.symbol} Depth (The top 1000 bids and asks from the order book.)")
-
-            temp_file_8 = genai.upload_file(path="30m_candlestick_with_technical_indicators_chart.png", display_name=f"Current {self.symbol} 30m Candlestick Chart (with Technical Indicators)")
-            temp_file_9 = genai.upload_file(path="1h_candlestick_with_technical_indicators_chart.png", display_name=f"Current {self.symbol} 1h Candlestick Chart (with Technical Indicators)")
-            temp_file_10 = genai.upload_file(path="2h_candlestick_with_technical_indicators_chart.png", display_name=f"Current {self.symbol} 2h Candlestick Chart (with Technical Indicators)")
-            temp_file_11 = genai.upload_file(path="4h_candlestick_with_technical_indicators_chart.png", display_name=f"Current {self.symbol} 4h Candlestick Chart (with Technical Indicators)")
-            temp_file_12 = genai.upload_file(path="6h_candlestick_with_technical_indicators_chart.png", display_name=f"Current {self.symbol} 6h Candlestick Chart (with Technical Indicators)")
-            temp_file_13 = genai.upload_file(path="8h_candlestick_with_technical_indicators_chart.png", display_name=f"Current {self.symbol} 8h Candlestick Chart (with Technical Indicators)")
-            temp_file_14 = genai.upload_file(path="12h_candlestick_with_technical_indicators_chart.png", display_name=f"Current {self.symbol} 12h Candlestick Chart (with Technical Indicators)")
-            temp_file_15 = genai.upload_file(path="1d_candlestick_with_technical_indicators_chart.png", display_name=f"Current {self.symbol} 1d Candlestick Chart (with Technical Indicators)")
-            temp_file_16 = genai.upload_file(path="3d_candlestick_with_technical_indicators_chart.png", display_name=f"Current {self.symbol} 3d Candlestick Chart (with Technical Indicators)")
-            temp_file_17 = genai.upload_file(path="1w_candlestick_with_technical_indicators_chart.png", display_name=f"Current {self.symbol} 1w Candlestick Chart (with Technical Indicators)")
-
-            model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
-                                        generation_config=generation_config,
-                                        system_instruction=self.get_system_instructions_3(),
-                                        safety_settings=safety_settings)
-            prompt_parts = [
-                temp_file_1,
-                temp_file_2,
-                temp_file_3,
-                temp_file_4,
-                temp_file_5,
-                temp_file_6,
-                temp_file_7,
-                temp_file_8,
-                temp_file_9,
-                temp_file_10,
-                temp_file_11,
-                temp_file_12,
-                temp_file_13,
-                temp_file_14,
-                temp_file_15,
-                temp_file_16,
-                temp_file_17,
-            ]
-            response = model.generate_content(prompt_parts)
-
-            genai.delete_file(temp_file_1.name)
-            genai.delete_file(temp_file_2.name)
-            genai.delete_file(temp_file_3.name)
-            genai.delete_file(temp_file_4.name)
-            genai.delete_file(temp_file_5.name)
-            genai.delete_file(temp_file_6.name)
-            genai.delete_file(temp_file_7.name)
-            genai.delete_file(temp_file_8.name)
-            genai.delete_file(temp_file_9.name)
-            genai.delete_file(temp_file_10.name)
-            genai.delete_file(temp_file_11.name)
-            genai.delete_file(temp_file_12.name)
-            genai.delete_file(temp_file_13.name)
-            genai.delete_file(temp_file_14.name)
-            genai.delete_file(temp_file_15.name)
-            genai.delete_file(temp_file_16.name)
-            genai.delete_file(temp_file_17.name)
-
-            generative_text = str(response.text)
-
-            model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
-                                        generation_config=generation_config,
-                                        system_instruction=self.get_system_instructions_4(),
-                                        safety_settings=safety_settings)
-            prompt_parts = [
-                generative_text,
-            ]
-            response = model.generate_content(prompt_parts)
-            result_dict = extract_json(response.text)[0]
-
-            execution_time = time.time() - start_time
-            execution_time = round(execution_time, 2)
-
-            temp_file_1 = None
-            temp_file_2 = None
-            temp_file_3 = None
-            temp_file_4 = None
-            temp_file_5 = None
-            temp_file_6 = None
-            temp_file_7 = None
-            temp_file_8 = None
-            temp_file_9 = None
-            temp_file_10 = None
-            temp_file_11 = None
-            temp_file_12 = None
-            temp_file_13 = None
-            temp_file_14 = None
-            temp_file_15 = None
-            temp_file_16 = None
-            temp_file_17 = None
-            model = None
-            prompt_parts = None
-            json_data = None
-            del temp_file_1, temp_file_2, temp_file_3, temp_file_4, temp_file_5, temp_file_6, temp_file_7, temp_file_8, temp_file_9, temp_file_10, temp_file_11, temp_file_12, temp_file_13, temp_file_14, temp_file_15, temp_file_16, temp_file_17
-            del model, prompt_parts, json_data
-            gc.collect()
-
-            return generative_text, execution_time, result_dict
-
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-            try:
-                self.docker_print(generative_text)
-            except:
-                pass
-            execution_time = time.time() - start_time
-            execution_time = round(execution_time, 2)
-            return temp_msg, execution_time, 'error'
-        
-    def get_depth_image(self):
-        order_book = self.get_depth(format = 'json')
-        formatted_bids = [[float(price), float(quantity)] for price, quantity in order_book['bids']]
-        formatted_asks = [[float(price), float(quantity)] for price, quantity in order_book['asks']]
-
-        # Prepare data for plotting
-        bid_prices, bid_volumes = zip(*formatted_bids)
-        ask_prices, ask_volumes = zip(*formatted_asks)
-        cum_bid_volumes = list(accumulate(bid_volumes))
-        cum_ask_volumes = list(accumulate(ask_volumes))
-
-        # Create figure and axes
-        fig, ax = plt.subplots(figsize=(12, 6))
-
-        # Plot bids and asks
-        ax.fill_between(bid_prices, cum_bid_volumes, color='#218559', label='Bids')
-        ax.fill_between(ask_prices, cum_ask_volumes, color='#E44358', label='Asks')
-
-        # Calculate and plot the middle point
-        middle_point = (max(bid_prices) + min(ask_prices)) / 2
-        ax.axvline(middle_point, color="#333437", linestyle='--', linewidth=1)
-
-        # Customize plot appearance
-        ax.set_title(f'Current {self.symbol} Depth (The top {self.depth_limit_no} bids and asks from the order book.)', fontsize=14)
-        ax.set_facecolor('#161A1E')
-        ax.grid(True, color='#333437', linestyle='-', linewidth=0.5)
-        ax.xaxis.set_major_formatter(FuncFormatter(lambda x, _: format(x, ",.2f")))  # Format x-axis with commas and 2 decimal places
-        ax.yaxis.set_ticks_position('both')  # Show ticks on both sides of the plot
-        ax.yaxis.set_tick_params(pad=20, direction='inout', length=6, labelright=True, right=True)  # Move ticks and labels to the right
-        ax.set_xlabel('Price')
-        ax.set_ylabel('Quantity')
-        ax.legend(loc = 'upper center')
-
-        # Save the plot
-        plt.savefig('temp_depth_chart.png', dpi=300)
-
-        with Image.open("temp_depth_chart.png") as img:
-            new_width, new_height = 3072, 1536
-            img_resized = img.resize((new_width, new_height), resample=Image.LANCZOS)
-            img_resized.save(f"current_depth_top_{self.depth_limit_no}_bids_asks_chart.png")
-            
-        plt.close(fig)
-        plt.close('all')
-        plt.clf()
-        plt.cla()
-        order_book = None
-        formatted_bids = None
-        formatted_asks = None
-        bid_prices, bid_volumes = None, None
-        ask_prices, ask_volumes = None, None
-        cum_bid_volumes = None 
-        cum_ask_volumes = None
-        fig = None
-        ax = None
-        middle_point = None
-        img = None
-        img_resized = None
-        del order_book, formatted_bids, formatted_asks
-        del bid_prices, bid_volumes
-        del ask_prices, ask_volumes
-        del cum_bid_volumes
-        del cum_ask_volumes
-        del fig, ax, middle_point
-        del img, img_resized
-
-        matplotlib.pyplot.close('all')
-        matplotlib.use('Agg')
-        gc.collect()
-        
-        # graph = make_subplots(rows = 1, cols =1)
-        # graph.add_trace(Scatter(
-        #     x=[price for price, quantity in formatted_bids],
-        #     y=list(accumulate([quantity for price, quantity in formatted_bids], add)),
-        #     line=dict(color='#218559'),
-        #     fill='tozeroy',
-        #     name='Bids',
-        # ))
-        # graph.add_trace(Scatter(
-        #     x = [price for price, quantity in formatted_asks],
-        #     y = list(accumulate([quantity for price, quantity in formatted_asks], add)),
-        #     line=dict(color='#E44358'),
-        #     fill='tozeroy',
-        #     name='Asks',
-        # ))
-        # # Set layout background color to black
-        # graph.update_layout(plot_bgcolor='#161A1E', 
-        #                     title=f'Depth ({self.symbol})',
-        #                     title_x=0.5, title_y=0.88,)
-        # # Remove grid lines
-        # graph.update_xaxes(showgrid=False)
-        # graph.update_yaxes(showgrid=False)
-
-        # # Calculate the middle point between bid and ask
-        # middle_point = (max([price for price, quantity in formatted_bids]) + min([price for price, quantity in formatted_asks])) / 2
-
-        # # Add a vertical line at the middle point
-        # graph.add_shape(type="line",
-        #                 x0=middle_point, y0=0, x1=middle_point, y1=max(graph.data[0].y + graph.data[1].y) * 1.06,
-        #                 line=dict(color="#333437", width=1,))
-        # graph.update_xaxes(showgrid=True, gridwidth=1, gridcolor='#333437')
-        # graph.update_yaxes(showgrid=True, gridwidth=1, gridcolor='#333437')
-        # graph.update_layout(xaxis=dict(tickformat=",.2f"))  # Display numbers with 2 decimal places and commas
-        # graph.write_image('temp_depth_chart.png', width=1200, height=600, scale = 4.5)
-        
-        # with Image.open("temp_depth_chart.png") as img:
-        #     new_width, new_height = 3072, 1536
-        #     img_resized = img.resize((new_width, new_height), resample=Image.LANCZOS)
-        #     img_resized.save("temp_depth_chart.png")
-
+            return temp_msg, execution_time, 'error'        
     def get_candlestick_data(self):
-        if self.model == 'gemini-1.5-pro-latest':
-            candle_df = self.get_btc_candle(limit = 499) # 320
-        elif self.model == 'gemini-1.5-flash-latest':
-            candle_df = self.get_btc_candle(limit = 499)
-        ohlc = candle_df[['close_ds', 'open', 'high', 'low', 'close','volume']].copy()
-        ohlc.columns = ['Date', 'Open', 'High', 'Low', 'Close', 'Volume']
+        ohlc = self.nasdaq100_df_dict[self.ticker].copy()
         ohlc['ori_Date'] = ohlc['Date']
         ohlc['Date'] = mdates.date2num(ohlc['Date'])
         ohlc['RSI'] = talib.RSI(ohlc['Close'].values)
         ohlc['RSI_SMA_14'] = talib.SMA(ohlc['RSI'], timeperiod=14)
-        # ohlc['MA_23'] = calculate_sma(ohlc['Close'], window=23)
-        # ohlc['MA_45'] = calculate_sma(ohlc['Close'], window=45)
         close_prices = ohlc['Close']
         macd, macd_signal, macd_hist = talib.MACD(close_prices, fastperiod=12, slowperiod=26, signalperiod=9)
-        ohlc['macd'] = macd # macd_signal + macd_hist
+        ohlc['macd'] = macd
         ohlc['macdsignal'] = macd_signal
         ohlc['macdhist'] = macd_hist
         upperband, middleband, lowerband = talib.BBANDS(ohlc['Close'], timeperiod=20, nbdevup=2, nbdevdn=2, matype=0)
         ohlc['upperband_BB'] = upperband
         ohlc['middleband_BB'] = middleband
         ohlc['lowerband_BB'] = lowerband
-        ohlc = calc_k_d(ohlc)
-        ohlc = calc_CMF(ohlc)
+        ohlc = self.calc_k_d(ohlc)
+        ohlc = self.calc_CMF(ohlc)
         ohlc['OBV'] = talib.OBV(ohlc['Close'], ohlc['Volume'])
-        ohlc['ATR'] = talib.ATR(ohlc['High'], ohlc['Low'], ohlc['Close'])        
-        if self.freq_interval == self.ori_freq_interval:
-            if self.model == 'gemini-1.5-flash-latest':
-                ds_df = pd.DataFrame({'date_column': [ohlc['ori_Date'].values[-1]]})
-            elif self.model == 'gemini-1.5-pro-latest':
-                ds_df = pd.DataFrame({'date_column': [ohlc['ori_Date'].values[-2]]})
-            ds_df['formatted_date'] = ds_df['date_column'].dt.strftime('%B %d, %Y, at %H:%M')
-            self.current_meeting_date = ds_df['formatted_date'].values[-1]
+        ohlc['ATR'] = talib.ATR(ohlc['High'], ohlc['Low'], ohlc['Close'])  
+        ds_df = pd.DataFrame({'date_column': [ohlc['ori_Date'].values[-1]]})
+        ds_df['date_column'] = pd.to_datetime(ds_df['date_column'])
+        ds_df['formatted_date'] = ds_df['date_column'].dt.strftime('%B %d, %Y, at %H:%M')
+        self.current_meeting_date = ds_df['formatted_date'].values[-1]
         ohlc = self.calculate_ichimoku(ohlc)
         ohlc = reset(ohlc.tail(self.candlestick_chart_no + self.future_cloud_no))
-        return ohlc
-    
-    def get_candlestick_json(self, tf = ""):
-        if tf != "":
-            temp_df = self.get_candlestick_data()
-            self.freq_interval = self.ori_freq_interval
-            temp_df = temp_df[:-self.future_cloud_no]
-
-            ohlc = temp_df.copy()
-            fib_list_1 = []
-            levels = [0, 0.214, 0.382, 0.5, 0.618, 0.764, 1]
-            levels_label = ['1', '0.786', '0.618', '0.5', '0.382', '0.236','0']
-            for i, level in enumerate(levels):
-                price = ohlc['Low'].min() + (ohlc['High'].max() - ohlc['Low'].min()) * level
-                fib_list_1.append(f"{levels_label[i]} " + "(" + "{:.2f}".format(price) + ")")
-            fib_list_2 = []
-            levels_2 = [0, 0.236, 0.382, 0.5, 0.618, 0.786, 1]
-            levels_label_2 = ['0', '0.236', '0.382', '0.5', '0.618', '0.786','1']
-            ohlc = temp_df.copy()
-            for i, level in enumerate(levels_2):
-                price = ohlc['Low'].min() + (ohlc['High'].max() - ohlc['Low'].min()) * level
-                fib_list_2.append(f"{levels_label_2[i]} " + "(" + "{:.2f}".format(price) + ")")
-
-            # temp_df = reset(temp_df.tail(18))
-            temp_df['Date'] = temp_df['ori_Date'].astype(str).apply(lambda x: x[:16])
-            temp_df.drop(columns = ['ori_Date','Chikou_Span'], inplace = True)
-            json_string = temp_df.to_json(orient='split', index=False, date_format='iso', double_precision=0)
-            json_dict = json.loads(json_string)
-            json_dict['Fib_Retracement'] = [fib_list_1,fib_list_2]
-            return str(json_dict)
-            # return str(json_dict).replace(' ','')
-        else:
-            return "tf Undefined"
-    
+        concat_date_list = []
+        for i in range(self.candlestick_chart_no + self.future_cloud_no):
+            concat_date_list.append(ohlc['Date'].max() - (i+1))
+        ohlc['Date'] = concat_date_list[::-1]
+        return ohlc    
     def get_candlestick_image(self):
         ohlc = self.get_candlestick_data()
         data = ohlc.copy()
-        # screen ratio 7:4
-        # Create a new figure with subplots: long_7 wid: 2.5, 1.5 fig (width, height)
         fig, (ax1, ax5, ax2, ax8, ax4, ax3, ax9, ax6, ax7) = plt.subplots(9, 1, 
                                                         sharex=True, 
                                                         figsize=(20,30), 
@@ -1621,19 +1256,14 @@ class autotrade:
         ax7.set_facecolor("#151924")
         ax8.set_facecolor("#151924")
         ax9.set_facecolor("#151924")
-
         ax1.set_axisbelow(True)
         ax1.grid(color='#2E323D', linestyle='-', zorder = 0)
         ax2.set_axisbelow(True)
         ax2.grid(color='#2E323D', linestyle='-', zorder = 0)
-        # ax3.set_axisbelow(True)
-        # ax3.grid(color='#2E323D', linestyle='-', zorder = 1)
         ax4.set_axisbelow(True)
         ax4.grid(color='#2E323D', linestyle='-', zorder = 0)
         ax5.set_axisbelow(True)
         ax5.grid(color='#2E323D', linestyle='-', zorder = 1)
-        # ax6.set_axisbelow(True)
-        # ax6.grid(color='#2E323D', linestyle='-', zorder = 0)
         ax7.set_axisbelow(True)
         ax7.grid(color='#2E323D', linestyle='-', zorder = 0)
         ax8.set_axisbelow(True)
@@ -1642,11 +1272,10 @@ class autotrade:
         ax9.grid(color='#2E323D', linestyle='-', zorder = 0)
 
         # Format x-axis ticks for the first subplot
-        ax1.xaxis.set_major_locator(mdates.DayLocator(interval=self.x_date_interval))  # Adjust the interval as needed
-        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))
-        ax1.set_title(f'Current {self.symbol} {self.freq_interval} Candlestick Chart (with Technical Indicators)', fontsize=16)
-        # ax1.plot(ohlc['Date'], ohlc['MA_23'], color='#2096F3', linewidth = 0.5)
-        # ax1.plot(ohlc['Date'], ohlc['MA_45'], color='#FF5252', linewidth = 0.5)
+        ax1.xaxis.set_major_locator(mdates.DayLocator(interval=24))  # Adjust the interval as needed
+        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
+
+        ax1.set_title(f'{self.ticker_company} ({self.ticker}): 1d Candlestick Chart (with Technical Indicators)', fontsize=16)
         levels = [0, 0.214, 0.382, 0.5, 0.618, 0.764, 1]
         color_list = ['#787B86', '#06BCD4', '#0A9981', '#4CAF51', '#FF9800', '#F23545', '#787B86']
         levels_label = ['1', '0.786', '0.618', '0.5', '0.382', '0.236','0']
@@ -1655,7 +1284,6 @@ class autotrade:
             ax1.axhline(price, linestyle='-', linewidth=0.75, color=color_list[i], zorder=1)
             ax1.text(ohlc['Date'].iloc[-1], price, f"{levels_label[i]} " + "(" + "{:.2f}".format(price) + ")",  # Display on the right (last date)
                     va='bottom', ha='right', fontsize=12,  # Align for right side
-                    # backgroundcolor='#151924',
                     color=color_list[i],
                     alpha=0.7)
         ax1.plot(ohlc['Date'], ohlc['upperband_BB'], color='#F23545', linestyle='-', linewidth=1, zorder=1)
@@ -1671,6 +1299,7 @@ class autotrade:
         ax1.yaxis.set_tick_params(pad=10, direction='inout', length=6, labelright=True, right=True)  # Move ticks and labels to the right
         ax1.yaxis.set_tick_params(labelsize=13)
         ax1.set_ylim(top = ohlc['upperband_BB'].max() + (ohlc['upperband_BB'].max()-ohlc['lowerband_BB'].min())*0.15)
+
         candlestick_ohlc(ax1, ohlc.values, width=self.graph_width, colorup='#26A69A', colordown='#F05350', alpha=1.0)
 
         # Plot volume on the second subplot with colored bars
@@ -1698,9 +1327,6 @@ class autotrade:
         ax3.axhline(y=70, color='grey', linestyle='--', linewidth = 0.5, zorder = 2)
         ax3.yaxis.set_tick_params(labelsize=13)
         ax3.set_ylim(1, 99)
-        # max_val = max(ohlc['RSI'].max(), ohlc['RSI_SMA_14'].max())
-        # min_val = min(ohlc['RSI'].min(), ohlc['RSI_SMA_14'].min())
-        # ax3.set_ylim(1, max_val + ((max_val-min_val)*0.15))
         ax3.grid(color='#2E323D', linestyle='-', zorder = 1)
         ax3.plot(ohlc['Date'], ohlc['RSI'], color='#7D57C2', linewidth = 1, zorder=2)  # Assuming 'Date' is the date column and 'RSI' is the RSI values column
         ax3.plot(ohlc['Date'], ohlc['RSI_SMA_14'], color='yellow', linewidth = 1, zorder=3)
@@ -1725,7 +1351,6 @@ class autotrade:
         ax5.plot(ohlc['Date'], ohlc['Chikou_Span'], label='Chikou Span', color='#43A047', linewidth = 1, zorder = 1)
         ax5.plot(ohlc['Date'], ohlc['Senkou_Span_A'], label='Senkou Span A (Leading Span A)', color='#A5D6A7', linewidth = 1, zorder = 1)
         ax5.plot(ohlc['Date'], ohlc['Senkou_Span_B'], label='Senkou Span B (Leading Span B)', color='#EF9A9A', linewidth = 1, zorder = 1)
-        # Fill the area between the Senkou Span A and B (Kumo Cloud)
         ax5.fill_between(ohlc['Date'], ohlc['Senkou_Span_A'], ohlc['Senkou_Span_B'], 
                         where=ohlc['Senkou_Span_A'] >= ohlc['Senkou_Span_B'], 
                         facecolor='#43A047', alpha=0.125, interpolate=True, zorder = 1)
@@ -1744,11 +1369,11 @@ class autotrade:
             ax5.axhline(price, linestyle='-', linewidth=0.75, color=color_list_2[i], zorder = 1)
             ax5.text(ohlc['Date'].iloc[-1], price, f"{levels_label_2[i]} " + "(" + "{:.2f}".format(price) + ")",  # Display on the right (last date)
                     va='bottom', ha='right', fontsize=12,  # Align for right side
-                    # backgroundcolor='#151924',
                     color=color_list_2[i],
                     alpha=0.7)
         ax5.yaxis.set_major_formatter(FuncFormatter(comma_formatter_2))
         ax5.set_ylim(top = ohlc['High'].max() + (ohlc['High'].max()-ohlc['Low'].min())*0.15)
+
         candlestick_ohlc(ax5, ohlc.values, width=self.graph_width, colorup='#26A69A', colordown='#F05350', alpha=1.0)
 
         ax6.set_ylabel('STO', fontsize = 16)
@@ -1759,9 +1384,6 @@ class autotrade:
         ax6.axhline(y=80, color='grey', linestyle='--', linewidth = 0.5, zorder=2)
         ax6.yaxis.set_tick_params(labelsize=13)
         ax6.set_ylim(-8, 115)
-        # max_val = max(ohlc['K_STO'].max(), ohlc['D_STO'].max())
-        # min_val = min(ohlc['K_STO'].min(), ohlc['D_STO'].min())
-        # ax6.set_ylim(top = max_val + ((max_val-min_val)*0.15))
         ax6.grid(color='#2E323D', linestyle='-', zorder = 1)
         ax6.plot(ohlc['Date'], ohlc['K_STO'], color='#09AE0C', linewidth = 1, zorder=2)
         ax6.plot(ohlc['Date'], ohlc['D_STO'], color='#B25B11', linewidth = 1, zorder=3)
@@ -1850,7 +1472,6 @@ class autotrade:
         colors = ['white', "#2862FF",]
         color_title(ax8, label_list, colors, y = 0.92)
 
-
         label_list = ["ATR ", "14 RMA ",
                     f"{title_formatter(ohlc['ATR'].values[-1-self.future_cloud_no])}",
                     ]
@@ -1860,14 +1481,37 @@ class autotrade:
         date_val = ohlc['Date'].values[1] - ohlc['Date'].values[0]
         ax1.set_xlim([ohlc['Date'].min() - date_val, ohlc['Date'].max() + date_val])
 
+        xticklabels_list = []
+        start_i = 19 - 1 
+        xticklabels_list.append(get_date_month_text(ohlc['ori_Date'].values[start_i - 1]))
+        next_i = start_i + 24
+        xticklabels_list.append(get_date_month_text(ohlc['ori_Date'].values[next_i]))
+        for _ in range(5):
+            next_i = next_i + 24
+            xticklabels_list.append(get_date_month_text(ohlc['ori_Date'].values[next_i]))
+        xticklabels_list_2 = ['10 May']
+        dates = [datetime.datetime.strptime(date, '%d %b') for date in xticklabels_list_2]
+        last_date = dates[-1]
+        next_days = []
+        # Add days until we have 24 additional days
+        days_to_add = 24
+        while len(next_days) < days_to_add:
+            last_date += datetime.timedelta(days=1)
+            if last_date.weekday() < 5:  # Monday to Friday are 0-4
+                next_days.append(last_date)
+        next_days_str = [date.strftime('%d %b') for date in next_days]
+        xticklabels_list.extend([next_days_str[-1]])
+        ax1.set_xticklabels(xticklabels_list)
+
         plt.subplots_adjust(left=0.085, right=0.925, bottom=0.025, top=0.975)
         fig.subplots_adjust(hspace=0.03)
-        plt.savefig('temp_candlestick_chart.png')
+        plt.savefig('data/png/temp.png')
 
-        with Image.open("temp_candlestick_chart.png") as img:
+        with Image.open("data/png/temp.png") as img:
             new_width, new_height = 2048, 3072 # 6000, 9000
             img_resized = img.resize((new_width, new_height), resample=Image.LANCZOS)
-            img_resized.save(f"{self.freq_interval}_candlestick_with_technical_indicators_chart.png")
+            img_resized.save(f"data/png/{self.ticker}.png")
+        os.remove('data/png/temp.png')
 
         plt.close(fig)
         plt.close('all')
@@ -1894,55 +1538,6 @@ class autotrade:
         matplotlib.pyplot.close('all')
         matplotlib.use('Agg')
         gc.collect()
-
-    def get_list_3d(self):
-        with requests.Session() as s:
-            self.response = s.get('https://api.binance.com/api/v3/time').json()
-        server_time_df = pd.DataFrame([self.response])
-        server_time_df['serverTime']=server_time_df['serverTime'].apply(lambda d: datetime.datetime.fromtimestamp(int(d)/1000).strftime('%Y-%m-%d %H:%M:%S'))
-        server_time_df['serverTime'] = pd.to_datetime(server_time_df['serverTime'])
-        currect_time_text = str(server_time_df['serverTime'].values[0])[:10]
-        currect_time_no = int(currect_time_text.replace('-',''))
-
-        start_date = '2017-11-20' # NEO
-        # start_date = '2017-08-20' # BTC
-        # start_date = '2017-12-16' # LTC
-
-        # Convert the start_date to a datetime object
-        current_date = datetime.datetime.strptime(start_date, '%Y-%m-%d')
-
-        # Create a list to store the result
-        date_list = []
-
-        date_list.append(current_date.strftime('%Y-%m-%d'))
-
-        # Loop to generate the list of dates
-        while True:
-            current_date += datetime.timedelta(days=3)
-            date_list.append(current_date.strftime('%Y-%m-%d'))
-            if int(str(current_date)[:10].replace('-','')) > currect_time_no:
-                break
-        return date_list
-    def update_next_current_time_interval_3d(self):
-        self.next_current_time_interval = self.get_list_3d()[-2] + ' 00:00:00'
-        temp_df = pd.DataFrame([self.next_current_time_interval])
-        temp_df.columns = ['next_current_time_interval']
-        self.next_entry_sec = self.get_wait_entry_sec()
-        temp_df['next_entry_sec'] = self.next_entry_sec
-        self.next_current_time_interval_df = temp_df
-        if self.next_current_time_interval_df['next_entry_sec'].values[0] < 0:
-            self.next_current_time_interval = self.get_list_3d()[-1] + ' 00:00:00'
-            temp_df = pd.DataFrame([self.next_current_time_interval])
-            temp_df.columns = ['next_current_time_interval']
-            self.next_entry_sec = self.get_wait_entry_sec()
-            temp_df['next_entry_sec'] = self.next_entry_sec
-            self.next_current_time_interval_df = temp_df
-    def get_meeting_date(self):
-        with requests.Session() as s:
-            self.response = s.get('https://api.binance.com/api/v3/time').json()
-        server_time = datetime.datetime.utcfromtimestamp(self.response['serverTime'] / 1000)
-        formatted_time = server_time.strftime('%B %d, %Y, %H:%M')
-        return formatted_time
     def calculate_ichimoku(self, ohlc):
         df = ohlc.copy()
         # Tenkan-sen (Conversion Line): (Highest High + Lowest Low) / 2 for the past 9 periods
@@ -1975,6 +1570,41 @@ class autotrade:
         all_Senkou_Span_B = list(df['Senkou_Span_B'].values[:-self.future_cloud_no]) + future_Senkou_Span_B
         df['Senkou_Span_B'] = all_Senkou_Span_B
         return df
+    def calc_k_d(self, data, N=14, M=3):
+        data['low_N'] = data['Low'].rolling(N).min()
+        data['high_N'] = data['High'].rolling(N).max()
+        data['K_STO'] = 100 * (data['Close'] - data['low_N']) / \
+            (data['high_N'] - data['low_N'])
+        data['D_STO'] = data['K_STO'].rolling(M).mean()
+        data.drop(columns = ['low_N','high_N'], inplace = True)
+        return data
+    def calc_CMF(self, ask_series):
+        ask_series["cmfm"] = (((ask_series["Close"] - ask_series["Low"]) - (ask_series["High"] - ask_series["Close"])) / (ask_series["High"] - ask_series["Low"]))
+        ask_series["cmfv"] = ask_series["cmfm"] * ask_series["Volume"]
+        ask_series["CMF"] = ask_series['cmfv'].rolling(window=20).mean() / ask_series['Volume'].rolling(window=21).mean() 
+        ask_series.drop(columns = ['cmfm','cmfv'], inplace = True)
+        return ask_series
+    def get_nasdaq100_candlestick(self):
+        nasdaq_df = yf.download(self.nasdaq_100_tickers_list, period=f'{self.candlestick_chart_no*2}d', interval="1d")
+        date_list = [str(each)[:10] for each in list(nasdaq_df['Close'].index)]
+        self.nasdaq100_df_dict = {}
+        ticker_list = list(set([each[1]for each in nasdaq_df.columns]))
+        for each_ticker in ticker_list:
+            temp_dict = {'Date': [],
+                        'Open': [],
+                        'High': [],
+                        'Low': [],
+                        'Close': [],
+                        'Volume': [],
+                        }
+            temp_dict['Date'].extend(date_list)
+            temp_dict['Open'].extend(list(nasdaq_df['Open'][each_ticker].values))
+            temp_dict['High'].extend(list(nasdaq_df['High'][each_ticker].values))
+            temp_dict['Low'].extend(list(nasdaq_df['Low'][each_ticker].values))
+            temp_dict['Close'].extend(list(nasdaq_df['Close'][each_ticker].values))
+            temp_dict['Volume'].extend(list(nasdaq_df['Volume'][each_ticker].values))
+            temp_df = pd.DataFrame(temp_dict)
+            self.nasdaq100_df_dict[each_ticker] = temp_df
 ####
 #### End Class Here
 ####
