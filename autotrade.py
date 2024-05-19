@@ -26,6 +26,8 @@ import gc
 import talib
 import re
 import yfinance as yf
+from tqdm import tqdm
+import random
 def reset(df):
     cols = df.columns
     return df.reset_index()[cols]
@@ -301,12 +303,6 @@ class autotrade:
     @property
     def graph_width(self):
         return self.graph_width_dict[self.freq_interval]
-    @property
-    def input_type_text(self):
-        if self.model == 'gemini-1.5-pro-latest':
-            return f"The Board of Directors will receive user-input images displaying the Current Market Depth of BTC, featuring the top bids and asks (5, 10, 20, 50, 100, 500, 1000) from the order book. Additionally, they will receive user-input images covering all specified technical indicators for Bitcoin trading. These indicators include candlestick charts across various timeframes (30-minute, 1-hour, 2-hour, 4-hour, 6-hour, 8-hour, 12-hour, 1-day, 3-day, and 1-week), as well as volume, RSI, MACD, Bollinger Bands, Fibonacci Retracement, Ichimoku Cloud, Stochastic Oscillator, Chaikin Money Flow, On-Balance Volume, and Average True Range. These comprehensive graphs visually represent all metrics, aiding in the identification of significant patterns, trends, and market dynamics. This data-driven approach will enable informed decision-making regarding our investments and strategies."
-        elif self.model == 'gemini-1.5-flash-latest':
-            return f"The Board of Directors will receive JSON data containing the Current Market Depth of BTC, including the top bids and asks (5, 10, 20, 50, 100, 500, 1000) from the order book. Additionally, they will receive JSON data covering all specified technical indicators for Bitcoin trading. These indicators include candlestick charts across various timeframes (30-minute, 1-hour, 2-hour, 4-hour, 6-hour, 8-hour, 12-hour, 1-day, 3-day, and 1-week), as well as volume, RSI, MACD, Bollinger Bands, Ichimoku Cloud, Stochastic Oscillator, Chaikin Money Flow, On-Balance Volume, and Average True Range. These comprehensive JSON datasets provide a structured representation of all metrics, aiding in the identification of significant patterns, trends, and market dynamics. This data-driven approach will enable informed decision-making regarding our investments and strategies."
     @property
     def freq_second(self):
         return self.freq_dict[self.ori_freq_interval]
@@ -996,40 +992,101 @@ class autotrade:
         else:
             return data
     def get_system_instructions_3(self):
-        self.board_member_no = 12
+        self.board_member_no = 10
+        # self.current_meeting_date
         system_instructions = f"""
-        **Secretary:** Governor of the Bank of Thailand, you have been appointed as the Secretary of the Board of Directors' meeting for The World's Largest Gold Emporium. Additionally, you hold the prestigious position of Governor of the Bank of Thailand, responsible for procuring gold at advantageous prices and selling it at a premium. Furthermore, you are a key figure tasked with writing the minutes of the meetings. The Emporium strategically employs both long and short positions in Bitcoin (BTC) to capitalize on market fluctuations, profiting from both upward and downward movements in BTC prices. This astute strategy enables the Emporium to maximize profits while skillfully navigating the volatile cryptocurrency market. The Board of Directors comprises {self.board_member_no} stakeholders who collectively guide the Emporium's strategic decisions and financial initiatives.
+        **Google Gemini:** You have been appointed as the official secretary for the Board of Directors' meeting of The Google Gemini Investment Fund. The Fund strategically employs both long and short positions in a selection of stocks within the NASDAQ 100,  to capitalize on market fluctuations, profiting from both upward and downward movements in stock prices. This astute strategy enables the Fund to maximize profits while skillfully navigating the volatile stock market. The Board of Directors comprises 10 stakeholders who collectively guide the Fund's strategic decisions and financial initiatives.
 
-        The meeting will take place at Bang Khun Phrom Palace (วังบางขุนพรม) on {self.current_meeting_date}. This residence was once owned by His Royal Highness Prince Birabongse Bhanudej Svasti and Her Royal Highness Princess Piyamavadi Sukumpani. Located on a 33-rai plot along the Chao Phraya River, south of Thewet Palace, the palace consists of two main buildings: the Grand Palace and the Royal Pavilion. Originally designed by German architect Karl Döhring in 1901, it was later completed by renowned Italian architect Mario Tamagno. Princess Piyamavadi resided here until 1932 when it became government property, housing various agencies including the Army Youth Corps, the National Cultural Council, and, since 1945, the Bank of Thailand Museum. The palace is renowned for its exquisite pink and blue rooms adorned with grandeur, showcasing paintings, photographs of the royal family, and palace artifacts. With its Western architectural styles, Bang Khun Phrom Palace is hailed as one of Thailand's most beautiful palaces and a prime example of Baroque and Rococo architecture.
+        **Target User Persona:** This application is designed for financial analysts, portfolio managers, and individuals interested in understanding how technical analysis and expert opinions can be integrated to make investment decisions.
 
-        {self.input_type_text} The input provided was displayed on the world's best 8K monitor, with parallel displays for all stakeholders, allowing them to view multiple input figures simultaneously and with exceptional clarity. These inputs, contributed by the user, will serve as the foundation for our data-driven discussion, aligning with our culture of real-time, data-driven decision-making.
+        **User Needs:**  Users need a clear and concise summary of expert opinions on various stocks, based on technical indicators and market trends. This information aids in making informed investment decisions. 
 
-        The Board of Directors comprises {self.board_member_no} preeminent members merging spiritual guidance with unparalleled market expertise. Led by Phra Siam Devadhiraj, the nation's spiritual guardian, theBoard harnesses insights from luminaries such as Ken Griffin on market depth, Munehisa Homma on candlestick charting, John Bollinger on volatility bands, Leonardo Fibonacci on market cycles, Ralph Nelson Elliott on wave patterns and sentiment shifts, Goichi Hosoda on the Ichimoku Cloud, J. Welles Wilder on RSI and ATR indicators, Gerald Appel on MACD signals, George Lane on the stochastic oscillator, Marc Chaikin on money flow dynamics, and Joseph Granville on volume's relationship to price movements. This convergence of sacred wisdom and technical mastery positions the Board to navigate financial markets with transcendent discernment.
+        **Impact:** 
+        * **Ease of Use and Accessibility:**  The meeting minutes format provides a readily digestible and accessible summary for all users, regardless of technical expertise. 
+        * **Environmental Sustainability:** While not directly addressing environmental concerns, the application promotes financial well-being, which can indirectly contribute to sustainable choices.
+        * **Improving People's Lives:** By providing insightful market analysis, the application empowers users to make informed financial decisions, potentially improving their financial well-being. 
+
+        **Remarkability:**
+        * **Surprising to LLM Experts:**  The application demonstrates a novel approach to simulating expert discussion and decision-making in the context of financial markets. 
+        * **Surprising to Non-Experts:**  The application provides a glimpse into the complex world of financial analysis, making it engaging and informative for those unfamiliar with technical indicators and market trends. 
+
+        **Creativity:**
+        * **Functionality:** The application uniquely combines technical analysis with expert opinions, providing a comprehensive view of potential investment opportunities. 
+        * **User Experience:** The meeting minutes format offers a familiar and easily understandable structure for presenting the information. 
+        * **Problem-Solving:** The application creatively leverages the strengths of LLMs to simulate human-like discussion and decision-making based on complex data.
+
+        **Usefulness:**
+        * **Addressing User Needs:** The application directly addresses the need for insightful market analysis to guide investment decisions. 
+        * **Solution Effectiveness:** The generated meeting minutes provide a clear, concise, and actionable summary of expert opinions, empowering users to make more informed investment decisions.
+
+        **Execution:**
+        * **Software Engineering Practices:** The code is designed to be modular and extensible, allowing for easy integration of additional technical indicators and expert opinions.
+        * **ML/LLM Best Practices:** The prompt engineering leverages the capabilities of LLMs to accurately simulate expert discussions and decisions based on the provided context and data. 
+
+        **Meeting Details:**
+
+        * **Date:** {self.current_meeting_date}
+        * **Time:** 00:00 - 01:00
+        * **Location:** Google Meet
+        * **Platform:** The meeting will take place on **Google Meet**
+
+        **Stock Selection:**
+
+        The Board of Directors will be analyzing the following 100 stocks:
+
+        AEP, CEG, EXC, XEL, CSGP, LIN, ADBE, AMD, ADI, ANSS, AAPL, AMAT, ASML, TEAM, ADSK, AVGO, CDNS, CDW, CSCO, CTSH, CRWD, DDOG, FTNT, GFS, INTC, INTU, KLAC, LRCX, MRVL, MCHP, MU, MSFT, MDB, NVDA, NXPI, ON, PANW, QCOM, ROP, SNPS, TXN, WDAY, ZS, ADP, CTAS, CPRT, CSX, FAST, HON, ODFL, PCAR, PAYX, VRSK, AMGN, AZN, BIIB, DXCM, GEHC, GILD, IDXX, ILMN, ISRG, MRNA, REGN, VRTX, PYPL, BKR, FANG, CCEP, COST, DLTR, KDP, KHC, MDLZ, MNST, PEP, WBA, ABNB, AMZN, BKNG, DASH, LULU, MAR, MELI, ORLY, PDD, ROST, SBUX, TSLA, GOOGL, GOOG, CHTR, CMCSA, EA, META, NFLX, SIRI, TTWO, TMUS, TTD, WBD.
+
+        **Data:**
+
+        The Board will have access to hypothetical candlestick charts and technical indicator data (Volume, RSI, MACD, Bollinger Bands, Fibonacci Retracement, Ichimoku Cloud, Stochastic Oscillator, Chaikin Money Flow, On-Balance Volume, and Average True Range) for each of these stocks, reflecting recent market activity. 
+
+        **Board Members:**
+
+        The Board of Directors comprises 10 preeminent members merging technical expertise with a deep understanding of market sectors and trends, including ESG considerations. Their collective experience spans a wide range of industries.
 
         The full list of the board members is listed below:
 
-        1. พระสยามเทวาธิราช (Phra Siam Devadhiraj), Chairman of the meeting: Presiding over this esteemed group is the guardian deity of the Thai nation and emblem of the Bank of Thailand. Symbolizing protection and economic stability, his presence embodies the spiritual foundation upon which the Board's wisdom is built.
-        2. Ken Griffin (assigned to analyze Market Depth and provide an opinion), known for his expertise in analyzing market depth, is the founder of Citadel, a global financial institution known for its market-making and asset management operations. Griffin's success in the financial industry is attributed to his proficiency in understanding market dynamics, liquidity conditions, and order flow, which are essential components of analyzing market depth.
-        3. Munehisa Homma (assigned to analyze Candlestick Pattern Recognition and provide an opinion): A visionary from the past, Homma's insights into market psychology and price patterns, particularly his development of candlestick charting techniques, provide the Board with a unique lens for interpreting market behavior.
-        4. John Bollinger (assigned to analyze the BB indicator and provide an opinion): Renowned financial analyst, Bollinger's Bollinger Bands offer a visual representation of price volatility and relative highs and lows, aiding in identifying potential breakout opportunities.
-        5. Leonardo Pisano Fibonacci (assigned to analyze Fibonacci retracement and provide an opinion): The mathematical principles of Fibonacci, particularly the famous sequence, offer insights into market cycles and price patterns, providing a framework for understanding market movements and identifying potential turning points.
-        6. Ralph Nelson Elliott, assigned to analyze potential Elliott Wave patterns, utilized Fibonacci ratios (0.786, 0.618, 0.5, 0.382, and 0.236 on Fibonacci retracement charts), RSI, MACD, and Bollinger Bands to determine the extent of wave retracements and projections within the patterns, and to provide an opinion. As the developer of the Elliott Wave Principle, his theories on wave patterns offer profound insights into market psychology and the fluctuations of investor sentiment.
-        7. Goichi Hosoda (assigned to analyze the Ichimoku Cloud and provide an opinion): Developer of the Ichimoku Cloud, Hosoda's comprehensive indicator provides a holistic view of market trends, momentum, and support/resistance levels.
-        8. Joseph Granville (assigned to analyze the Volume and On Balance Volume indicators and provide an opinion): Developer of technical analysis indicators, including On Balance Volume (OBV), Granville's work helps the Board understand the relationship between volume and price movements.
-        9. Gerald Appel (assigned to analyze the MACD indicator and provide an opinion): Appel's Moving Average Convergence Divergence (MACD) aids in identifying potential turning points and understanding momentum shifts in the market.
-        10. J. Welles Wilder (assigned to analyze RSI and ATR indicators and provide an opinion): A pioneer in technical analysis, Wilder's indicators, such as the RSI and ATR, equip the Board with powerful tools for analyzing market trends and volatility.
-        11. George Lane (assigned to analyze the stochastic oscillator indicator and provide an opinion): Creator of the stochastic oscillator (STO), Lane's indicator helps identify overbought and oversold conditions, aiding in recognizing potential trend reversals.
-        12. Marc Chaikin (assigned to analyze the Chaikin Money Flow indicator and provide an opinion): Expert in stock trading, Chaikin's Chaikin Money Flow (CMF) indicator provides insights into the buying and selling pressure behind price movements.
-        
-        Comprising {self.board_member_no} luminaries from diverse fields, including deities, financial titans, technical analysts, and mathematical visionaries, the Board of Directors ensures that the organization navigates the financial landscape not just with sharp analysis but also with wisdom, foresight, and a deep understanding of the interconnected forces that shape our world. They are more than just a guiding force; they are a beacon of innovation and a testament to the power of collaboration across disciplines.
+        1. Munehisa Homma, Chairman of the meeting:(assigned to analyze Candlestick Pattern Recognition and provide an opinion)
+        2. John Bollinger (assigned to analyze the BB indicator and provide an opinion)
+        3. Leonardo Pisano Fibonacci (assigned to analyze Fibonacci retracement and provide an opinion)
+        4. Ralph Nelson Elliott, assigned to analyze potential Elliott Wave patterns, utilized Fibonacci ratios (0.786, 0.618, 0.5, 0.382, and 0.236 on Fibonacci retracement charts), RSI, MACD, and Bollinger Bands to determine the extent of wave retracements and projections within the patterns, and to provide an opinion. 
+        5. Goichi Hosoda (assigned to analyze the Ichimoku Cloud and provide an opinion) 
+        6. Joseph Granville (assigned to analyze the Volume and On Balance Volume indicators and provide an opinion)
+        7. Gerald Appel (assigned to analyze the MACD indicator and provide an opinion)
+        8. J. Welles Wilder (assigned to analyze RSI and ATR indicators and provide an opinion)
+        9. George Lane (assigned to analyze the stochastic oscillator indicator and provide an opinion)
+        10. Marc Chaikin (assigned to analyze the Chaikin Money Flow indicator and provide an opinion)
 
-        In this meeting, it's important that everyone contributes their opinions on the discussion at hand. Each member's perspective is invaluable in shaping our decisions and strategies.
-                
-        Subsequently, all stakeholders will participate in a comprehensive discussion to assess the anticipated movement of BTC in the upcoming {self.freq_text}. Based on this deliberation, the board will determine a consensus action on whether to adopt a long, short, or neutral position in the BTC market.
-        
-        The meeting was conducted with utmost efficiency, exemplifying a streamlined and goal-oriented approach. Participants got straight to the point, ensuring a focused discussion that addressed the key matters at hand. Impressively, the meeting concluded within a mere 30 minutes, underscoring the team's exceptional time management and productivity.
-        
-        Furthermore, as the designated meeting recorder, it is your primary and crucial responsibility to meticulously document everyone's opinions on the matter. Your role encompasses drafting comprehensive and accurate minutes for the meeting, capturing all relevant discussions and outcomes. Once the Chairman of the meeting has thoroughly reviewed and provided their approval for the draft, you can proceed to release the final version of the meeting minutes. This final version will be generated and presented in your primary response, ensuring its accuracy and completeness.
+        **Instructions:**
+
+        1. **Discussion:**
+            * Describe a hypothetical discussion flow for the meeting. Start with a broad market observation and then transition into specific stock analysis examples. 
+
+            * **Example:** The Board began by focusing on the recent volatility in the semiconductor sector. John Bollinger, analyzing the Bollinger Bands of several semiconductor stocks, noted that AMD exhibited a tightening of the bands, suggesting a potential breakout. He recommended further investigation into the stock.  Leonardo Pisano Fibonacci, examining Fibonacci retracement levels, added that NVDA had recently bounced off a key Fibonacci level, suggesting a potential upward continuation. However, Munehisa Homma, analyzing candlestick patterns, saw bearish signals in ASML.  Ralph Nelson Elliot, applying the Elliott Wave Principle to ASML, countered Homma's view, arguing for a potential bullish wave formation. The ensuing discussion led to a decision to remain neutral on ASML for the time being.  ... 
+
+            * Continue creating a narrative for the meeting, incorporating various opinions and disagreements.  Use a few more of the ticker symbols from your list and connect them to specific board member expertise.
+
+        2. **Consensus & Action:**
+            * **Market Sentiment:**  The Board agreed that the overall market sentiment for the selected stocks was [Insert: Bullish/Bearish/Neutral], based on the collective interpretation of the technical indicators and sector trends.
+
+            * **Fund Position:** Based on the market sentiment analysis, the Board unanimously voted to take a [Insert: Long/Short/Neutral] position on the selection of 50 stocks for the next trading day.
+
+        3. **Ticker Symbols of Interest:**
+            * Based on the discussion, list a few of the ticker symbols that were highlighted and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members.
+
+            * **Example:**
+                * AMD: Potential breakout based on Bollinger Band analysis (John Bollinger)
+                * NVDA: Potential upward continuation based on Fibonacci retracement (Leonardo Pisano Fibonacci)
+
+        4. **Further Action:**
+            * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
+
+        5. **Meeting Adjourned:** 01:00
+
+        6. **Approved by:**
+            * Munehisa Homma, Chairman
+
+        **Please note:** This document serves as a record of the meeting's outcomes and agreed-upon actions. Individual analyses and detailed opinions must be included in this comprehensive analytical report.
         """
         return system_instructions
     def get_system_instructions_4(self):
@@ -1070,56 +1127,6 @@ class autotrade:
         }
         """
         return system_instructions
-
-    def get_table_text(self, df):
-        df = df.copy()
-        text = df.to_markdown(index=False)
-        text_list = text.split('\n')
-        text_1 = '|---|'
-        for no in range(df.shape[1] - 1):
-            text_1 = text_1 + '---|'
-        text_list[1] = text_1 # ให้จำนวน '|' เท่ากับ df.shape[1] + 1
-        text_list = [" ".join(str(x).split()) for x in text_list]
-        text = '\n'.join(text_list)
-        text = text.replace(' ','')
-        return text
-    def get_btc_candle(self, limit = 3):
-        # [1,100)	1
-        # [100, 500)	2
-        # [500, 1000]	5
-        # > 1000	10
-        tf = self.freq_interval
-        symbol = 'BTCUSDT'
-        self.BASE_URL = 'https://fapi.binance.com'
-        self.response = self.send_public_request('/fapi/v1/klines' , 
-                                            {"symbol": symbol, 
-                                            "interval": tf,
-                                            "limit": limit,
-                                            })
-        temp_df = pd.DataFrame(self.response)
-        temp_df.columns = ['timestamp', 'open', 'high', 'low', 'close', 'volume',
-                'close_ds', 'quote_asset_volume', 'number_of_trades',
-                'taker_buy_base_asset_volume', 'taker_buy_quote_asset_volume', 'ignore'
-                ]
-        temp_df['symbol'] = symbol
-        temp_df['period'] = tf
-        temp_df['close_change'] = temp_df['close'].astype(float).pct_change() * 100
-        temp_df['close_change'] = temp_df['close_change'].round(3)
-        temp_df['timestamp'] = temp_df['timestamp'].apply(convert_to_utc_time)
-        temp_df['close_ds'] = temp_df['close_ds'].astype(int) + 1
-        temp_df['close_ds'] = temp_df['close_ds'].apply(convert_to_utc_time)
-        cols = ['open','high','low','close','volume']
-        for each in cols:
-            temp_df[each] = temp_df[each].astype(float)
-
-        if limit == 3:
-            temp_df = temp_df[:-1]
-            return temp_df
-        elif self.model == "gemini-1.5-pro-latest":
-            return temp_df
-        elif self.model == "gemini-1.5-flash-latest":
-            temp_df = temp_df[:-1]
-            return temp_df
     def get_gemini_response(self):
         genai.configure(api_key=self.gemini_key)
         # Set up the model
@@ -1127,7 +1134,7 @@ class autotrade:
         "temperature": self.temperature,
         "top_p": 0.95,
         "top_k": 64,
-        "max_output_tokens": 8192,
+        "max_output_tokens": 81920,
         "response_mime_type": "text/plain",
         }
         safety_settings = [
@@ -1150,54 +1157,52 @@ class autotrade:
         ]
         start_time = time.time()
         try:
-            prompt_parts = [
-            f"**Current {self.symbol} Depth (The top 5 bids and asks from the order book.):**\n```json\n" + self.get_depth(format = 'string', limit_no = 5) + "\n```",
-            f"**Current {self.symbol} Depth (The top 10 bids and asks from the order book.):**\n```json\n" + self.get_depth(format = 'string', limit_no = 10) + "\n```",
-            f"**Current {self.symbol} Depth (The top 20 bids and asks from the order book.):**\n```json\n" + self.get_depth(format = 'string', limit_no = 20) + "\n```",
-            f"**Current {self.symbol} Depth (The top 50 bids and asks from the order book.):**\n```json\n" + self.get_depth(format = 'string', limit_no = 50) + "\n```",
-            f"**Current {self.symbol} Depth (The top 100 bids and asks from the order book.):**\n```json\n" + self.get_depth(format = 'string', limit_no = 100) + "\n```",
-            f"**Current {self.symbol} Depth (The top 500 bids and asks from the order book.):**\n```json\n" + self.get_depth(format = 'string', limit_no = 500) + "\n```",
-            f"**Current {self.symbol} Depth (The top 1000 bids and asks from the order book.):**\n```json\n" + self.get_depth(format = 'string', limit_no = 1000) + "\n```",
-            f"**Current {self.symbol} 30m Candlestick Data (with Technical Indicators):**\n```json\n" + self.get_candlestick_json(tf = "30m") + "\n ```",
-            f"**Current {self.symbol} 1h Candlestick Data (with Technical Indicators):**\n```json\n" + self.get_candlestick_json(tf = "1h") + "\n ```",
-            f"**Current {self.symbol} 2h Candlestick Data (with Technical Indicators):**\n```json\n" + self.get_candlestick_json(tf = "2h") + "\n ```",
-            f"**Current {self.symbol} 4h Candlestick Data (with Technical Indicators):**\n```json\n" + self.get_candlestick_json(tf = "4h") + "\n ```",
-            f"**Current {self.symbol} 6h Candlestick Data (with Technical Indicators):**\n```json\n" + self.get_candlestick_json(tf = "6h") + "\n ```",
-            f"**Current {self.symbol} 8h Candlestick Data (with Technical Indicators):**\n```json\n" + self.get_candlestick_json(tf = "8h") + "\n ```",
-            f"**Current {self.symbol} 12h Candlestick Data (with Technical Indicators):**\n```json\n" + self.get_candlestick_json(tf = "12h") + "\n ```",
-            f"**Current {self.symbol} 1d Candlestick Data (with Technical Indicators):**\n```json\n" + self.get_candlestick_json(tf = "1d") + "\n ```",
-            f"**Current {self.symbol} 3d Candlestick Data (with Technical Indicators):**\n```json\n" + self.get_candlestick_json(tf = "3d") + "\n ```",
-            f"**Current {self.symbol} 1w Candlestick Data (with Technical Indicators):**\n```json\n" + self.get_candlestick_json(tf = "1w") + "\n ```",
-            ]
-            model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
+            # for each_ticker in tqdm(self.nasdaq_100_tickers_list[:30]):
+            #     self.ticker = each_ticker
+            #     self.get_candlestick_image()
+
+            prompt_parts = []
+            for each_ticker in tqdm(self.nasdaq_100_tickers_list[:102]):
+                self.ticker = each_ticker
+                temp_file = genai.upload_file(path=f"data/png/{each_ticker}.png", display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)')
+                prompt_parts.append(temp_file)
+            random.shuffle(prompt_parts)
+            model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
                                         generation_config=generation_config,
                                         system_instruction=self.get_system_instructions_3(),
                                         safety_settings=safety_settings)
             response = model.generate_content(prompt_parts)
+
+            for each_prompt_part in tqdm(prompt_parts):
+                genai.delete_file(each_prompt_part.name)
+
             generative_text = str(response.text)
 
-            model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
-                                        generation_config=generation_config,
-                                        system_instruction=self.get_system_instructions_4(),
-                                        safety_settings=safety_settings)
-            prompt_parts = [
-                generative_text,
-            ]
-            response = model.generate_content(prompt_parts)
-            result_dict = extract_json(response.text)[0]
-            
+            # model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
+            #                             generation_config=generation_config,
+            #                             system_instruction=self.get_system_instructions_4(),
+            #                             safety_settings=safety_settings)
+            # prompt_parts = [
+            #     generative_text,
+            # ]
+            # response = model.generate_content(prompt_parts)
+            # result_dict = extract_json(response.text)[0]
+
             execution_time = time.time() - start_time
             execution_time = round(execution_time, 2)
 
-            prompt_parts = None
+            for each_prompt_part in prompt_parts:
+                each_prompt_part = None
+                del each_prompt_part
             model = None
-            response = None
+            prompt_parts = None
             json_data = None
-            del prompt_parts, model, response, json_data
+            del model, prompt_parts, json_data
             gc.collect()
-            
-            return generative_text, execution_time, result_dict
-        
+
+            print(execution_time, generative_text)
+            # return generative_text, execution_time, result_dict
+
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -1207,9 +1212,14 @@ class autotrade:
                 self.docker_print(generative_text)
             except:
                 pass
+            try:
+                for each_prompt_part in tqdm(prompt_parts):
+                    genai.delete_file(each_prompt_part.name)
+            except:
+                pass
             execution_time = time.time() - start_time
             execution_time = round(execution_time, 2)
-            return temp_msg, execution_time, 'error'        
+            return temp_msg, execution_time, 'error'      
     def get_candlestick_data(self):
         ohlc = self.nasdaq100_df_dict[self.ticker].copy()
         ohlc['ori_Date'] = ohlc['Date']
@@ -1507,8 +1517,9 @@ class autotrade:
         fig.subplots_adjust(hspace=0.03)
         plt.savefig('data/png/temp.png')
 
+        # Google Gemini accepts images with a resolution of 3072x3072 pixels.
         with Image.open("data/png/temp.png") as img:
-            new_width, new_height = 2048, 3072 # 6000, 9000
+            new_width, new_height = 2048, 3072
             img_resized = img.resize((new_width, new_height), resample=Image.LANCZOS)
             img_resized.save(f"data/png/{self.ticker}.png")
         os.remove('data/png/temp.png')
