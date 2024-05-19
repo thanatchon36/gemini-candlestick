@@ -1,0 +1,43 @@
+# TA-Lib dependencies
+FROM arm64v8/python:3.12
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libssl-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    wget \
+    curl \
+    llvm \
+    libc6-dev \
+    libedit-dev \
+    libncursesw5-dev \
+    xz-utils \
+    tk-dev \
+    libxml2-dev \
+    libxmlsec1-dev \
+    libffi-dev \
+    liblzma-dev
+RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+    tar -xzf ta-lib-0.4.0-src.tar.gz && \
+    cd ta-lib && \
+    ./configure --prefix=/usr/local --build=aarch64-unknown-linux-gnu && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf ta-lib*
+
+# Install pip, setuptools, and wheel
+RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel
+RUN python3 -m pip install --no-cache-dir TA-Lib
+RUN python3 -m pip install --no-cache-dir grpcio
+RUN python3 -m pip install --no-cache-dir pandas
+RUN python3 -m pip install --no-cache-dir google-generativeai
+RUN python3 -m pip install --no-cache-dir plotly
+RUN python3 -m pip install --no-cache-dir matplotlib
+RUN python3 -m pip install --no-cache-dir mplfinance
+RUN python3 -m pip install --no-cache-dir pillow
+
+# Specify the command to run on container start
+CMD ["python", "/opt/app/main.py"]

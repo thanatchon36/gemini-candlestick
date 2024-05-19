@@ -1,0 +1,102 @@
+Company,Ticker,GISC Sector,GISC Sub-Industry
+American Electric Power,AEP,Utilities,Electric Utilities
+Constellation Energy,CEG,Utilities,Electric Utilities
+Exelon,EXC,Utilities,Electric Utilities
+Xcel Energy,XEL,Utilities,Multi-Utilities
+CoStar Group,CSGP,Real Estate,Real Estate Services
+Linde plc,LIN,Materials,Industrial Gases
+Adobe Inc.,ADBE,Information Technology,Application Software
+Advanced Micro Devices Inc.,AMD,Information Technology,Semiconductors
+Analog Devices,ADI,Information Technology,Semiconductors
+Ansys,ANSS,Information Technology,Application Software
+Apple Inc.,AAPL,Information Technology,"Technology Hardware, Storage & Peripherals"
+Applied Materials,AMAT,Information Technology,Semiconductor Equipment
+ASML Holding,ASML,Information Technology,Semiconductor Equipment
+Atlassian,TEAM,Information Technology,Application Software
+Autodesk,ADSK,Information Technology,Application Software
+Broadcom Inc.,AVGO,Information Technology,Semiconductors
+Cadence Design Systems,CDNS,Information Technology,Application Software
+CDW Corporation,CDW,Information Technology,Technology Distributors
+Cisco,CSCO,Information Technology,Communications Equipment
+Cognizant,CTSH,Information Technology,IT Consulting & Other Services
+CrowdStrike,CRWD,Information Technology,Application Software
+Datadog,DDOG,Information Technology,Application Software
+Fortinet,FTNT,Information Technology,Systems Software
+GlobalFoundries,GFS,Information Technology,Semiconductors
+Intel,INTC,Information Technology,Semiconductors
+Intuit,INTU,Information Technology,Application Software
+KLA Corporation,KLAC,Information Technology,Semiconductor Equipment
+Lam Research,LRCX,Information Technology,Semiconductor Equipment
+Marvell Technology,MRVL,Information Technology,Application Software
+Microchip Technology,MCHP,Information Technology,Semiconductors
+Micron Technology,MU,Information Technology,Semiconductors
+Microsoft,MSFT,Information Technology,Systems Software
+MongoDB Inc.,MDB,Information Technology,Systems Software
+Nvidia,NVDA,Information Technology,Semiconductors
+NXP,NXPI,Information Technology,Semiconductors
+Onsemi,ON,Information Technology,Semiconductors
+Palo Alto Networks,PANW,Information Technology,Systems Software
+Qualcomm,QCOM,Information Technology,Semiconductors
+Roper Technologies,ROP,Information Technology,Electronic Equipment & Instruments
+Synopsys,SNPS,Information Technology,Application Software
+Texas Instruments,TXN,Information Technology,Semiconductors
+"Workday, Inc.",WDAY,Information Technology,Application Software
+Zscaler,ZS,Information Technology,Application Software
+ADP,ADP,Industrials,Human Resource & Employment Services
+Cintas,CTAS,Industrials,Diversified Support Services
+Copart,CPRT,Industrials,Diversified Support Services
+CSX Corporation,CSX,Industrials,Rail Transportation
+Fastenal,FAST,Industrials,Trading Companies & Distributors
+Honeywell,HON,Industrials,Industrial Conglomerates
+Old Dominion Freight Line,ODFL,Industrials,Cargo Ground Transportation
+Paccar,PCAR,Industrials,Construction Machinery & Heavy Transportation Equipment
+Paychex,PAYX,Industrials,Human Resource & Employment Services
+Verisk,VRSK,Industrials,Research & Consulting Services
+Amgen,AMGN,Health Care,Biotechnology
+AstraZeneca,AZN,Health Care,Pharmaceuticals
+Biogen,BIIB,Health Care,Biotechnology
+DexCom,DXCM,Health Care,Health Care Equipment
+GE HealthCare,GEHC,Health Care,Health Care Equipment
+Gilead Sciences,GILD,Health Care,Biotechnology
+Idexx Laboratories,IDXX,Health Care,Health Care Equipment
+"Illumina, Inc.",ILMN,Health Care,Life Sciences Tools & Services
+Intuitive Surgical,ISRG,Health Care,Health Care Equipment
+Moderna,MRNA,Health Care,Biotechnology
+Regeneron,REGN,Health Care,Biotechnology
+Vertex Pharmaceuticals,VRTX,Health Care,Biotechnology
+PayPal,PYPL,Financials,Transaction & Payment Processing Services
+Baker Hughes,BKR,Energy,Oil & Gas Equipment & Services
+Diamondback Energy,FANG,Energy,Oil & Gas Exploration & Production
+Coca-Cola Europacific Partners,CCEP,Consumer Staples,Soft Drinks & Non-alcoholic Beverages
+Costco,COST,Consumer Staples,Consumer Staples Merchandise Retail
+Dollar Tree,DLTR,Consumer Staples,Consumer Staples Merchandise Retail
+Keurig Dr Pepper,KDP,Consumer Staples,Soft Drinks & Non-alcoholic Beverages
+Kraft Heinz,KHC,Consumer Staples,Packaged Foods & Meats
+Mondelēz International,MDLZ,Consumer Staples,Packaged Foods & Meats
+Monster Beverage,MNST,Consumer Staples,Soft Drinks & Non-alcoholic Beverages
+PepsiCo,PEP,Consumer Staples,Soft Drinks & Non-alcoholic Beverages
+Walgreens Boots Alliance,WBA,Consumer Staples,Drug Retail
+Airbnb,ABNB,Consumer Discretionary,"Hotels, Resorts & Cruise Lines"
+Amazon,AMZN,Consumer Discretionary,Broadline Retail
+Booking Holdings,BKNG,Consumer Discretionary,"Hotels, Resorts & Cruise Lines"
+DoorDash,DASH,Consumer Discretionary,Specialized Consumer Services
+Lululemon,LULU,Consumer Discretionary,"Apparel, Accessories & Luxury Goods"
+Marriott International,MAR,Consumer Discretionary,"Hotels, Resorts & Cruise Lines"
+MercadoLibre,MELI,Consumer Discretionary,Broadline Retail
+O'Reilly Automotive,ORLY,Consumer Discretionary,Automotive Retail
+PDD Holdings,PDD,Consumer Discretionary,Broadline Retail
+Ross Stores,ROST,Consumer Discretionary,Apparel Retail
+Starbucks,SBUX,Consumer Discretionary,Restaurants
+"Tesla, Inc.",TSLA,Consumer Discretionary,Automobile Manufacturers
+Alphabet Inc. (Class A),GOOGL,Communication Services,Interactive Media & Services
+Alphabet Inc. (Class C),GOOG,Communication Services,Interactive Media & Services
+Charter Communications,CHTR,Communication Services,Cable & Satellite
+Comcast,CMCSA,Communication Services,Cable & Satellite
+Electronic Arts,EA,Communication Services,Interactive Home Entertainment
+Meta Platforms,META,Communication Services,Interactive Media & Services
+Netflix,NFLX,Communication Services,Movies & Entertainment
+Sirius XM,SIRI,Communication Services,Broadcasting
+Take-Two Interactive,TTWO,Communication Services,Interactive Home Entertainment
+T-Mobile US,TMUS,Communication Services,Wireless Telecommunication Services
+The Trade Desk,TTD,Communication Services,Advertising
+Warner Bros. Discovery,WBD,Communication Services,Broadcasting
