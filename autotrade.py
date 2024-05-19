@@ -286,6 +286,18 @@ class autotrade:
         self.ticker_sector_dict_1 = dict(zip(self.nasdaq_100_df['Ticker'], self.nasdaq_100_df['GISC Sector']))
         self.ticker_sector_dict_2 = dict(zip(self.nasdaq_100_df['Ticker'], self.nasdaq_100_df['GISC Sub-Industry']))
     @property
+    def company_ticker_text(self):
+        company_ticker_text = ', '.join(self.company_ticker_list)
+        company_ticker_text = company_ticker_text.strip()
+        company_ticker_text = " ".join(company_ticker_text.split())
+        return company_ticker_text
+    @property
+    def company_ticker_list(self):
+        company_ticker_list = []
+        for index, row in self.nasdaq_100_df.iterrows():
+            company_ticker_list.append(f"{row['Company']} ({row['Ticker']})")
+        return company_ticker_list
+    @property
     def ticker_company(self):
         return self.ticker_company_dict[self.ticker]   
     @property
@@ -995,7 +1007,7 @@ class autotrade:
         self.board_member_no = 10
         # self.current_meeting_date
         system_instructions = f"""
-        **Google Gemini:** You have been appointed as the official secretary for the Board of Directors' meeting of The Google Gemini Investment Fund. The Fund strategically employs both long and short positions in a selection of stocks within the NASDAQ 100,  to capitalize on market fluctuations, profiting from both upward and downward movements in stock prices. This astute strategy enables the Fund to maximize profits while skillfully navigating the volatile stock market. The Board of Directors comprises 10 stakeholders who collectively guide the Fund's strategic decisions and financial initiatives.
+        **Google Gemini:** You have been appointed as the official secretary for The Gemini Candlestick Investment Fund's Board of Directors meeting. The Fund strategically employs both long and short positions in a selection of stocks within the NASDAQ 100,  to capitalize on market fluctuations, profiting from both upward and downward movements in stock prices. This astute strategy enables the Fund to maximize profits while skillfully navigating the volatile stock market. The Board of Directors comprises 10 stakeholders who collectively guide the Fund's strategic decisions and financial initiatives.
 
         **Target User Persona:** This application is designed for financial analysts, portfolio managers, and individuals interested in understanding how technical analysis and expert opinions can be integrated to make investment decisions.
 
@@ -1004,7 +1016,7 @@ class autotrade:
         **Impact:** 
         * **Ease of Use and Accessibility:**  The meeting minutes format provides a readily digestible and accessible summary for all users, regardless of technical expertise. 
         * **Environmental Sustainability:** While not directly addressing environmental concerns, the application promotes financial well-being, which can indirectly contribute to sustainable choices.
-        * **Improving People's Lives:** By providing insightful market analysis, the application empowers users to make informed financial decisions, potentially improving their financial well-being. 
+        * **Improving People's Lives:** By providing insightful market analysis, the application empowers users to make informed financial decisions, potentially improving their financial well-being.
 
         **Remarkability:**
         * **Surprising to LLM Experts:**  The application demonstrates a novel approach to simulating expert discussion and decision-making in the context of financial markets. 
@@ -1034,7 +1046,7 @@ class autotrade:
 
         The Board of Directors will be analyzing the following 100 stocks:
 
-        AEP, CEG, EXC, XEL, CSGP, LIN, ADBE, AMD, ADI, ANSS, AAPL, AMAT, ASML, TEAM, ADSK, AVGO, CDNS, CDW, CSCO, CTSH, CRWD, DDOG, FTNT, GFS, INTC, INTU, KLAC, LRCX, MRVL, MCHP, MU, MSFT, MDB, NVDA, NXPI, ON, PANW, QCOM, ROP, SNPS, TXN, WDAY, ZS, ADP, CTAS, CPRT, CSX, FAST, HON, ODFL, PCAR, PAYX, VRSK, AMGN, AZN, BIIB, DXCM, GEHC, GILD, IDXX, ILMN, ISRG, MRNA, REGN, VRTX, PYPL, BKR, FANG, CCEP, COST, DLTR, KDP, KHC, MDLZ, MNST, PEP, WBA, ABNB, AMZN, BKNG, DASH, LULU, MAR, MELI, ORLY, PDD, ROST, SBUX, TSLA, GOOGL, GOOG, CHTR, CMCSA, EA, META, NFLX, SIRI, TTWO, TMUS, TTD, WBD.
+        {self.company_ticker_text}.
 
         **Data:**
 
