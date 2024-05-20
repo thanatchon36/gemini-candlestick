@@ -28,6 +28,7 @@ import re
 import yfinance as yf
 from tqdm import tqdm
 import random
+from pytickersymbols import PyTickerSymbols
 def reset(df):
     cols = df.columns
     return df.reset_index()[cols]
@@ -280,11 +281,6 @@ class autotrade:
         self.model = model
         self.candlestick_chart_no = 168
         self.future_cloud_no = 26
-        self.nasdaq_100_df = pd.read_csv('data/csv/nasdaq100.csv')
-        self.nasdaq_100_tickers_list = list(self.nasdaq_100_df['Ticker'].values)
-        self.ticker_company_dict = dict(zip(self.nasdaq_100_df['Ticker'], self.nasdaq_100_df['Company']))
-        self.ticker_sector_dict_1 = dict(zip(self.nasdaq_100_df['Ticker'], self.nasdaq_100_df['GISC Sector']))
-        self.ticker_sector_dict_2 = dict(zip(self.nasdaq_100_df['Ticker'], self.nasdaq_100_df['GISC Sub-Industry']))
     @property
     def company_ticker_text(self):
         company_ticker_text = ', '.join(self.company_ticker_list)
@@ -294,19 +290,16 @@ class autotrade:
     @property
     def company_ticker_list(self):
         company_ticker_list = []
-        for index, row in self.nasdaq_100_df.iterrows():
-            company_ticker_list.append(f"{row['Company']} ({row['Ticker']})")
+        for index, row in self.sp100_nasdaq100_df.iterrows():
+            company_ticker_list.append(f"{row['name']} ({row['symbol']})")
         random.shuffle(company_ticker_list)
         return company_ticker_list
     @property
     def ticker_company(self):
-        return self.ticker_company_dict[self.ticker]   
+        return self.ticker_company_dict[self.ticker]
     @property
-    def ticker_sector_1(self):
-        return self.ticker_sector_dict_1[self.ticker]
-    @property
-    def ticker_sector_2(self):
-        return self.ticker_sector_dict_2[self.ticker]   
+    def ticker_sector(self):
+        return self.ticker_sector_dict[self.ticker]
     @property
     def gc_collect_time(self):
         return self.gc_collect_time_dict[self.ori_freq_interval]
@@ -316,15 +309,39 @@ class autotrade:
     @property
     def graph_width(self):
         return self.graph_width_dict[self.freq_interval]
-    @property
-    def freq_second(self):
-        return self.freq_dict[self.ori_freq_interval]
-    @property
-    def freq_text(self):
-        return self.freq_text_dict[self.ori_freq_interval]
-    @property
-    def exit_stick_no(self):
-        return self.exit_stick_no_dict[self.freq_interval]
+    def prep_sp100_nasdaq100_dataset(self):
+        stock_data = PyTickerSymbols()
+        sp100_df = pd.DataFrame(list(stock_data.get_stocks_by_index('S&P 100')))
+        nasdaq100_df = pd.DataFrame(list(stock_data.get_stocks_by_index('NASDAQ 100')))
+        sp100_nasdaq100_df = reset(pd.concat([sp100_df, nasdaq100_df]))
+        sp100_nasdaq100_df = sp100_nasdaq100_df.groupby('symbol').first().reset_index()
+        candlestick_df = yf.download(list(sp100_nasdaq100_df['symbol'].values), period=f'{self.candlestick_chart_no*2}d', interval="1d")
+        date_list = [str(each)[:10] for each in list(candlestick_df['Close'].index)]
+        self.sp100_nasdaq100_df_dict = {}
+        for each_ticker in tqdm(sp100_nasdaq100_df['symbol'].values):
+            temp_dict = {'Date': [],
+                        'Open': [],
+                        'High': [],
+                        'Low': [],
+                        'Close': [],
+                        'Volume': [],
+                        }
+            temp_dict['Date'].extend(date_list)
+            temp_dict['Open'].extend(list(candlestick_df['Open'][each_ticker].values))
+            temp_dict['High'].extend(list(candlestick_df['High'][each_ticker].values))
+            temp_dict['Low'].extend(list(candlestick_df['Low'][each_ticker].values))
+            temp_dict['Close'].extend(list(candlestick_df['Close'][each_ticker].values))
+            temp_dict['Volume'].extend(list(candlestick_df['Volume'][each_ticker].values))
+            temp_df = pd.DataFrame(temp_dict)
+            if pd.notna(temp_df['Close'].values[0]):
+                self.sp100_nasdaq100_df_dict[each_ticker] = temp_df
+        sp100_nasdaq100_df = sp100_nasdaq100_df[sp100_nasdaq100_df['symbol'].isin(list(self.sp100_nasdaq100_df_dict.keys()))]   
+        self.sp100_nasdaq100_df = reset(sp100_nasdaq100_df)
+        self.sp100_nasdaq100_df['indices'] = self.sp100_nasdaq100_df['indices'].apply(lambda x: ';'.join(x))
+        self.sp100_nasdaq100_df['industries'] = self.sp100_nasdaq100_df['industries'].apply(lambda x: ';'.join(x))
+        self.sp100_nasdaq100_df.to_csv('data/csv/sp100_nasdaq100.csv', index = False)
+        self.ticker_sector_dict = dict(zip(self.sp100_nasdaq100_df['symbol'], self.sp100_nasdaq100_df['industries']))
+        self.ticker_company_dict = dict(zip(self.sp100_nasdaq100_df['symbol'], self.sp100_nasdaq100_df['name']))
     def lineNotify(self, msg, image_path = ""):
         try:
             url = 'https://notify-api.line.me/api/notify'
@@ -1178,23 +1195,23 @@ class autotrade:
         ]
         start_time = time.time()
         try:
-            # for each_ticker in tqdm(self.nasdaq_100_tickers_list[:30]):
+            # for each_ticker in tqdm(self.nasdaq_100_tickers_list[:102]):
             #     self.ticker = each_ticker
             #     self.get_candlestick_image()
 
-            prompt_parts = []
+            self.prompt_parts = []
             for each_ticker in tqdm(self.nasdaq_100_tickers_list[:102]):
                 self.ticker = each_ticker
                 temp_file = genai.upload_file(path=f"data/png/{each_ticker}.png", display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)')
-                prompt_parts.append(temp_file)
-            random.shuffle(prompt_parts)
+                self.prompt_parts.append(temp_file)
+            random.shuffle(self.prompt_parts)
             model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
                                         generation_config=generation_config,
                                         system_instruction=self.get_system_instructions_3(),
                                         safety_settings=safety_settings)
-            response = model.generate_content(prompt_parts)
+            response = model.generate_content(self.prompt_parts)
 
-            for each_prompt_part in tqdm(prompt_parts):
+            for each_prompt_part in tqdm(self.prompt_parts):
                 genai.delete_file(each_prompt_part.name)
 
             generative_text = str(response.text)
@@ -1212,7 +1229,7 @@ class autotrade:
             execution_time = time.time() - start_time
             execution_time = round(execution_time, 2)
 
-            for each_prompt_part in prompt_parts:
+            for each_prompt_part in self.prompt_parts:
                 each_prompt_part = None
                 del each_prompt_part
             model = None
@@ -1234,7 +1251,7 @@ class autotrade:
             except:
                 pass
             try:
-                for each_prompt_part in tqdm(prompt_parts):
+                for each_prompt_part in tqdm(self.prompt_parts):
                     genai.delete_file(each_prompt_part.name)
             except:
                 pass
