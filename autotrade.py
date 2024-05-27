@@ -1,177 +1,44 @@
-import sys, os
+import os
+import sys
 import time
-import requests
-import datetime
-import os.path
-from os import path
+import json
 import hmac
 import hashlib
-from urllib.parse import urlencode
+import base64
+import random
+import datetime
+import requests
 import numpy as np
 import pandas as pd
-from itertools import accumulate 
+import talib
+import re
+import yfinance as yf
+import gc
+from urllib.parse import urlencode
+from pathlib import Path
+from PIL import Image
+from tqdm import tqdm
+from pytickersymbols import PyTickerSymbols
+import google.generativeai as genai
+
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 plt.rc('figure', figsize = (15, 12), dpi = 300)
-from mplfinance.original_flavor import candlestick_ohlc
-import matplotlib.dates as mdates
 from matplotlib.ticker import FuncFormatter
-from pathlib import Path
-import base64
-import google.generativeai as genai
-import json
-from PIL import Image
-import gc
-import talib
-import re
-import yfinance as yf
-from tqdm import tqdm
-import random
-from pytickersymbols import PyTickerSymbols
+import matplotlib.dates as mdates
+from mplfinance.original_flavor import candlestick_ohlc
+from matplotlib.ticker import FixedLocator
+from matplotlib.dates import DayLocator, date2num, num2date
+import pdfkit
+from pdf2image import convert_from_path
+from img2pdf import convert
+from PyPDF2 import PdfMerger
+
 def reset(df):
     cols = df.columns
     return df.reset_index()[cols]
-def modification_date(filename):
-    t = os.path.getmtime(filename)
-    return datetime.datetime.fromtimestamp(t)
-def get_file_age(filename):
-    now = datetime.datetime.now()
-    return (now - modification_date(filename)).seconds
-def round_down(value, decimals):
-    value = value + 0.0000000001
-    int_num = str('{0:.10f}'.format(value)).split('.')[0]
-    float_num = str('{0:.10f}'.format(value)).split('.')[1][:decimals]
-    return float(int_num + '.' + float_num)
-def label_inverse_flag(txt):
-    if txt == 'SHORT':
-        return 'LONG'
-    else:
-        return 'SHORT'
-def calc_MDD(networth):
-    df = pd.Series(networth, name="nw").to_frame()
-    max_peaks_idx = df.nw.expanding(min_periods=1).apply(lambda x: x.argmax()).fillna(0).astype(int)
-    df['max_peaks_idx'] = pd.Series(max_peaks_idx).to_frame()
-    nw_peaks = pd.Series(df.nw.iloc[max_peaks_idx.values].values, index=df.nw.index)
-    df['dd'] = ((df.nw-nw_peaks)/nw_peaks)
-    df['mdd'] = df.groupby('max_peaks_idx').dd.apply(lambda x: x.expanding(min_periods=1).apply(lambda y: y.min())).fillna(0)
-    return df
-def get_con_G(x):
-    try:
-        return len(x.split('R')[-1])
-    except:
-        return np.nan
-def get_con_R(x):
-    try:
-        return len(x.split('G')[-1])
-    except:
-        return np.nan
-def human_format(num):
-    magnitude = 0
-    while abs(num) >= 1000:
-        magnitude += 1
-        num /= 1000.0
-    # add more suffixes if you need them
-    return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
-def convert_to_utc_time(num):
-    timestamp = num / 1000  # Convert milliseconds to seconds
-    utc_time = datetime.datetime.utcfromtimestamp(timestamp)
-    return utc_time
-def add(a, b):
-    return a + b
-def get_color_list(values):
-    # Define dark and light shades of green and red
-    dark_green = '#26A69A'
-    light_green = '#B2DFDB'
-    light_red = '#FFCDD2'
-    dark_red = '#FF5252'
-    colors = []
-    previous_value = values[0]
-    for value in values:
-        if value < 0:
-            if value < previous_value:
-                colors.append(dark_red)
-            else:
-                colors.append(light_red)
-        elif value > 0:
-            if value > previous_value:
-                colors.append(dark_green)
-            else:
-                colors.append(light_green)
-        else:
-            colors.append(light_green)  # Adjust for zero values as needed
-        previous_value = value
-    return colors
-def millions_formatter(x, pos):
-    num = x
-    magnitude = 0
-    while abs(num) >= 1000:
-        magnitude += 1
-        num /= 1000.0
-    # add more suffixes if you need them
-    return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
-def comma_formatter(x, pos):
-    return "{:,}".format(x)
-def comma_formatter_2(x, pos):
-    return "{:,.2f}".format(x)
-def title_formatter(x):
-    return "{:.2f}".format(x)
-def color_title(ax, labels, colors, textprops={'size': 15}, y=0.96,
-               precision=10**-2):
-    """Creates a left-aligned title with multiple colors. Don't change axes limits afterwards."""
-    plt.gcf().canvas.draw()
-    transform = ax.transAxes  # use axes coords
-    # Initial params - start from the left (x=0)
-    x_pos = 0  
-    # For text objects
-    text = dict()
-    for label, col in zip(labels, colors):
-        text[label] = ax.text(x_pos, y, label,
-                              transform=transform,
-                              ha='left',  # Left alignment
-                              color=col,
-                              **textprops)
-        # Update x_pos for the next label
-        x_pos = text[label].get_window_extent().transformed(transform.inverted()).x1
-def extract_json(text_response):
-    # This pattern matches a string that starts with '{' and ends with '}'
-    pattern = r'\{[^{}]*\}'
-    matches = re.finditer(pattern, text_response)
-    json_objects = []
-    for match in matches:
-        json_str = match.group(0)
-        try:
-            # Validate if the extracted string is valid JSON
-            json_obj = json.loads(json_str)
-            json_objects.append(json_obj)
-        except json.JSONDecodeError:
-            # Extend the search for nested structures
-            extended_json_str = extend_search(text_response, match.span())
-            try:
-                json_obj = json.loads(extended_json_str)
-                json_objects.append(json_obj)
-            except json.JSONDecodeError:
-                # Handle cases where the extraction is not valid JSON
-                continue
-    if json_objects:
-        return json_objects
-    else:
-        return None  # Or handle this case as you prefer
-def extend_search(text, span):
-    # Extend the search to try to capture nested structures
-    start, end = span
-    nest_count = 0
-    for i in range(start, len(text)):
-        if text[i] == '{':
-            nest_count += 1
-        elif text[i] == '}':
-            nest_count -= 1
-            if nest_count == 0:
-                return text[start:i+1]
-    return text[start:end]
-def get_date_month_text(date_str):
-    date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
-    return date_obj.strftime("%d %b")
+
 ####
 #### Start Class Here:
 ####
@@ -282,6 +149,33 @@ class autotrade:
         self.candlestick_chart_no = 168
         self.future_cloud_no = 26
     @property
+    def example_analysis_text(self):
+        self.example_analysis_text_list = [f'John Bollinger, {self.analysis_verb} the Bollinger Bands of **{self.company_ticker_list[0]}**,...',
+                                    f'Goichi Hosoda, {self.analysis_verb} the Ichimoku Cloud for **{self.company_ticker_list[0]}**,...',
+                                    f'Marc Chaikin, {self.analysis_verb} **{self.company_ticker_list[0]}**,...',
+                                    f'J. Welles Wilder, {self.analysis_verb} the RSI of **{self.company_ticker_list[0]}**,...',
+                                    f'Ralph Nelson Elliott, {self.analysis_verb} the price action of **{self.company_ticker_list[0]}**,...',
+                                    f'Munehisa Homma, {self.analysis_verb} the candlestick patterns of **{self.company_ticker_list[0]}**,...',
+                                    f'Leonardo Pisano Fibonacci, {self.analysis_verb} **{self.company_ticker_list[0]}**,...',
+                                    f'Gerald Appel, {self.analysis_verb} the MACD of **{self.company_ticker_list[0]}**,...',
+                                    f'George Lane, {self.analysis_verb} the stochastic oscillator for **{self.company_ticker_list[0]}**,...',
+                                    f'Joseph Granville, {self.analysis_verb} **{self.company_ticker_list[0]}**,...',
+                                    ]
+        random.shuffle(self.example_analysis_text_list)
+        return self.example_analysis_text_list[0]
+    @property
+    def analysis_verb(self):
+        self.analysis_verb_list = ['examining',
+                                    'reviewing',
+                                    'analyzing',
+                                    'assessing',
+                                    'evaluating',
+                                    'scrutinizing',
+                                    'observing',
+                                    ]
+        random.shuffle(self.analysis_verb_list)
+        return self.analysis_verb_list[0]
+    @property
     def company_ticker_text(self):
         company_ticker_text = ', '.join(self.company_ticker_list)
         company_ticker_text = company_ticker_text.strip()
@@ -301,11 +195,11 @@ class autotrade:
     def ticker_sector(self):
         return self.ticker_sector_dict[self.ticker]
     @property
+    def ticker_list(self):
+        return list(self.sp100_nasdaq100_df['symbol'].values)
+    @property
     def gc_collect_time(self):
         return self.gc_collect_time_dict[self.ori_freq_interval]
-    @property
-    def x_date_interval(self):
-        return self.x_date_interval_dict[self.freq_interval]
     @property
     def graph_width(self):
         return self.graph_width_dict[self.freq_interval]
@@ -342,29 +236,7 @@ class autotrade:
         self.sp100_nasdaq100_df.to_csv('data/csv/sp100_nasdaq100.csv', index = False)
         self.ticker_sector_dict = dict(zip(self.sp100_nasdaq100_df['symbol'], self.sp100_nasdaq100_df['industries']))
         self.ticker_company_dict = dict(zip(self.sp100_nasdaq100_df['symbol'], self.sp100_nasdaq100_df['name']))
-    def lineNotify(self, msg, image_path = ""):
-        try:
-            url = 'https://notify-api.line.me/api/notify'
-            token = self.line_api_key
-            headers = {'Authorization': 'Bearer ' + token}
-            if image_path == "":
-                payload = {'message': f"{self.ws_name}: {msg}"}
-                requests.post(url, headers=headers, data=payload)
-            else:
-                with open(image_path, 'rb') as image_file:
-                    image_data = image_file.read()
-                    payload = {'message': f"{self.ws_name}: {msg}"}
-                    files = {'imageFile': image_data}
-                    requests.post(url, headers=headers, data=payload, files=files)
-                    image_file = None
-                    image_data = None
-                    payload = None
-                    files = None
-                    del image_file, image_data, payload, files
-                    gc.collect()
-        except:
-            self.docker_print('Error: lineNotify')
-            pass
+    # self.docker_print('Error !')
     def docker_print(self, txt):
         print(txt, flush=True)
     def print_response_params(self):
@@ -408,15 +280,6 @@ class autotrade:
         params = {'url': url, 'params': {}}
         response = self.dispatch_request(http_method)(**params)
         return response.json()
-    # used for sending public data request
-    def send_public_request(self, url_path, payload={}):
-        query_string = urlencode(payload, True)
-        url = self.BASE_URL + url_path
-        if query_string:
-            url = url + '?' + query_string
-        # self.docker_print("{}".format(url))
-        response = self.dispatch_request('GET')(url=url)
-        return response.json()
     def ping_binance(self):
         server_time_df = pd.DataFrame([0])
         self.params = {
@@ -431,311 +294,8 @@ class autotrade:
         entry_ts = server_time_df['next'].values[-1]
         entry_ts = str(entry_ts)[:10] + ' ' + str(entry_ts)[11:19]
         return entry_ts
-    def ping_past_binance(self):
-        server_time_df = pd.DataFrame([0])
-        self.params = {
-            'symbol': 'BTCUSDT',
-            'interval': self.freq_interval,
-            'limit': '2',
-        }
-        self.response = self.send_signed_request('GET', '/fapi/v1/klines', self.params)
-        server_time_df['next'] = self.response[0][6]
-        server_time_df['next']=server_time_df['next'].apply(lambda d: datetime.datetime.fromtimestamp(int(d)/1000).strftime('%Y-%m-%d %H:%M:%S'))
-        server_time_df['next'] = pd.to_datetime(server_time_df['next'], format='%Y-%m-%d') + pd.Timedelta(seconds=1)
-        entry_ts = server_time_df['next'].values[-1]
-        entry_ts = str(entry_ts)[:10] + ' ' + str(entry_ts)[11:19]
-        return entry_ts
-    def ping_past_ori_binance(self):
-        server_time_df = pd.DataFrame([0])
-        self.params = {
-            'symbol': 'BTCUSDT',
-            'interval': self.freq_interval,
-            'limit': '2',
-        }
-        self.response = self.send_signed_request('GET', '/fapi/v1/klines', self.params)
-        return self.response[0][6] + 1
-    def clear_open_order(self):
-        try:
-            self.response = self.send_signed_request('GET', '/fapi/v1/openOrders')
-            temp_open_order_list = self.response
-            if len(temp_open_order_list) > 0:
-                for each in list(set(pd.DataFrame(temp_open_order_list)['symbol'].values)):
-                    self.params = {
-                        'symbol': each
-                    }
-                    self.send_signed_request('DELETE', '/fapi/v1/allOpenOrders', self.params)
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-            self.lineNotify(temp_msg)
-            self.print_response_params()
-        finally:
-            pass
-    def clear_position(self, extra_msg = ""):
-        try:
-            self.update_temp_pos_df()
-            temp_hold_minus_symbol_list = self.temp_pos_df[self.temp_pos_df['positionAmt'] < 0]['symbol'].tolist()
-            temp_hold_plus_symbol_list = self.temp_pos_df[self.temp_pos_df['positionAmt'] > 0]['symbol'].tolist()
-
-            if len(temp_hold_minus_symbol_list) == 0 and len(temp_hold_plus_symbol_list) == 0:
-                temp_msg = 'Force Close: Position Closed !'
-                if extra_msg != "":
-                    temp_msg = temp_msg + " " + extra_msg
-                self.docker_print(temp_msg)
-                self.lineNotify(temp_msg)
-
-            for each in temp_hold_minus_symbol_list:
-                temp_quantity = abs(float(self.temp_pos_df[self.temp_pos_df['symbol'] == each]['positionAmt'].values[0])) / self.batchOrders_no
-                quantityPrecision = self.exchange_df[self.exchange_df['symbol'] == each]['quantityPrecision'].values[0]
-                self.each_params = {
-                    'symbol': each,
-                    'side': 'BUY',
-                    'type': 'MARKET',
-                    'quantity': str(round(temp_quantity, int(quantityPrecision))),
-                }
-                self.params = {
-                    "batchOrders": []
-                }
-
-                if self.batchOrders_no == 1:
-                    self.params = {
-                        "batchOrders": [self.each_params]
-                    }
-                    self.response = self.send_signed_request("POST",'/fapi/v1/batchOrders', self.params)
-                else:
-                    self.params = {
-                        "batchOrders": [self.each_params, self.each_params, self.each_params, self.each_params, self.each_params]
-                    }
-                    for batch_i in range(int(self.batchOrders_no / 5)):
-                        self.response = self.send_signed_request("POST",'/fapi/v1/batchOrders', self.params)
-
-                entryPrice = self.temp_pos_df[self.temp_pos_df['symbol'] == each]['entryPrice'].values[0]
-                markPrice = self.temp_pos_df[self.temp_pos_df['symbol'] == each]['markPrice'].values[0]
-                positionAmt = self.temp_pos_df[self.temp_pos_df['symbol'] == each]['positionAmt'].values[0]
-                leverage_no = self.temp_pos_df[self.temp_pos_df['symbol'] == each]['leverage'].values[0]
-
-                if positionAmt > 0:
-                    profit_usd = (markPrice - entryPrice) * 100 / entryPrice
-                elif positionAmt < 0:
-                    profit_usd = -(markPrice - entryPrice) * 100 / entryPrice
-
-                temp_msg = 'Force Close: Symbol: {} Realized Profit: {}/{} entryPrice: {} markPrice: {} Position Closed !'.format(each, 
-                                                                        round(profit_usd, 2),
-                                                                        round(profit_usd * leverage_no, 2),
-                                                                        round(entryPrice, 4),
-                                                                        round(markPrice, 4),
-                )
-                if extra_msg != "":
-                    temp_msg = temp_msg + " " + extra_msg
-                self.docker_print(temp_msg)
-                self.lineNotify(temp_msg)
-
-            for each in temp_hold_plus_symbol_list:
-                temp_quantity = abs(float(self.temp_pos_df[self.temp_pos_df['symbol'] == each]['positionAmt'].values[0])) / self.batchOrders_no
-                quantityPrecision = self.exchange_df[self.exchange_df['symbol'] == each]['quantityPrecision'].values[0]
-                self.each_params = {
-                    'symbol': each,
-                    'side': 'SELL',
-                    'type': 'MARKET',
-                    'quantity': str(round(temp_quantity, int(quantityPrecision))),
-                }
-                self.params = {
-                    "batchOrders": []
-                }
-
-                if self.batchOrders_no == 1:
-                    self.params = {
-                        "batchOrders": [self.each_params]
-                    }
-                    self.response = self.send_signed_request("POST",'/fapi/v1/batchOrders', self.params)
-                else:
-                    self.params = {
-                        "batchOrders": [self.each_params, self.each_params, self.each_params, self.each_params, self.each_params]
-                    }
-                    for batch_i in range(int(self.batchOrders_no / 5)):
-                        self.response = self.send_signed_request("POST",'/fapi/v1/batchOrders', self.params)
-
-                entryPrice = self.temp_pos_df[self.temp_pos_df['symbol'] == each]['entryPrice'].values[0]
-                markPrice = self.temp_pos_df[self.temp_pos_df['symbol'] == each]['markPrice'].values[0]
-                positionAmt = self.temp_pos_df[self.temp_pos_df['symbol'] == each]['positionAmt'].values[0]
-                leverage_no = self.temp_pos_df[self.temp_pos_df['symbol'] == each]['leverage'].values[0]
-                
-                if positionAmt > 0:
-                    profit_usd = (markPrice - entryPrice) * 100 / entryPrice
-                elif positionAmt < 0:
-                    profit_usd = -(markPrice - entryPrice) * 100 / entryPrice
-
-                temp_msg = 'Force Close: Symbol: {} Realized Profit: {}/{} entryPrice: {} markPrice: {} Position Closed !'.format(each, 
-                                                                        round(profit_usd, 2),
-                                                                        round(profit_usd * leverage_no, 2),
-                                                                        round(entryPrice, 4),
-                                                                        round(markPrice, 4),
-                )
-                if extra_msg != "":
-                    temp_msg = temp_msg + " " + extra_msg
-                self.docker_print(temp_msg)
-                self.lineNotify(temp_msg)
-
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-            self.lineNotify(temp_msg)
-            self.print_response_params()
-        finally:
-            pass
-
-    def clear_single_position(self):
-        try:
-            self.update_temp_pos_df()
-            temp_hold_minus_symbol_list = self.temp_pos_df[self.temp_pos_df['positionAmt'] < 0]['symbol'].tolist()
-            temp_hold_plus_symbol_list = self.temp_pos_df[self.temp_pos_df['positionAmt'] > 0]['symbol'].tolist()
-            for each in temp_hold_minus_symbol_list:
-                temp_quantity = abs(float(self.temp_pos_df[self.temp_pos_df['symbol'] == each]['positionAmt'].values[0]))
-                self.params = {
-                    'symbol': each,
-                    'side': 'BUY',
-                    'type': 'MARKET',
-                    'quantity': str(temp_quantity),
-                }
-                self.send_signed_request('POST', '/fapi/v1/order', self.params)
-            for each in temp_hold_plus_symbol_list:
-                temp_quantity = abs(float(self.temp_pos_df[self.temp_pos_df['symbol'] == each]['positionAmt'].values[0]))   
-                self.params = {
-                    'symbol': each,
-                    'side': 'SELL',
-                    'type': 'MARKET',
-                    'quantity': str(temp_quantity),
-                }
-                self.send_signed_request('POST', '/fapi/v1/order', self.params)
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-            self.lineNotify(temp_msg)
-            self.print_response_params()
-        finally:
-            pass
-
-    def set_leverage_to_x(self):
-        try:     
-            try:             
-                self.params = {
-                    'symbol': self.symbol,
-                    'leverage': int(self.temp_leverage_no),
-                }
-                self.response = self.send_signed_request('POST', '/fapi/v1/leverage', self.params)
-                self.maxNotionalValue = float(self.response['maxNotionalValue'])
-                self.docker_print('self.response: {}'.format(self.response))
-            except Exception as e:
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno) + f" self.response: {self.response} symbol: {self.symbol}"
-                self.lineNotify(temp_msg)
-                self.docker_print(temp_msg)
-                self.docker_print('Leverage setting Error: {}'.format(self.symbol))
-                self.print_response_params()
-            finally:
-                pass
-            # try:
-            #     self.params = {
-            #         'symbol': self.symbol,
-            #         'marginType': 'ISOLATED',
-            #     }
-            #     self.response = self.send_signed_request('POST', '/fapi/v1/marginType', self.params)
-            #     self.docker_print('self.response: {}'.format(self.response))
-            # except Exception as e:
-            #     exc_type, exc_obj, exc_tb = sys.exc_info()
-            #     fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            #     temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            #     self.docker_print(temp_msg)
-            #     self.docker_print('Margin setting Error: {}'.format(self.symbol))
-            #     self.print_response_params()
-            # finally:
-            #     pass
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-            self.lineNotify(temp_msg)
-            self.print_response_params()
-        finally:
-            pass
-    def set_leverage_to_1(self):
-        try:
-            self.update_temp_pos_df()
-            for each in self.temp_pos_df[self.temp_pos_df['leverage'] != '1']['symbol'].tolist():
-                try:
-                    self.params = {
-                        'symbol': each,
-                        'leverage': 1,
-                    }
-                    self.send_signed_request('POST', '/fapi/v1/leverage', self.params)
-                    self.docker_print('Set Leverage to 1 Success: {}'.format(each))
-                except Exception as e:
-                    exc_type, exc_obj, exc_tb = sys.exc_info()
-                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                    temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-                    self.docker_print(temp_msg)
-                    self.docker_print('Leverage setting Error: {}'.format(each))
-                    self.print_response_params()
-                finally:
-                    pass
-            for each in self.temp_pos_df[self.temp_pos_df['marginType'] != 'isolated']['symbol'].tolist():  
-                try:
-                    self.params = {
-                        'symbol': each,
-                        'marginType': 'ISOLATED',
-                    }
-                    self.send_signed_request('POST', '/fapi/v1/marginType', self.params)
-                    self.docker_print('Set Margin to ISOLATED Success: {}'.format(each))
-                except Exception as e:
-                    exc_type, exc_obj, exc_tb = sys.exc_info()
-                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                    temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-                    self.docker_print(temp_msg)
-                    self.docker_print('Margin setting Error: {}'.format(each))
-                    self.print_response_params()
-                finally:
-                    pass
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-            self.lineNotify(temp_msg)
-            self.print_response_params()
-        finally:
-            pass
-    def get_current_time_interval(self):
-        return self.ping_past_binance()
-    def get_next_current_time_interval(self):
-        return self.ping_binance()
-    def get_next_current_time_interval_x(self, x):
-        server_time_df = pd.DataFrame([0])
-        self.params = {
-            'symbol': 'BTCUSDT',
-            'interval': str(x),
-            'limit': '1',
-        }
-        self.response = self.send_signed_request('GET', '/fapi/v1/klines', self.params)
-        server_time_df['next'] = self.response[0][6]
-        server_time_df['next']=server_time_df['next'].apply(lambda d: datetime.datetime.fromtimestamp(int(d)/1000).strftime('%Y-%m-%d %H:%M:%S'))
-        server_time_df['next'] = pd.to_datetime(server_time_df['next'], format='%Y-%m-%d') + pd.Timedelta(seconds=1)
-        entry_ts = server_time_df['next'].values[-1]
-        entry_ts = str(entry_ts)[:10] + ' ' + str(entry_ts)[11:19]
-        return entry_ts
-    def get_next_current_time_interval_30m(self):
-        return self.get_next_current_time_interval_x('30m')
-    def get_next_current_time_interval_1h(self):
-        return self.get_next_current_time_interval_x('1h')
     def update_next_current_time_interval(self):
-        self.next_current_time_interval = self.get_next_current_time_interval()
+        self.next_current_time_interval = self.ping_binance()
         temp_df = pd.DataFrame([self.next_current_time_interval])
         temp_df.columns = ['next_current_time_interval']
         self.next_entry_sec = self.get_wait_entry_sec()
@@ -754,306 +314,77 @@ class autotrade:
         dt = server_time_df['diff'].values[0]
         dt_sec = int(str(np.timedelta64(dt, 's')).split(' ')[0])
         return dt_sec 
-    def get_dynamic_budget_per_stick_usdt(self):
-        self.response = self.send_signed_request("GET",'/fapi/v2/balance')
-        bal_df = pd.DataFrame(self.response)
-        total_usdt_asset = float(bal_df[bal_df['asset'] == 'USDT']['balance'].values[0])
-        self.budget_per_stick_usdt = int(total_usdt_asset * self.risk_ratio)
-        return self.budget_per_stick_usdt
-    def get_avail_dynamic_budget_per_stick_usdt(self):
-        self.response = self.send_signed_request("GET",'/fapi/v2/balance')
-        bal_df = pd.DataFrame(self.response)
-        total_usdt_asset = float(bal_df[bal_df['asset'] == 'USDT']['availableBalance'].values[0])
-        self.budget_per_stick_usdt = int(total_usdt_asset * self.risk_ratio)
-        return self.budget_per_stick_usdt
-    def get_dynamic_budget_per_stick_busd(self):
-        self.response = self.send_signed_request("GET",'/fapi/v2/balance')
-        bal_df = pd.DataFrame(self.response)
-        total_usdt_asset = float(bal_df[bal_df['asset'] == 'BUSD']['balance'].values[0])
-        self.budget_per_stick_usdt = int(total_usdt_asset * self.risk_ratio)
-        return self.budget_per_stick_usdt
-    def get_avail_dynamic_budget_per_stick_busd(self):
-        self.response = self.send_signed_request("GET",'/fapi/v2/balance')
-        bal_df = pd.DataFrame(self.response)
-        total_usdt_asset = float(bal_df[bal_df['asset'] == 'BUSD']['availableBalance'].values[0])
-        self.budget_per_stick_usdt = int(total_usdt_asset * self.risk_ratio)
-        return self.budget_per_stick_usdt
-    def get_total_budget_usdt(self):
-        self.response = self.send_signed_request("GET",'/fapi/v2/balance')
-        bal_df = pd.DataFrame(self.response)
-        total_usdt_asset = float(bal_df[bal_df['asset'] == 'USDT']['balance'].values[0])
-        return int(total_usdt_asset)
-    def get_total_budget_busd(self):
-        self.response = self.send_signed_request("GET",'/fapi/v2/balance')
-        bal_df = pd.DataFrame(self.response)
-        total_usdt_asset = float(bal_df[bal_df['asset'] == 'BUSD']['balance'].values[0])
-        return int(total_usdt_asset)
-    def take_position(self, extra_msg = ""):
-        try:
-            self.set_leverage_to_x()
-            each = self.symbol
-            try:
-                if self.symbol[-4:] == 'USDT':
-                    self.budget_per_stick_usdt = self.get_dynamic_budget_per_stick_usdt()
-                    self.leverage_budget_per_stick_usdt = self.budget_per_stick_usdt * self.temp_leverage_no
-                    if self.leverage_budget_per_stick_usdt > self.maxNotionalValue:
-                        self.budget_per_stick_usdt = self.maxNotionalValue * self.risk_ratio
-                if self.position == 'SELL':
-                    temp_type = 'Short Taker'
-                else:
-                    temp_type = 'Long Taker'
+    def get_judge_instructions(self):
+        system_instructions = f"""
+        ## JUDGING ROUND
 
-                temp_quantityPrecision = self.exchange_df[self.exchange_df['symbol'] == each]['quantityPrecision'].values[0]
-                MARKET_LOT_SIZE = [each for each in self.exchange_df[self.exchange_df['symbol'] == each]['filters'].values[0] if each['filterType'] == 'MARKET_LOT_SIZE'][0]
-                self.maxQty = MARKET_LOT_SIZE['maxQty']
-                self.minQty = MARKET_LOT_SIZE['minQty']
+        Sponsor will evaluate each Entrant and their Submission. Your Submission, including Your video and code will be evaluated based on following judging criteria (the “Judging Criteria”), weighted equally:
 
-                self.update_temp_pos_df()
-                self.markPrice = round(self.temp_pos_df[self.temp_pos_df['symbol'] == self.symbol]['markPrice'].values[0], 2)
-                temp_hold_minus_symbol_list = self.temp_pos_df[self.temp_pos_df['positionAmt'] < 0]['symbol'].tolist()
-                temp_hold_plus_symbol_list = self.temp_pos_df[self.temp_pos_df['positionAmt'] > 0]['symbol'].tolist()
-                if len(temp_hold_minus_symbol_list) > 0 or len(temp_hold_plus_symbol_list) > 0:
-                    self.clear_single_position()
+        * Submissions will be evaluated by Google judges who excel in the following five (5) categories as they relate to this challenge: impact, remarkability, creativity, usefulness, and execution. Each criteria will be scored on a scale of 1 (strongly disagree) to 5 (strongly agree). 
 
-                temp_check_last_mark_price = self.temp_pos_df[self.temp_pos_df['symbol'] == each]['markPrice'].values[0]
-                temp_quantity = round_down((self.budget_per_stick_usdt * self.temp_leverage_no) / float(temp_check_last_mark_price), int(temp_quantityPrecision))
-                temp_quantity = round_down((temp_quantity / self.batchOrders_no), int(temp_quantityPrecision))
-                    
-                self.budget_per_stick_usdt = round(temp_quantity * temp_check_last_mark_price, 2)
-                try:
-                    temp_msg = 'symbol: ' + each + ' self.budget_per_stick_usdt:' + str(self.budget_per_stick_usdt)
-                    self.docker_print(temp_msg)
-                    temp_msg = 'temp_check_last_mark_price: ' + str(temp_check_last_mark_price)
-                    self.docker_print(temp_msg)
-                    temp_msg = 'temp_quantity: ' + str(temp_quantity) + ' temp_quantityPrecision: ' + str(temp_quantityPrecision)
-                    self.docker_print(temp_msg)
-                
-                    temp_quantity = round_down(temp_quantity, int(temp_quantityPrecision))
-                    self.each_params = {
-                        'symbol': each,
-                        'side': self.position,
-                        'type': 'MARKET',
-                        'quantity': str(temp_quantity),  
-                    }
+        The judging criteria is as follows:
 
-                    if self.batchOrders_no == 1:
-                        self.params = {
-                            "batchOrders": [self.each_params]
-                        }
-                        self.response = self.send_signed_request("POST",'/fapi/v1/batchOrders', self.params)
-                    else:
-                        self.params = {
-                            "batchOrders": [self.each_params, self.each_params, self.each_params, self.each_params, self.each_params]
-                        }
-                        for batch_i in range(int(self.batchOrders_no / 5)):
-                            self.response = self.send_signed_request("POST",'/fapi/v1/batchOrders', self.params)
+        **Category 1: Impact**
 
-                except Exception as e:
-                    exc_type, exc_obj, exc_tb = sys.exc_info()
-                    fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                    temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-                    self.docker_print(temp_msg)
-                    self.print_response_params()
-                finally:
-                    pass
-                
-                max_one_order_usdt = (self.markPrice * (float(self.maxQty)))
-                self.current_order_no = round((self.budget_per_stick_usdt * self.temp_leverage_no) / max_one_order_usdt, 6)
-                self.cap_order_no = round(self.maxNotionalValue / max_one_order_usdt, 2)
-                self.current_order_no_ratio = round((self.current_order_no)*100 / self.cap_order_no, 4)
-                self.leverage_budget_per_stick_usdt_ratio = round((self.leverage_budget_per_stick_usdt * 100) / self.maxNotionalValue, 2)
+        * Is the solution easy and enjoyable to use for everyone, including people with disabilities? (maximum 5 points)
+        * Does this solution have potential to contribute meaningfully to environmental sustainability? (maximum 5 points)
+        * Does this solution have potential to contribute meaningfully to improving people's lives? (maximum 5 points)
 
-                temp_msg = f'{temp_type}: {each} NotionalValue: {human_format(self.leverage_budget_per_stick_usdt)}/{human_format(self.maxNotionalValue)}/{self.leverage_budget_per_stick_usdt_ratio} markPrice: {self.markPrice} Qty: {temp_quantity * self.batchOrders_no}/{self.maxQty} current_order_no: {self.current_order_no}/{self.cap_order_no}/{self.current_order_no_ratio} leverage_no: {self.temp_leverage_no} batchOrders_no: {self.batchOrders_no} limit: {self.order_limit_text}'
-                
-                if extra_msg != "":
-                    temp_msg = temp_msg + ' ' + extra_msg
+        **Category 2: Remarkability**
 
-                self.docker_print(temp_msg)
-                self.lineNotify(temp_msg)
-            except Exception as e:
-                exc_type, exc_obj, exc_tb = sys.exc_info()
-                fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-                temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-                self.docker_print(temp_msg)
-                self.lineNotify(temp_msg)
-                self.clear_position()
-                self.print_response_params()
-            finally:
-                pass
-            
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-            self.lineNotify(temp_msg)
-            self.print_response_params()
-        finally:
-            pass
-    def get_exchange_df(self):
-        self.response = self.send_signed_request("GET",'/fapi/v1/exchangeInfo')
-        self.exchange_df = pd.DataFrame(self.response['symbols'])
+        * Is the submission surprising to those that are well-versed in Large Language Models (“LLM”)? (maximum 5 points)
+        * Is the submission surprising to those that are not well-versed in LLM? (maximum 5 points)
 
-        self.order_limit_df = pd.DataFrame(self.response['rateLimits'])
-        self.order_limit_df = reset(self.order_limit_df[self.order_limit_df['rateLimitType'] == 'ORDERS'])
-        self.order_limit_df['text'] = self.order_limit_df['intervalNum'].map(str) + '_' + self.order_limit_df['interval'] + '_' + self.order_limit_df['limit'].map(str) + '_' + self.order_limit_df['rateLimitType']
-        self.order_limit_text = str(self.order_limit_df['text'].values)
-        # self.order_limit_no = self.order_limit_df[(self.order_limit_df['interval'] == 'SECOND') &\
-        #                     (self.order_limit_df['intervalNum'] == 10)
-        #                 ]['limit'].values[0]
+        **Category 3: Creativity**
 
-    def update_temp_pos_df(self):
-        try:
-            self.response = self.send_signed_request('GET', '/fapi/v2/positionRisk')
-            self.temp_pos_df = pd.DataFrame(self.response)
-            self.temp_pos_df['symbol_last_4'] = self.temp_pos_df['symbol'].apply(lambda x: x[-4:])
-            # temp_pos_df only supports USDT
-            self.temp_pos_df = self.temp_pos_df[self.temp_pos_df['symbol_last_4'] == 'USDT']
-            self.temp_pos_df['positionAmt'] = self.temp_pos_df['positionAmt'].astype(float)
-            self.temp_pos_df['markPrice'] = self.temp_pos_df['markPrice'].astype(float)
-            self.temp_pos_df['entryPrice'] = self.temp_pos_df['entryPrice'].astype(float)
-            self.temp_pos_df['unRealizedProfit'] = self.temp_pos_df['unRealizedProfit'].astype(float)
-            self.temp_pos_df['leverage'] = self.temp_pos_df['leverage'].astype(int)
-            self.temp_pos_df['abs_positionAmt'] = abs(self.temp_pos_df['positionAmt'])
-            self.temp_pos_df['abs_usdt'] = self.temp_pos_df['entryPrice'] * self.temp_pos_df['abs_positionAmt']
-            self.temp_pos_df = reset(self.temp_pos_df.sort_values(by = 'abs_usdt', ascending = False))
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-            self.lineNotify(temp_msg)
-            self.print_response_params()
-        finally:
-            pass
-    def get_hold_symbol_no(self):
-        try:
-            self.response = self.send_signed_request('GET', '/fapi/v2/positionRisk')
-            temp_pos_df = pd.DataFrame(self.response)
-            temp_pos_df['symbol_last_4'] = temp_pos_df['symbol'].apply(lambda x: x[-4:])
-            temp_pos_df = temp_pos_df[temp_pos_df['symbol_last_4'] == 'USDT']
-            temp_pos_df['positionAmt'] = temp_pos_df['positionAmt'].astype(float)
-            temp_pos_df = temp_pos_df[temp_pos_df['positionAmt'] != 0]
-            self.hold_symbol_no = len(temp_pos_df)
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-            self.lineNotify(temp_msg)
-            self.print_response_params()
-        finally:
-            pass
-    def get_profit_percent(self):
-        self.update_temp_pos_df()
-        if len(self.temp_pos_df[self.temp_pos_df['positionAmt'] != 0]) > 0:
-            entryPrice = self.temp_pos_df['entryPrice'].values[0]
-            markPrice = self.temp_pos_df['markPrice'].values[0]
-            positionAmt = self.temp_pos_df['positionAmt'].values[0]
-            if positionAmt > 0:
-                profit_usd = (markPrice - entryPrice) * 100 / entryPrice
-            elif positionAmt < 0:
-                profit_usd = -(markPrice - entryPrice) * 100 / entryPrice
-            leverage_no = int(self.temp_pos_df['leverage'].values[0])
-            profit_usd = profit_usd * leverage_no
-            return round(profit_usd, 2), round(entryPrice, 4), round(markPrice, 4)
-        else:
-            return 0
-    def get_past_profit_percent(self):
-        try:
-            self.params = {
-                'incomeType': 'REALIZED_PNL'
-            }
-            self.response = self.send_signed_request('GET', '/fapi/v1/income', self.params)
-            income_df = pd.DataFrame(self.response)
-            income_df['time'] = income_df['time'].apply(lambda d: datetime.datetime.fromtimestamp(int(d)/1000).strftime('%Y-%m-%d %H:%M:%S'))
-            income_df['time'] = pd.to_datetime(income_df['time'], format='%Y-%m-%d')
-            income_df.index = income_df['time']
-            income_df.drop(columns = 'time', inplace = True)
-            income_df['income'] = income_df['income'].astype(float)
-            income_df_1 = income_df.resample('4Min')['income'].sum().reset_index()
-            income_df_2 = income_df.resample('4Min')['symbol'].first().reset_index()
-            income_df = pd.merge(income_df_1, income_df_2, on = 'time', how = 'left')
-            income_df = reset(income_df[income_df['symbol'].notna()])
-            income_df = income_df.round(3)
-            return income_df
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-            self.lineNotify(temp_msg)
-            self.print_response_params()
-            return pd.DataFrame([])
-        finally:
-            pass
-    def get_depth(self, format = 'string', limit_no = ""):
-        # Base URL for the Binance Futures API
-        base_url = 'https://fapi.binance.com'
-        # Symbol for which you want to get the order book depth
-        symbol = self.symbol
-        # Depth parameter (e.g., 5 for top 5 levels)
-        if limit_no == "":
-            depth = self.depth_limit_no
-        else:
-            depth = limit_no
-        # API endpoint
-        endpoint = f'/fapi/v1/depth'
-        # Construct the URL
-        url = f'{base_url}{endpoint}?symbol={symbol}&limit={depth}'
-        # Create headers with API key and sign the request
-        headers = {
-        }
-        # Make the request
-        response = requests.get(url, headers=headers)
-        data = response.json()
-        # df = pd.DataFrame(data)
-        # df['bids_PRICE'] = df['bids'].apply(lambda x: x[0])
-        # df['bids_QTY'] = df['bids'].apply(lambda x: x[1])
-        # df['asks_PRICE'] = df['asks'].apply(lambda x: x[0])
-        # df['asks_QTY'] = df['asks'].apply(lambda x: x[1])
-        # cols = ['bids_PRICE', 'bids_QTY','asks_PRICE', 'asks_QTY']
-        # df = df[cols]
-        # # df = reset(df.tail(910))
-        # return df
-        if format == 'string':
-            return str(data)
-            # return str(data).replace(' ','')
-        else:
-            return data
-    def get_system_instructions_3(self):
+        * Does the submission differ from existing, well known, applications in functionality? (maximum 5 points)
+        * Does the submission differ from existing, well known, applications in user experience? (maximum 5 points)
+        * Is the submission implemented through the use of creative problem-solving approaches? (maximum 5 points)
+
+        **Category 4: Usefulness**
+
+        * Does the submission include a well-defined target user persona/segmentation? (maximum 5 points)
+        * Does the submission identify how the solution addresses specific user needs? (maximum 5 points)
+        * How well does the solution, as implemented, help users meet these needs? (maximum 5 points)
+
+        **Category 5: Execution**
+
+        * Is the solution well-designed and adhere to software engineering practices? (maximum 5 points)
+        * Is the LLM component of the solution well-designed and adhere to Machine Learning (ML)/LLM best practices? (maximum 5 points)
+
+        **Maximum score: 65**
+
+        *Best Overall Submission will be determined by the Entrant who has the highest score in the combined categories of Impact, Creativity and Usefulness. In the event of a tie, Sponsor will determine the Best Overall Submission Prize. Sponsor’s decision is final and binding.* 
+        """
+        return system_instructions
+    def get_sector_text(self):
+        sector_list = ['Information Technology',
+                       'Health Care',
+                       'Consumer Discretionary',
+                       'Communication Services',
+                       'Industrials',  
+                       'Consumer Staples',
+                       'Utilities',
+                       'Renewable Energy',
+                       'Real Estate',
+                       'Materials',
+                       'Financials',]
+        random.shuffle(sector_list)
+        return  "- " + "\n- ".join(sector_list)
+    def get_system_instructions_1(self):
         self.board_member_no = 10
         # self.current_meeting_date
         # self.company_ticker_text
         # self.company_ticker_list[0]
+        # len(self.company_ticker_list)
         system_instructions = f"""
-        **Google Gemini:** You have been appointed as the official secretary for The Gemini Candlestick Investment Fund's Board of Directors meeting. The Fund strategically employs both long and short positions in a selection of stocks within the NASDAQ 100, to capitalize on market fluctuations, profiting from both upward and downward movements in stock prices. This astute strategy enables the Fund to maximize profits while skillfully navigating the volatile stock market. The Board of Directors comprises 10 stakeholders who collectively guide the Fund's strategic decisions and financial initiatives.
+        {self.get_judge_instructions()}
+
+        **Google Gemini:** The Gemini Candlestick Investment Fund employs a dynamic investment strategy that capitalizes on both market growth and volatility. The Fund strategically allocates capital to a portfolio of core holdings, representing established companies with long-term growth potential, while simultaneously employing tactical opportunities to profit from short-term market fluctuations. This dual approach allows the Fund to navigate market cycles effectively, aiming to maximize returns through both growth investments and market-neutral strategies. This strategy, guided by the collective wisdom of the ten-member Board of Directors, ensures a balanced and diversified approach to investment, seeking to generate consistent and sustainable profitability for its stakeholders. The meeting minutes will primarily focus on the judging round mentioned earlier and aim to maximize the score closely to 65 as much as possible.
 
         **Target User Persona:** This application is designed for financial analysts, portfolio managers, and individuals interested in understanding how technical analysis and expert opinions can be integrated to make investment decisions. 
 
         **User Needs:**  Users need a clear and concise summary of expert opinions on various stocks and overall market sectors based on technical indicators and market trends. This information aids in making informed investment decisions. 
-
-        **Impact:** 
-        * **Ease of Use and Accessibility:** The meeting minutes format provides a readily digestible and accessible summary for all users, regardless of technical expertise. 
-        * **Environmental Sustainability:** While not directly addressing environmental concerns, the application promotes financial well-being, which can indirectly contribute to sustainable choices by empowering individuals to make better financial decisions and potentially invest in sustainable companies. 
-        * **Improving People's Lives:** By providing insightful market analysis, the application empowers users to make informed financial decisions, potentially improving their financial well-being.
-
-        **Remarkability:**
-        * **Surprising to LLM Experts:**  The application demonstrates a novel approach to simulating expert discussion and decision-making in the context of financial markets, including detailed analysis and realistic disagreements based on diverse technical indicators.
-        * **Surprising to Non-Experts:** The application provides a glimpse into the complex world of financial analysis, making it engaging and informative for those unfamiliar with technical indicators and market trends. 
-
-        **Creativity:**
-        * **Functionality:** The application uniquely combines technical analysis with expert opinions, providing a comprehensive view of potential investment opportunities across individual stocks and market sectors. 
-        * **User Experience:** The meeting minutes format offers a familiar and easily understandable structure for presenting the information, enhanced by clear sector analysis and insightful quotes from the "Board members".
-        * **Problem-Solving:** The application creatively leverages the strengths of LLMs to simulate human-like discussion and decision-making based on complex data and diverse analytical perspectives.
-
-        **Usefulness:**
-        * **Addressing User Needs:** The application directly addresses the need for insightful market analysis to guide investment decisions by providing both broad market sector analysis and specific stock recommendations.
-        * **Solution Effectiveness:** The generated meeting minutes should provide a clear, concise, and actionable summary of expert opinions, including unambiguous company identification and sector analysis, empowering users to make more informed investment decisions. 
-
-        **Execution:**
-        * **Software Engineering Practices:** The code is designed to be modular and extensible, allowing for easy integration of additional technical indicators and expert opinions.
-        * **ML/LLM Best Practices:** The prompt engineering leverages the capabilities of LLMs to accurately simulate expert discussions and decisions based on the provided context and data, including nuanced opinions and realistic disagreements. 
 
         **Meeting Details:**
 
@@ -1063,7 +394,7 @@ class autotrade:
 
         **Stock Selection:**
 
-        The Board of Directors will be analyzing the following 100 stocks:
+        The Board of Directors will be analyzing the following {len(self.company_ticker_list)} stocks:
 
         {self.company_ticker_text}.
 
@@ -1090,28 +421,42 @@ class autotrade:
 
         1. **Broad Market Analysis:**
             * Begin the meeting minutes with a concise analysis of the following sectors:
-            - 'Information Technology'
-            - 'Health Care'
-            - 'Consumer Discretionary'
-            - 'Communication Services'
-            - 'Industrials'
-            - 'Consumer Staples'
-            - 'Utilities'
-            - 'Renewable Energy'
-            - 'Real Estate'
-            - 'Materials'
-            - 'Financials' 
+            {self.get_sector_text()}
             *  Synthesize the Board's collective opinion on each sector, including relevant technical indicator observations and potential trends. 
+            *  Utilize a more professional and business-oriented language, incorporating critical analysis that establishes connections among significant sectors.
+            *  Link between sectors in Broad Market Analysis and generate critical thoughts on these links.
 
         2. **Discussion:**
-            * Following the broad market analysis, describe a hypothetical discussion flow focusing on specific stock analysis examples. 
-            * **Example:** "John Bollinger, examining the Bollinger Bands of {self.company_ticker_list[0]}, observed a recent tightening of the bands, suggesting a potential breakout and further bullish momentum in the stock..." 
+            * Following the broad market analysis, describe a hypothetical discussion flow focusing on specific stock analysis examples.
+            * **Example:** "{self.example_analysis_text}"
             * Continue creating a narrative for the meeting, incorporating various opinions and disagreements, connecting board member expertise with specific ticker symbols from the list.
             * Highlight at least one stock from each market sector.
 
         3. **Consensus & Action:**
-            * **Market Sentiment:**  The Board agreed that the overall market sentiment for the selected stocks was [Insert: Bullish/Bearish/Neutral], based on the collective interpretation of the technical indicators and sector trends.
-            * **Fund Position:** Based on the market sentiment analysis, the Board unanimously voted to take a [Insert: Long/Short/Neutral] position on the selection of 50 stocks for the next trading day.
+
+        * **Market Sentiment:**  
+            * The Board assessed the overall market sentiment for relevant sectors, considering: 
+                * [List specific factors analyzed, e.g., economic indicators, sector trends, investor sentiment surveys].
+            * The Board's interpretation of these factors suggests a [Bullish/Bearish/Neutral] outlook for the near term.
+        * **Fund Position:**
+
+        **Based on an analysis of market sentiment and identified opportunities, the Board has determined the following strategy:**
+            * **Adopting bullish positions:** To capitalize on potential market growth.
+            * **Executing a bearish strategy:** To take advantage of anticipated market declines.
+            * **Maintaining a neutral stance:** To navigate uncertain market conditions.
+            * **Focusing on specific sectors:** To maximize potential returns.
+            * **Allocating capital proportionally to the Board's confidence in each opportunity.**
+            **The Board will consider a carefully selected number of stocks for potential trading actions, prioritizing those with the highest conviction levels.**
+            **Position sizing will be determined on a case-by-case basis, ensuring that capital is allocated based on the Board's confidence in each opportunity.** 
+
+        * **Alternative Strategies Considered:**
+            * [Briefly list alternative approaches that were discussed and the rationale for not selecting them at this time. This demonstrates thoroughness.]
+        * **Risk Management:**
+            * The Board acknowledges the inherent risks associated with the chosen strategy and has implemented appropriate measures to mitigate potential losses, such as:
+                * [List risk management techniques, e.g., stop-loss orders, diversification across sectors, hedging strategies, position limits]. 
+        * **Monitoring & Review:**
+            * The Board will actively monitor market conditions and the performance of selected positions.
+            * The Board will reconvene in [timeframe, e.g., one week, two weeks] to review the fund's position and make any necessary adjustments based on evolving market dynamics and new information.
 
         4. **Ticker Symbols of Interest:**
             * Based on the discussion, list a few of the ticker symbols that were highlighted and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members.
@@ -1119,52 +464,63 @@ class autotrade:
         5. **Further Action:**
             * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
 
-        6. **Meeting Adjourned:** 01:00
+        6. **Meeting Adjourned:** 01:30
 
         7. **Approved by:**
             * Munehisa Homma, Chairman
+        """
+        return system_instructions
+    def get_system_instructions_2(self):
+        system_instructions = f"""
+        {self.get_judge_instructions()}
+        
+        ## Gemini Candlestick Investment Fund Meeting Summary - {self.current_meeting_date}
 
-        **Please note:** This document serves as a record of the meeting's outcomes and agreed-upon actions. Individual analyses and detailed opinions must be included in this comprehensive analytical report. Remember to generate realistic, nuanced discussions and disagreements amongst the Board members based on their assigned expertise and the observed technical indicators.
+        You are provided with detailed minutes from the latest Gemini Candlestick Investment Fund meeting.  Your task is to analyze this information and create a concise and insightful summary for the fund's managers. 
+
+        **Meeting Minutes:** 
+        [Insert the transcript of the full meeting recorded in the user's initial input]
+
+        **Objective:**  Summarize the provided meeting minutes, focusing on key decisions, market observations, and interconnections between sectors. Extract impactful insights relevant to the Gemini Candlestick Investment Fund's investment strategy.
+
+        **Instructions:**
+
+        1. **Concise Summary:**  Provide a clear and concise summary of the meeting's key discussions and decisions. This should include:
+            * Overall market sentiment and the rationale behind it.
+            * The fund's investment strategy and its justification.
+            * Risk management measures being implemented. 
+
+        2. **Sector Analysis:**  Analyze the discussion around each sector. Highlight:
+            * The perceived strength or weakness of the sector.
+            * Key factors and technical indicators driving the assessment.
+            * Specific companies mentioned and the rationale for their inclusion.
+
+        3. **Interconnected Insights:**  Identify and elaborate on the key interconnections observed between different sectors. Explain how these connections influence the fund's decisions.
+
+        4. **Actionable Takeaways:**  Based on the meeting discussions, extract actionable takeaways and insights relevant to the fund's investment strategy. This might include:
+            * Emerging investment opportunities.
+            * Potential risks to be aware of.
+            * Key trends influencing market dynamics.
+
+        5. **Language:**  Use clear, professional, and business-oriented language. Avoid technical jargon where possible and explain any necessary technical terms in a way that is easy to understand.
+
+        **Example Insights:**
+
+        * "The meeting highlighted a growing divergence between traditional utilities and renewable energy, indicating a potential shift in investor sentiment towards sustainable investments."
+        * "The strong performance of [INSERT_TICKET] suggests continued growth in the technology sector, potentially creating ripple effects in related industries like consumer electronics and e-commerce."
+        * "The fund's cautious optimism reflects a balanced approach, capitalizing on growth opportunities while acknowledging potential market risks." 
+        """
+        return system_instructions
+    def get_system_instructions_3(self):
+        system_instructions = """
+        Your role is to extract ticker symbols of "**4. Ticker Symbols of Interest:**" into JSON object format.
         """
         return system_instructions
     def get_system_instructions_4(self):
         system_instructions = """
-        You will receive user-input minutes of the board of directors meeting, and your primary role is to generate a JSON response. This JSON response is essential for completing the task effectively. It should be structured and formatted appropriately, providing all necessary information and data in a clear and concise manner. By fulfilling this responsibility diligently, you significantly contribute to the proper documentation and communication of the meeting's decisions.
-        
-        **Your JSON Response Formatting:**
-        {       "type": "object",
-        "properties": {
-            "analyzed_asset": {
-            "type": "string"
-            },
-            "rationale_for_long_position": {
-            "type": "string"
-            },
-            "rationale_for_short_position": {
-            "type": "string"
-            },
-            "rationale_for_neutral_position": {
-            "type": "string"
-            },
-            "analysis_overview": {
-            "type": "string"
-            },
-            "meeting_consensus_action": {
-            "type": "string",
-            "enum": ["long", "short", "neutral"]
-            }
-        },
-        "required": [
-            "analyzed_asset",
-            "rationale_for_long_position",
-            "rationale_for_short_position",
-            "rationale_for_neutral_position",
-            "analysis_overview",
-            "meeting_consensus_action"
-        ]
-        }
+        Your role is to translate the user's meeting minutes into HTML format.
         """
-        return system_instructions
+        return system_instructions    
     def get_gemini_response(self):
         genai.configure(api_key=self.gemini_key)
         # Set up the model
@@ -1195,26 +551,76 @@ class autotrade:
         ]
         start_time = time.time()
         try:
-            # for each_ticker in tqdm(self.nasdaq_100_tickers_list[:102]):
+            # for each_ticker in tqdm(self.sp100_nasdaq100_df['symbol'].values[:202]):
             #     self.ticker = each_ticker
             #     self.get_candlestick_image()
 
             self.prompt_parts = []
-            for each_ticker in tqdm(self.nasdaq_100_tickers_list[:102]):
+            for each_ticker in tqdm(self.ticker_list[:202]):
                 self.ticker = each_ticker
                 temp_file = genai.upload_file(path=f"data/png/{each_ticker}.png", display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)')
                 self.prompt_parts.append(temp_file)
             random.shuffle(self.prompt_parts)
-            model = genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
+            system_instruction_1 = self.get_system_instructions_1()
+            print(system_instruction_1)
+            minutes_text = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
                                         generation_config=generation_config,
-                                        system_instruction=self.get_system_instructions_3(),
-                                        safety_settings=safety_settings)
-            response = model.generate_content(self.prompt_parts)
+                                        system_instruction=system_instruction_1,
+                                        safety_settings=safety_settings).generate_content(self.prompt_parts,
+                                            request_options={"timeout": 1000}).text)
+            print(execution_time, minutes_text)
 
             for each_prompt_part in tqdm(self.prompt_parts):
                 genai.delete_file(each_prompt_part.name)
 
-            generative_text = str(response.text)
+            minutes_html = str(genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
+                            generation_config=generation_config,
+                            system_instruction=self.get_system_instructions_4(),
+                            safety_settings=safety_settings).generate_content(minutes_text).text)
+            minutes_html = minutes_html.replace('```html','')
+            minutes_html = minutes_html.replace('```','')
+            pdfkit.from_string(minutes_html, 'data/pdf/minutes.pdf')
+            self.make_pdf_uncroppable('data/pdf/minutes.pdf','data/pdf/minutes.pdf')
+            
+            summary_text = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
+                                        generation_config=generation_config,
+                                        system_instruction=self.get_system_instructions_2(),
+                                        safety_settings=safety_settings).generate_content(minutes_text).text)
+            summary_html = str(genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
+                                        generation_config=generation_config,
+                                        system_instruction=self.get_system_instructions_4(),
+                                        safety_settings=safety_settings).generate_content(summary_text).text)
+            summary_html = summary_html.replace('```html','')
+            summary_html = summary_html.replace('```','')
+            pdfkit.from_string(summary_html, 'data/pdf/summary.pdf')
+            self.make_pdf_uncroppable('data/pdf/summary.pdf','data/pdf/summary.pdf')
+
+            for _ in range(6):
+                try:
+                    interest_ticker_list = str(genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
+                                                generation_config=generation_config,
+                                                system_instruction="""Your role is to extract ticker symbols of "**4. Ticker Symbols of Interest:**" into JSON object format.""",
+                                                safety_settings=safety_settings).generate_content(minutes_text).text)
+                    key = list(self.extract_json(interest_ticker_list)[0].keys())[0]
+                    interest_ticker_list = self.extract_json(interest_ticker_list)[0][key]
+                    match_no = 0
+                    for each_ticket in ticket_list:
+                        if each_ticket in self.ticker_list:
+                            match_no = match_no + 1
+                    if match_no == len(ticket_list):
+                        ticket_list = ticket_list[:12]
+                        # Convert the PNG files to PDF
+                        png_files = [f'data/png/{each}.png' for each in interest_ticker_list]
+                        with open("data/pdf/png.pdf", "wb") as pdf_file:
+                            pdf_bytes = convert(png_files)
+                            pdf_file.write(pdf_bytes)
+                        pdf_paths = ["data/pdf/minutes.pdf", "data/pdf/png.pdf"]
+                        self.merge_pdfs(pdf_paths, pdf_paths[0])
+                        break
+                except:
+                    pass
+
+            
 
             # model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
             #                             generation_config=generation_config,
@@ -1238,9 +644,7 @@ class autotrade:
             del model, prompt_parts, json_data
             gc.collect()
 
-            print(execution_time, generative_text)
             # return generative_text, execution_time, result_dict
-
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
@@ -1259,7 +663,7 @@ class autotrade:
             execution_time = round(execution_time, 2)
             return temp_msg, execution_time, 'error'      
     def get_candlestick_data(self):
-        ohlc = self.nasdaq100_df_dict[self.ticker].copy()
+        ohlc = self.sp100_nasdaq100_df_dict[self.ticker].copy()
         ohlc['ori_Date'] = ohlc['Date']
         ohlc['Date'] = mdates.date2num(ohlc['Date'])
         ohlc['RSI'] = talib.RSI(ohlc['Close'].values)
@@ -1319,10 +723,6 @@ class autotrade:
         ax9.set_axisbelow(True)
         ax9.grid(color='#2E323D', linestyle='-', zorder = 0)
 
-        # Format x-axis ticks for the first subplot
-        ax1.xaxis.set_major_locator(mdates.DayLocator(interval=24))  # Adjust the interval as needed
-        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b'))
-
         ax1.set_title(f'{self.ticker_company} ({self.ticker}): 1d Candlestick Chart (with Technical Indicators)', fontsize=16)
         levels = [0, 0.214, 0.382, 0.5, 0.618, 0.764, 1]
         color_list = ['#787B86', '#06BCD4', '#0A9981', '#4CAF51', '#FF9800', '#F23545', '#787B86']
@@ -1338,7 +738,7 @@ class autotrade:
         ax1.plot(ohlc['Date'], ohlc['middleband_BB'], color='#2862FF', linestyle='-', linewidth=1, zorder=1)
         ax1.plot(ohlc['Date'], ohlc['lowerband_BB'], color='#0A9981', linestyle='-', linewidth=1, zorder=1)
         ax1.fill_between(ohlc['Date'], ohlc['lowerband_BB'], ohlc['upperband_BB'], color='#2862FF', alpha=0.078, zorder=1)
-        ax1.yaxis.set_major_formatter(FuncFormatter(comma_formatter_2))
+        ax1.yaxis.set_major_formatter(FuncFormatter(self.comma_formatter_2))
         # Set labels and title for the first subplot
         ax1.set_ylabel('Price, BB, and Fib Retracement', fontsize=16)
         ax1.yaxis.set_label_position('left')  # Move y-axis label to the right
@@ -1356,7 +756,7 @@ class autotrade:
         # Set labels and title for the second subplot
         ax2.set_ylabel('Volume', fontsize=16)
         # Apply the formatter to the y-axis of the second subplot
-        ax2.yaxis.set_major_formatter(FuncFormatter(millions_formatter))
+        ax2.yaxis.set_major_formatter(FuncFormatter(self.millions_formatter))
         # Set labels and title for the second subplot
         ax2.set_ylabel('Volume', labelpad=20)  # Increase label padding to move it to the right
         ax2.yaxis.set_label_position('left')  # Move y-axis label to the right
@@ -1385,11 +785,11 @@ class autotrade:
         ax4.plot(ohlc['Date'], ohlc['macdsignal'], color='#FF6D00', label='Signal', linewidth = 1, zorder=1)  # Signal line
         ax4.yaxis.set_ticks_position('both')
         ax4.yaxis.set_tick_params(pad=10, direction='inout', length=6, labelright=True, right=True)
-        ax4.yaxis.set_major_formatter(FuncFormatter(comma_formatter))
-        macd_colors = get_color_list(list(ohlc['macdhist'].values))
+        ax4.yaxis.set_major_formatter(FuncFormatter(self.comma_formatter))
+        macd_colors = self.get_color_list(list(ohlc['macdhist'].values))
         ax4.bar(ohlc['Date'], ohlc['macdhist'], color=macd_colors, alpha=0.5, width=self.graph_width, label='Histogram', zorder=1)  # Histogram
         ax4.yaxis.set_tick_params(labelsize=13)
-        ax4.yaxis.set_major_formatter(FuncFormatter(comma_formatter_2))
+        ax4.yaxis.set_major_formatter(FuncFormatter(self.comma_formatter_2))
         max_val = max(ohlc['macd'].max(), ohlc['macdsignal'].max(), ohlc['macdhist'].max())
         min_val = min(ohlc['macd'].min(), ohlc['macdsignal'].min(), ohlc['macdhist'].min())
         ax4.set_ylim(top = max_val + ((max_val-min_val)*0.15))
@@ -1419,7 +819,7 @@ class autotrade:
                     va='bottom', ha='right', fontsize=12,  # Align for right side
                     color=color_list_2[i],
                     alpha=0.7)
-        ax5.yaxis.set_major_formatter(FuncFormatter(comma_formatter_2))
+        ax5.yaxis.set_major_formatter(FuncFormatter(self.comma_formatter_2))
         ax5.set_ylim(top = ohlc['High'].max() + (ohlc['High'].max()-ohlc['Low'].min())*0.15)
 
         candlestick_ohlc(ax5, ohlc.values, width=self.graph_width, colorup='#26A69A', colordown='#F05350', alpha=1.0)
@@ -1448,7 +848,7 @@ class autotrade:
         ax8.set_ylabel('OBV', fontsize = 16)
         ax8.yaxis.set_ticks_position('both')  # Show ticks on both sides of the plot
         ax8.yaxis.set_tick_params(pad=10, direction='inout', length=6, labelright=True, right=True)  # Move ticks and labels to the right
-        ax8.yaxis.set_major_formatter(FuncFormatter(millions_formatter))
+        ax8.yaxis.set_major_formatter(FuncFormatter(self.millions_formatter))
         ax8.yaxis.set_tick_params(labelsize=13)
         ax8.set_ylim(top = ohlc['OBV'].max() + (ohlc['OBV'].max()-ohlc['OBV'].min())*0.15)
 
@@ -1456,88 +856,88 @@ class autotrade:
         ax9.set_ylabel('ATR', fontsize = 16)
         ax9.yaxis.set_ticks_position('both')  # Show ticks on both sides of the plot
         ax9.yaxis.set_tick_params(pad=10, direction='inout', length=6, labelright=True, right=True)  # Move ticks and labels to the right
-        ax9.yaxis.set_major_formatter(FuncFormatter(comma_formatter))
+        ax9.yaxis.set_major_formatter(FuncFormatter(self.comma_formatter))
         ax9.yaxis.set_tick_params(labelsize=13)
         ax9.set_xlabel('Date', fontsize = 16)
         ax9.xaxis.set_tick_params(labelsize=13)
-        ax9.yaxis.set_major_formatter(FuncFormatter(comma_formatter_2))
+        ax9.yaxis.set_major_formatter(FuncFormatter(self.comma_formatter_2))
         ax9.set_ylim(top = ohlc['ATR'].max() + (ohlc['ATR'].max()-ohlc['ATR'].min())*0.15)
 
-        label_list = ["BB ", "SMA ", "close 2 ", f"{title_formatter(ohlc['middleband_BB'].values[-1-self.future_cloud_no])} ", f"{title_formatter(ohlc['upperband_BB'].values[-1-self.future_cloud_no])} ", f"{title_formatter(ohlc['lowerband_BB'].values[-1-self.future_cloud_no])}"]
+        label_list = ["BB ", "SMA ", "close 2 ", f"{self.title_formatter(ohlc['middleband_BB'].values[-1-self.future_cloud_no])} ", f"{self.title_formatter(ohlc['upperband_BB'].values[-1-self.future_cloud_no])} ", f"{self.title_formatter(ohlc['lowerband_BB'].values[-1-self.future_cloud_no])}"]
         colors = ['white', '#868993', '#868993', '#2862FF', '#F23545', '#0A9981', '#EF9A9A']
-        color_title(ax1, label_list, colors, y=0.958)
+        self.color_title(ax1, label_list, colors, y=0.958)
         label_list = ["Fibonacci ", "Retracement ", "0 ", "0.236 ", "0.382 ", "0.5", " 0.618", " 0.786", "1"]
         colors = ['white','white','#787B86', '#F23545', '#FF9800', '#4CAF51', '#0A9981', '#06BCD4', '#787B86']
-        color_title(ax1, label_list, colors, y = 0.908)
+        self.color_title(ax1, label_list, colors, y = 0.908)
 
         label_list = ["Ichimoku ", "9 26 52 26 ",
-                    f"{title_formatter(ohlc['Tenkan_Sen'].loc[ohlc['Tenkan_Sen'].last_valid_index()])} ",
-                    f"{title_formatter(ohlc['Kijun_Sen'].loc[ohlc['Kijun_Sen'].last_valid_index()])} ",
-                    f"{title_formatter(ohlc['Chikou_Span'].loc[ohlc['Chikou_Span'].last_valid_index()])} ",
-                    f"{title_formatter(ohlc['Senkou_Span_A'].values[-1])} ",
-                    f"{title_formatter(ohlc['Senkou_Span_B'].values[-1])}",
+                    f"{self.title_formatter(ohlc['Tenkan_Sen'].loc[ohlc['Tenkan_Sen'].last_valid_index()])} ",
+                    f"{self.title_formatter(ohlc['Kijun_Sen'].loc[ohlc['Kijun_Sen'].last_valid_index()])} ",
+                    f"{self.title_formatter(ohlc['Chikou_Span'].loc[ohlc['Chikou_Span'].last_valid_index()])} ",
+                    f"{self.title_formatter(ohlc['Senkou_Span_A'].values[-1])} ",
+                    f"{self.title_formatter(ohlc['Senkou_Span_B'].values[-1])}",
                     ]
         colors = ['white', '#868993', '#2862FF', '#B71C1C', '#43A047', '#A5D6A7', '#EF9A9A']
-        color_title(ax5, label_list, colors, y=0.958)
+        self.color_title(ax5, label_list, colors, y=0.958)
         label_list = ["Fibonacci ", "Retracement ", "0 ", "0.236 ", "0.382 ", "0.5", " 0.618", " 0.786", "1"]
         colors = ['white','white','#787B86', '#F23545', '#FF9800', '#4CAF51', '#0A9981', '#06BCD4', '#787B86']
-        color_title(ax5, label_list, colors, y = 0.908)
+        self.color_title(ax5, label_list, colors, y = 0.908)
 
-        label_list = ["Volume ", f"{human_format(ohlc['Volume'].values[-1-self.future_cloud_no])}"]
+        label_list = ["Volume ", f"{self.human_format(ohlc['Volume'].values[-1-self.future_cloud_no])}"]
         colors = ['white', volume_color[data[data['Close'].isna()].index[0] - 1]]
-        color_title(ax2, label_list, colors, y = 0.88)
+        self.color_title(ax2, label_list, colors, y = 0.88)
 
         label_list = ["RSI ", "14 close ", 
-                    f"{title_formatter(ohlc['RSI'].values[-1-self.future_cloud_no])} ",
-                    f"{title_formatter(ohlc['RSI_SMA_14'].values[-1-self.future_cloud_no])}",
+                    f"{self.title_formatter(ohlc['RSI'].values[-1-self.future_cloud_no])} ",
+                    f"{self.title_formatter(ohlc['RSI_SMA_14'].values[-1-self.future_cloud_no])}",
                     ]
         colors = ['white', "#868993", "#7D57C2" , "yellow"]
-        color_title(ax3, label_list, colors, y = 0.92)
+        self.color_title(ax3, label_list, colors, y = 0.92)
 
         label_list = ["MACD ", "12 26 close ",
-                    f"{title_formatter(ohlc['macdhist'].values[-1-self.future_cloud_no])} ",
-                    f"{title_formatter(ohlc['macd'].values[-1-self.future_cloud_no])} ",
-                    f"{title_formatter(ohlc['macdsignal'].values[-1-self.future_cloud_no])}",
+                    f"{self.title_formatter(ohlc['macdhist'].values[-1-self.future_cloud_no])} ",
+                    f"{self.title_formatter(ohlc['macd'].values[-1-self.future_cloud_no])} ",
+                    f"{self.title_formatter(ohlc['macdsignal'].values[-1-self.future_cloud_no])}",
                     ]
         colors = ['white', "#868993", macd_colors[:-self.future_cloud_no][-1], "#2862FF", "#FF6D00"]
-        color_title(ax4, label_list, colors, y = 0.92)
+        self.color_title(ax4, label_list, colors, y = 0.92)
 
         label_list = ["Stochastic Oscillator ", "14 3 80 20 ",
-                    f"{title_formatter(ohlc['K_STO'].values[-1-self.future_cloud_no])} ",
-                    f"{title_formatter(ohlc['D_STO'].values[-1-self.future_cloud_no])} ",
+                    f"{self.title_formatter(ohlc['K_STO'].values[-1-self.future_cloud_no])} ",
+                    f"{self.title_formatter(ohlc['D_STO'].values[-1-self.future_cloud_no])} ",
                     ]
         colors = ['white', "#868993", "#07FC00", "#FF7F00"]
-        color_title(ax6, label_list, colors, y = 0.92)
+        self.color_title(ax6, label_list, colors, y = 0.92)
 
         label_list = ["CMF ", "20 ",
-                    f"{title_formatter(ohlc['CMF'].values[-1-self.future_cloud_no])}",
+                    f"{self.title_formatter(ohlc['CMF'].values[-1-self.future_cloud_no])}",
                     ]
         colors = ['white', "#868993", "#09AE0C",]
-        color_title(ax7, label_list, colors, y = 0.92)
+        self.color_title(ax7, label_list, colors, y = 0.92)
 
-        label_list = ["OBV ", f"{human_format(ohlc['OBV'].values[-1-self.future_cloud_no])}",
+        label_list = ["OBV ", f"{self.human_format(ohlc['OBV'].values[-1-self.future_cloud_no])}",
                     ]
         colors = ['white', "#2862FF",]
-        color_title(ax8, label_list, colors, y = 0.92)
+        self.color_title(ax8, label_list, colors, y = 0.92)
 
         label_list = ["ATR ", "14 RMA ",
-                    f"{title_formatter(ohlc['ATR'].values[-1-self.future_cloud_no])}",
+                    f"{self.title_formatter(ohlc['ATR'].values[-1-self.future_cloud_no])}",
                     ]
         colors = ['white', "#868993", "#B71C1C",]
-        color_title(ax9, label_list, colors, y = 0.92)
+        self.color_title(ax9, label_list, colors, y = 0.92)
 
         date_val = ohlc['Date'].values[1] - ohlc['Date'].values[0]
         ax1.set_xlim([ohlc['Date'].min() - date_val, ohlc['Date'].max() + date_val])
 
         xticklabels_list = []
         start_i = 19 - 1 
-        xticklabels_list.append(get_date_month_text(ohlc['ori_Date'].values[start_i - 1]))
+        xticklabels_list.append(self.get_date_month_text(ohlc['ori_Date'].values[start_i - 1]))
         next_i = start_i + 24
-        xticklabels_list.append(get_date_month_text(ohlc['ori_Date'].values[next_i]))
+        xticklabels_list.append(self.get_date_month_text(ohlc['ori_Date'].values[next_i]))
         for _ in range(5):
             next_i = next_i + 24
-            xticklabels_list.append(get_date_month_text(ohlc['ori_Date'].values[next_i]))
-        xticklabels_list_2 = ['10 May']
+            xticklabels_list.append(self.get_date_month_text(ohlc['ori_Date'].values[next_i]))
+        xticklabels_list_2 = [xticklabels_list[-1]]
         dates = [datetime.datetime.strptime(date, '%d %b') for date in xticklabels_list_2]
         last_date = dates[-1]
         next_days = []
@@ -1549,6 +949,9 @@ class autotrade:
                 next_days.append(last_date)
         next_days_str = [date.strftime('%d %b') for date in next_days]
         xticklabels_list.extend([next_days_str[-1]])
+        # Format x-axis ticks for the first subplot
+        ax1.xaxis.set_major_locator(mdates.DayLocator(interval=24))  # Adjust the interval as needed
+        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))
         ax1.set_xticklabels(xticklabels_list)
 
         plt.subplots_adjust(left=0.085, right=0.925, bottom=0.025, top=0.975)
@@ -1561,7 +964,7 @@ class autotrade:
             img_resized = img.resize((new_width, new_height), resample=Image.LANCZOS)
             img_resized.save(f"data/png/{self.ticker}.png")
         os.remove('data/png/temp.png')
-
+        
         plt.close(fig)
         plt.close('all')
         plt.clf()
@@ -1633,27 +1036,133 @@ class autotrade:
         ask_series["CMF"] = ask_series['cmfv'].rolling(window=20).mean() / ask_series['Volume'].rolling(window=21).mean() 
         ask_series.drop(columns = ['cmfm','cmfv'], inplace = True)
         return ask_series
-    def get_nasdaq100_candlestick(self):
-        nasdaq_df = yf.download(self.nasdaq_100_tickers_list, period=f'{self.candlestick_chart_no*2}d', interval="1d")
-        date_list = [str(each)[:10] for each in list(nasdaq_df['Close'].index)]
-        self.nasdaq100_df_dict = {}
-        ticker_list = list(set([each[1]for each in nasdaq_df.columns]))
-        for each_ticker in ticker_list:
-            temp_dict = {'Date': [],
-                        'Open': [],
-                        'High': [],
-                        'Low': [],
-                        'Close': [],
-                        'Volume': [],
-                        }
-            temp_dict['Date'].extend(date_list)
-            temp_dict['Open'].extend(list(nasdaq_df['Open'][each_ticker].values))
-            temp_dict['High'].extend(list(nasdaq_df['High'][each_ticker].values))
-            temp_dict['Low'].extend(list(nasdaq_df['Low'][each_ticker].values))
-            temp_dict['Close'].extend(list(nasdaq_df['Close'][each_ticker].values))
-            temp_dict['Volume'].extend(list(nasdaq_df['Volume'][each_ticker].values))
-            temp_df = pd.DataFrame(temp_dict)
-            self.nasdaq100_df_dict[each_ticker] = temp_df
+    def human_format(self, num):
+        magnitude = 0
+        while abs(num) >= 1000:
+            magnitude += 1
+            num /= 1000.0
+        # add more suffixes if you need them
+        return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+    def get_color_list(self, values):
+        # Define dark and light shades of green and red
+        dark_green = '#26A69A'
+        light_green = '#B2DFDB'
+        light_red = '#FFCDD2'
+        dark_red = '#FF5252'
+        colors = []
+        previous_value = values[0]
+        for value in values:
+            if value < 0:
+                if value < previous_value:
+                    colors.append(dark_red)
+                else:
+                    colors.append(light_red)
+            elif value > 0:
+                if value > previous_value:
+                    colors.append(dark_green)
+                else:
+                    colors.append(light_green)
+            else:
+                colors.append(light_green)  # Adjust for zero values as needed
+            previous_value = value
+        return colors
+    def millions_formatter(self, x, pos):
+        num = x
+        magnitude = 0
+        while abs(num) >= 1000:
+            magnitude += 1
+            num /= 1000.0
+        # add more suffixes if you need them
+        return '%.0f%s' % (num, ['', 'K', 'M', 'G', 'T', 'P'][magnitude])
+    def comma_formatter(self, x, pos):
+        return "{:,}".format(x)
+    def comma_formatter_2(self, x, pos):
+        return "{:,.2f}".format(x)
+    def title_formatter(self, x):
+        return "{:.2f}".format(x)
+    def color_title(self, ax, labels, colors, textprops={'size': 15}, y=0.96):
+        """Creates a left-aligned title with multiple colors. Don't change axes limits afterwards."""
+        plt.gcf().canvas.draw()
+        transform = ax.transAxes  # use axes coords
+        # Initial params - start from the left (x=0)
+        x_pos = 0  
+        # For text objects
+        text = dict()
+        for label, col in zip(labels, colors):
+            text[label] = ax.text(x_pos, y, label,
+                                transform=transform,
+                                ha='left',  # Left alignment
+                                color=col,
+                                **textprops)
+            # Update x_pos for the next label
+            x_pos = text[label].get_window_extent().transformed(transform.inverted()).x1
+    def extract_json(self, text_response):
+        # This pattern matches a string that starts with '{' and ends with '}'
+        pattern = r'\{[^{}]*\}'
+        matches = re.finditer(pattern, text_response)
+        json_objects = []
+        for match in matches:
+            json_str = match.group(0)
+            try:
+                # Validate if the extracted string is valid JSON
+                json_obj = json.loads(json_str)
+                json_objects.append(json_obj)
+            except json.JSONDecodeError:
+                # Extend the search for nested structures
+                extended_json_str = self.extend_search(text_response, match.span())
+                try:
+                    json_obj = json.loads(extended_json_str)
+                    json_objects.append(json_obj)
+                except json.JSONDecodeError:
+                    # Handle cases where the extraction is not valid JSON
+                    continue
+        if json_objects:
+            return json_objects
+        else:
+            return None  # Or handle this case as you prefer
+    def extend_search(self, text, span):
+        # Extend the search to try to capture nested structures
+        start, end = span
+        nest_count = 0
+        for i in range(start, len(text)):
+            if text[i] == '{':
+                nest_count += 1
+            elif text[i] == '}':
+                nest_count -= 1
+                if nest_count == 0:
+                    return text[start:i+1]
+        return text[start:end]
+    def get_date_month_text(self, date_str):
+        date_obj = datetime.datetime.strptime(date_str, "%Y-%m-%d")
+        return date_obj.strftime("%d %b")
+    
+    def make_pdf_uncroppable(self, input_pdf_path, output_pdf_path):
+        """Converts a PDF to a sequence of images, creating an 'uncroppable' PDF.
+
+        Args:
+            input_pdf_path (str): The path to the input PDF file.
+            output_pdf_path (str): The path where the output PDF will be saved.
+        """
+
+        images = convert_from_path(input_pdf_path)
+
+        # If your PDF has multiple pages:
+        if len(images) > 1:
+            images[0].save(
+                output_pdf_path,
+                "PDF",
+                resolution=100.0,
+                save_all=True,
+                append_images=images[1:],
+            )
+        else:
+            images[0].save(output_pdf_path, "PDF", resolution=100.0)
+    def merge_pdfs(self, paths, output_filename):
+        merger = PdfMerger()
+        for path in paths:
+            merger.append(path)
+        merger.write(output_filename)
+        merger.close()
 ####
 #### End Class Here
 ####
