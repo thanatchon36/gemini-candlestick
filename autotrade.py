@@ -148,6 +148,8 @@ class autotrade:
         self.model = model
         self.candlestick_chart_no = 168
         self.future_cloud_no = 26
+        self.BOT_TOKEN = '6634636445:AAE4FORei5yEjJmEZmEOHLrHQ4URFKB-yqI'
+        self.CHAT_ID = "-1002105947055"
     @property
     def example_analysis_text(self):
         self.example_analysis_text_list = [f'John Bollinger, {self.analysis_verb} the Bollinger Bands of **{self.company_ticker_list[0]}**,...',
@@ -203,6 +205,31 @@ class autotrade:
     @property
     def graph_width(self):
         return self.graph_width_dict[self.freq_interval]
+    def telegram_send_message(self, message):
+        url = f"https://api.telegram.org/bot{self.BOT_TOKEN}/sendMessage"
+        payload = {
+            "chat_id": self.CHAT_ID,
+            "text": message
+        }
+        requests.post(url, json=payload)
+    def telegram_send_pdfs(self, pdf_paths, caption_list):
+        media = []
+        for i, pdf_path in enumerate(pdf_paths):
+            with open(pdf_path, 'rb') as f:
+                data = {'type': 'document', 'media': f'attach://document{i}', 'caption': caption_list[i]}
+                media.append(data)
+        data = {'chat_id': self.CHAT_ID, 'media': json.dumps(media)}
+        url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMediaGroup'
+        requests.post(url, data=data, files={f'document{i}': open(pdf_paths[i], 'rb') for i in range(len(pdf_paths))})
+    def telegram_send_images(self, image_paths, caption_list):
+        media = []
+        for i, image_path in enumerate(image_paths):
+            with open(image_path, 'rb') as f:
+                data = {'type': 'photo', 'media': f'attach://photo{i}', 'caption': caption_list[i]}
+                media.append(data)
+        data = {'chat_id': self.CHAT_ID, 'media': json.dumps(media)}
+        url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMediaGroup'
+        requests.post(url, data=data, files={f'photo{i}': open(image_paths[i], 'rb') for i in range(len(image_paths))})
     def prep_sp100_nasdaq100_dataset(self):
         stock_data = PyTickerSymbols()
         sp100_df = pd.DataFrame(list(stock_data.get_stocks_by_index('S&P 100')))
@@ -460,6 +487,7 @@ class autotrade:
 
         4. **Ticker Symbols of Interest:**
             * Based on the discussion, list a few of the ticker symbols that were highlighted and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members.
+            * Please find attached the 1-day candlestick charts with technical indicators for these ticker symbols of interest at the end of this meeting minutes document.
 
         5. **Further Action:**
             * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
