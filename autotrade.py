@@ -213,6 +213,12 @@ class autotrade:
         }
         requests.post(url, json=payload)
     def telegram_send_pdfs(self, pdf_paths, caption_list):
+        url = f"https://api.telegram.org/bot{self.BOT_TOKEN}/sendDocument"
+        for i, pdf_file in enumerate(pdf_paths):
+            files = {"document": open(pdf_file, "rb")}
+            data = {"chat_id": self.CHAT_ID, "caption": caption_list[i]}
+            requests.post(url, files=files, data=data)
+    def telegram_send_group_pdfs(self, pdf_paths, caption_list):
         media = []
         for i, pdf_path in enumerate(pdf_paths):
             with open(pdf_path, 'rb') as f:
@@ -222,6 +228,12 @@ class autotrade:
         url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMediaGroup'
         requests.post(url, data=data, files={f'document{i}': open(pdf_paths[i], 'rb') for i in range(len(pdf_paths))})
     def telegram_send_images(self, image_paths, caption_list):
+        url = f"https://api.telegram.org/bot{self.BOT_TOKEN}/sendPhoto"
+        for i, photo_file in enumerate(image_paths):
+            files = {"photo": open(photo_file, "rb")}
+            data = {"chat_id": self.CHAT_ID, "caption": caption_list[i]}
+            requests.post(url, files=files, data=data)
+    def telegram_send_group_images(self, image_paths, caption_list):
         media = []
         for i, image_path in enumerate(image_paths):
             with open(image_path, 'rb') as f:
