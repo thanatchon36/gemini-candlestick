@@ -43,113 +43,53 @@ def reset(df):
 #### Start Class Here:
 ####
 class autotrade:
-    def __init__(self, 
-                 ws_name,
-                 freq_interval = "15m",
-                 line_api_key = "",
-                 binance_api_key = "",
-                 binance_api_secret = "",
-                 dev_flag = 0,
-                 test_mode=0,
-                 sync = True,
-                 model = "gemini-1.5-pro-latest",
-                 depth_limit_no = 1000,
+    def __init__(self,
+                 gemini_key,
+                 BOT_TOKEN,
+                 CHAT_ID,
+                 freq_interval = "1d",
                 ):
-        self.binance_api_key = binance_api_key
-        self.binance_api_secret = binance_api_secret
-        self.KEY = self.binance_api_key
-        self.SECRET = self.binance_api_secret
-        self.BASE_URL = 'https://fapi.binance.com'
-        self.line_api_key = line_api_key
-        self.test_mode = test_mode
-        self.ws_name = ws_name
-        self.dev_flag = dev_flag
-        self.sync = sync
-        self.stop_loss_percent = 8.5
-        self.time_offset = 0
-        self.freq_dict = {
-            '1m': 60,
-            '3m': 90,
-            '5m': 300,
-            '15m':900,
-            '30m':1800,
-            '1h':3600,
-            '2h':3600*2,
-            '4h':3600*4,
-            '6h':3600*6,
-            '8h':3600*8,
-            '12h':3600*12,
-            '1d':3600*24,
-            '3d':3600*24*3,
-            '1w': 3600*24*7,
-        }
-        self.freq_text_dict = {
-            '1m': "1 minute",
-            '3m': "3 minutes",
-            '5m': "5 minutes",
-            '15m': "15 minutes",
-            '30m': "30 minutes",
-            '1h': "1 hour",
-            '2h': "2 hours",
-            '4h': "4 hours",
-            '6h': "6 hours",
-            '8h': "8 hours",
-            '12h': "12 hours",
-            '1d': "1 day",
-            '3d': "3 days",
-            '1w': "7 days",
-        }
-        self.exit_stick_no_dict = {
-            '2h': 12,
-            '4h': 6,
-            '6h': 4,
-            '12h': 2,
-        }
+        self.gemini_key = gemini_key
         self.freq_interval = freq_interval
-        self.ori_freq_interval = freq_interval
-        self.depth_limit_no = depth_limit_no
-        self.ori_depth_limit_no = depth_limit_no
-        self.x_date_interval_dict = {
-            '1w': int(30 * 7/3) + 1,
-            '3d': 30,
-            '1d': int(30/3),
-            '12h': int(30/(3*2)) ,
-            '8h': int(30/(3*2)*8/12) + 1,
-            '6h': 3,
-            '4h': 2,
-            '2h': 1,
-            '1h': 1,
-            '30m': 1,
-        }
-        self.graph_width_dict = {
-            '1w': 4.75,
-            '3d': 2.15,
-            '1d': 0.75,
-            '12h': 0.35,
-            '8h': 0.225,
-            '6h': 0.18,
-            '4h': 0.12,
-            '2h': 0.063,
-            '1h': 0.029,
-            '30m': 0.015,
-        }
-        self.gc_collect_time_dict = {
-            '1w': (48*7)-1,
-            '3d': (48*3)-1,
-            '1d': 48-1,
-            '12h': 24-1,
-            '8h': 16-1,
-            '6h': 12-1,
-            '4h': 8-1,
-            '2h': 4-1,
-            '1h': 2-1,
-            '30m': 0,
-        }
-        self.model = model
+        self.BOT_TOKEN = BOT_TOKEN
+        self.CHAT_ID = CHAT_ID
         self.candlestick_chart_no = 168
         self.future_cloud_no = 26
-        self.BOT_TOKEN = '6634636445:AAE4FORei5yEjJmEZmEOHLrHQ4URFKB-yqI'
-        self.CHAT_ID = "-1002105947055"
+        # self.BOT_TOKEN = '6634636445:AAE4FORei5yEjJmEZmEOHLrHQ4URFKB-yqI'
+        # self.CHAT_ID = "-1002105947055"
+        self.freq_dict = {
+            '1d':3600*24,
+        }
+        self.graph_width_dict = {
+            '1d': 0.75,
+        }
+        self.gc_collect_time_dict = {
+            '1d': 48-1,
+        }
+        
+    @property
+    def until_next_day_sec(self):
+        today_utc = datetime.datetime.now(datetime.timezone.utc)
+        tomorrow_utc = today_utc + datetime.timedelta(days=1)
+        tomorrow_utc = tomorrow_utc.replace(hour=0, minute=0, second=0, microsecond=0)
+        time_to_wait = (tomorrow_utc - today_utc).total_seconds()
+        return float(time_to_wait)
+    @property
+    def today_time(self):
+        today_utc = datetime.datetime.now(datetime.timezone.utc)
+        return str(today_utc.strftime('%H:%M:%S'))
+    @property
+    def today_date(self):
+        today_utc = datetime.datetime.now(datetime.timezone.utc).date()
+        return str(today_utc.strftime("%A")).lower() # monday, tuesday, wednesday, thursday, friday, saturday, sunday
+    @property
+    def file_date(self):
+        today_utc = datetime.datetime.now(datetime.timezone.utc).date()
+        return str(today_utc.strftime("%Y-%m-%d"))
+    @property
+    def current_meeting_date(self):
+        today_utc = datetime.datetime.now(datetime.timezone.utc).date()
+        return str(today_utc.strftime('%A, %B %d, %Y, at 00:00'))
     @property
     def example_analysis_text(self):
         self.example_analysis_text_list = [f'John Bollinger, {self.analysis_verb} the Bollinger Bands of **{self.company_ticker_list[0]}**,...',
@@ -278,81 +218,6 @@ class autotrade:
     # self.docker_print('Error !')
     def docker_print(self, txt):
         print(txt, flush=True)
-    def print_response_params(self):
-        try:
-            self.docker_print('Error !: response: {} params: {}'.format(self.response, self.params))
-        except Exception as e:
-            exc_type, exc_obj, exc_tb = sys.exc_info()
-            fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            self.docker_print(temp_msg)
-        finally:
-            pass
-    def hashing(self, query_string):
-        return hmac.new(self.SECRET.encode('utf-8'), query_string.encode('utf-8'), hashlib.sha256).hexdigest()
-    def get_timestamp(self):
-        return int(time.time() * 1000)
-    def dispatch_request(self, http_method):
-        session = requests.Session()
-        session.headers.update({
-            'Content-Type': 'application/json;charset=utf-8',
-            'X-MBX-APIKEY': self.KEY
-        })
-        return {
-            'GET': session.get,
-            'DELETE': session.delete,
-            'PUT': session.put,
-            'POST': session.post,
-        }.get(http_method, 'GET')
-    # used for sending request requires the signature
-    def send_signed_request(self, http_method, url_path, payload={}):
-        query_string = urlencode(payload)
-        # replace single quote to double quote
-        query_string = query_string.replace('%27', '%22')
-        if query_string:
-            query_string = "{}&timestamp={}".format(query_string, self.get_timestamp())
-        else:
-            query_string = 'timestamp={}'.format(self.get_timestamp())
-
-        url = self.BASE_URL + url_path + '?' + query_string + '&signature=' + self.hashing(query_string)
-        # self.docker_print("{} {}".format(http_method, url))
-        params = {'url': url, 'params': {}}
-        response = self.dispatch_request(http_method)(**params)
-        return response.json()
-    def ping_binance(self):
-        server_time_df = pd.DataFrame([0])
-        self.params = {
-            'symbol': 'BTCUSDT',
-            'interval': self.freq_interval,
-            'limit': '1',
-        }
-        self.response = self.send_signed_request('GET', '/fapi/v1/klines', self.params)
-        server_time_df['next'] = self.response[0][6]
-        server_time_df['next']=server_time_df['next'].apply(lambda d: datetime.datetime.fromtimestamp(int(d)/1000).strftime('%Y-%m-%d %H:%M:%S'))
-        server_time_df['next'] = pd.to_datetime(server_time_df['next'], format='%Y-%m-%d %H:%M:%S') + pd.Timedelta(seconds=1)
-        entry_ts = server_time_df['next'].values[-1]
-        entry_ts = str(entry_ts)[:10] + ' ' + str(entry_ts)[11:19]
-        return entry_ts
-    def update_next_current_time_interval(self):
-        self.next_current_time_interval = self.ping_binance()
-        temp_df = pd.DataFrame([self.next_current_time_interval])
-        temp_df.columns = ['next_current_time_interval']
-        self.next_entry_sec = self.get_wait_entry_sec()
-        temp_df['next_entry_sec'] = self.next_entry_sec
-        self.next_current_time_interval_df = temp_df
-    def get_wait_entry_sec(self):
-        with requests.Session() as s:
-            self.response = s.get('https://api.binance.com/api/v3/time').json()
-        server_time_df = pd.DataFrame([self.response])
-        server_time_df['next'] = self.next_current_time_interval
-        server_time_df['serverTime']=server_time_df['serverTime'].apply(lambda d: datetime.datetime.fromtimestamp(int(d)/1000).strftime('%Y-%m-%d %H:%M:%S'))
-        server_time_df['serverTime'] = pd.to_datetime(server_time_df['serverTime'])
-        server_time_df['next'] = pd.to_datetime(server_time_df['next'], format='%Y-%m-%d %H:%M:%S') + pd.Timedelta(seconds=1)
-        server_time_df['next'] = pd.to_datetime(server_time_df['next'], format='%Y-%m-%d')
-        server_time_df['diff'] = server_time_df['next'] - server_time_df['serverTime']
-        dt = server_time_df['diff'].values[0]
-        dt_sec = int(str(np.timedelta64(dt, 's')).split(' ')[0])
-        return dt_sec 
     def get_judge_instructions(self):
         system_instructions = f"""
         ## JUDGING ROUND
@@ -428,7 +293,7 @@ class autotrade:
         **Meeting Details:**
 
         * **Date:** {self.current_meeting_date}
-        * **Time:** 00:00 - 01:00
+        * **Time:** 00:00 - 01:30
         * **Location:** Google Meet
 
         **Stock Selection:**
@@ -499,7 +364,6 @@ class autotrade:
 
         4. **Ticker Symbols of Interest:**
             * Based on the discussion, list a few of the ticker symbols that were highlighted and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members.
-            * Please find attached the 1-day candlestick charts with technical indicators for these ticker symbols of interest at the end of this meeting minutes document.
 
         5. **Further Action:**
             * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
@@ -508,6 +372,7 @@ class autotrade:
 
         7. **Approved by:**
             * Munehisa Homma, Chairman
+
         """
         return system_instructions
     def get_system_instructions_2(self):
@@ -558,14 +423,29 @@ class autotrade:
         return system_instructions
     def get_system_instructions_4(self):
         system_instructions = """
-        Your role is to translate the user's meeting minutes into HTML format.
+        Your responsibility is to convert meeting minutes into a professional HTML format suitable for web publication, maintaining a formal and polished tone throughout the process.
         """
-        return system_instructions    
-    def get_gemini_response(self):
+        return system_instructions
+    def get_system_instructions_5(self):
+        system_instructions = """
+        The enclosed documents contain 1-day candlestick charts and corresponding technical indicators for the ticker symbols listed in Section 4, which can be found on the following pages.
+        """
+        return system_instructions
+    def get_system_instructions_6(self):
+        system_instructions = """
+        One of the key responsibilities associated with your position is to reword the statements provided by users, ensuring that the revised phrasing upholds an appropriate level of professionalism.
+        """
+        return system_instructions
+    def get_system_instructions_7(self):
+        system_instructions = """
+        As an enhancer of Telegram messages, your objective is to captivate readers and amplify user input. By incorporating emojis, relevant symbols, and creative flair, you strive to ignite curiosity and inspire individuals to explore the original messages. You're limited to few sentences to write and wrap up the enhancements, making every word count.
+        """
+        return system_instructions
+    def generate_gemini_candlestick(self):
         genai.configure(api_key=self.gemini_key)
         # Set up the model
         generation_config = {
-        "temperature": self.temperature,
+        "temperature": 1,
         "top_p": 0.95,
         "top_k": 64,
         "max_output_tokens": 500000,
@@ -589,11 +469,11 @@ class autotrade:
             "threshold": "BLOCK_NONE"
         },
         ]
-        start_time = time.time()
-        try:
-            # for each_ticker in tqdm(self.sp100_nasdaq100_df['symbol'].values[:202]):
-            #     self.ticker = each_ticker
-            #     self.get_candlestick_image()
+        try:   
+            if self.today_date not in ['saturday', 'sunday']:
+                for each_ticker in tqdm(self.sp100_nasdaq100_df['symbol'].values[:202]):
+                    self.ticker = each_ticker
+                    self.get_candlestick_image()
 
             self.prompt_parts = []
             for each_ticker in tqdm(self.ticker_list[:202]):
@@ -601,32 +481,44 @@ class autotrade:
                 temp_file = genai.upload_file(path=f"data/png/{each_ticker}.png", display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)')
                 self.prompt_parts.append(temp_file)
             random.shuffle(self.prompt_parts)
-            system_instruction_1 = self.get_system_instructions_1()
-            print(system_instruction_1)
+
             minutes_text = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
                                         generation_config=generation_config,
-                                        system_instruction=system_instruction_1,
+                                        system_instruction=self.get_system_instructions_1(),
                                         safety_settings=safety_settings).generate_content(self.prompt_parts,
                                             request_options={"timeout": 1000}).text)
-            print(execution_time, minutes_text)
-
             for each_prompt_part in tqdm(self.prompt_parts):
-                genai.delete_file(each_prompt_part.name)
+                try:
+                    genai.delete_file(each_prompt_part.name)
+                except:
+                    pass
+            
+            time.sleep(30)
+            attached_text = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
+                            generation_config=generation_config,
+                            system_instruction=self.get_system_instructions_6(),
+                            safety_settings=safety_settings).generate_content(self.get_system_instructions_5()).text)
+            attached_text = attached_text.replace('"','')
+            attached_text = attached_text.replace('\n','')
+            attached_text = f'<p class="highlight">{attached_text}</p>'
 
-            minutes_html = str(genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
+            time.sleep(30)
+            minutes_html = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
                             generation_config=generation_config,
                             system_instruction=self.get_system_instructions_4(),
-                            safety_settings=safety_settings).generate_content(minutes_text).text)
+                            safety_settings=safety_settings).generate_content(minutes_text + '\n' + attached_text).text)
             minutes_html = minutes_html.replace('```html','')
             minutes_html = minutes_html.replace('```','')
             pdfkit.from_string(minutes_html, 'data/pdf/minutes.pdf')
             self.make_pdf_uncroppable('data/pdf/minutes.pdf','data/pdf/minutes.pdf')
             
+            time.sleep(30)
             summary_text = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
                                         generation_config=generation_config,
                                         system_instruction=self.get_system_instructions_2(),
                                         safety_settings=safety_settings).generate_content(minutes_text).text)
-            summary_html = str(genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
+            time.sleep(30)
+            summary_html = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
                                         generation_config=generation_config,
                                         system_instruction=self.get_system_instructions_4(),
                                         safety_settings=safety_settings).generate_content(summary_text).text)
@@ -637,18 +529,19 @@ class autotrade:
 
             for _ in range(6):
                 try:
-                    interest_ticker_list = str(genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
+                    time.sleep(30)
+                    interest_ticker_list = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
                                                 generation_config=generation_config,
-                                                system_instruction="""Your role is to extract ticker symbols of "**4. Ticker Symbols of Interest:**" into JSON object format.""",
+                                                system_instruction=self.get_system_instructions_3(),
                                                 safety_settings=safety_settings).generate_content(minutes_text).text)
                     key = list(self.extract_json(interest_ticker_list)[0].keys())[0]
                     interest_ticker_list = self.extract_json(interest_ticker_list)[0][key]
                     match_no = 0
-                    for each_ticket in ticket_list:
+                    for each_ticket in interest_ticker_list:
                         if each_ticket in self.ticker_list:
                             match_no = match_no + 1
-                    if match_no == len(ticket_list):
-                        ticket_list = ticket_list[:12]
+                    if match_no == len(interest_ticker_list):
+                        interest_ticker_list = interest_ticker_list[:12]
                         # Convert the PNG files to PDF
                         png_files = [f'data/png/{each}.png' for each in interest_ticker_list]
                         with open("data/pdf/png.pdf", "wb") as pdf_file:
@@ -659,49 +552,65 @@ class autotrade:
                         break
                 except:
                     pass
+            time.sleep(30)
+            self.telegram_minutes_text = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
+                                        generation_config=generation_config,
+                                        system_instruction=self.get_system_instructions_7(),
+                                        safety_settings=safety_settings).generate_content(minutes_text).text)
+            time.sleep(30)
+            self.telegram_summary_text = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
+                                        generation_config=generation_config,
+                                        system_instruction=self.get_system_instructions_7(),
+                                        safety_settings=safety_settings).generate_content(summary_text).text)
+            os.rename("data/pdf/minutes.pdf", f"data/pdf/{self.file_date}_minutes.pdf")
+            os.rename("data/pdf/summary.pdf", f"data/pdf/{self.file_date}_summary.pdf")
 
-            
+            self.prompt_parts = []
+            for each_ticker in tqdm(interest_ticker_list):
+                self.ticker = each_ticker
+                temp_file = genai.upload_file(path=f"data/png/{each_ticker}.png", display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)')
+                self.prompt_parts.append(temp_file)
+            self.photo_caption_list = []
+            for each_prompt_part in tqdm(self.prompt_parts):
+                time.sleep(30)
+                photo_caption = str(genai.GenerativeModel(model_name="gemini-1.5-pro-latest",
+                                generation_config=generation_config,
+                                system_instruction=self.get_system_instructions_7(),
+                                safety_settings=safety_settings).generate_content([each_prompt_part]).text)
+                self.photo_caption_list.append(photo_caption)
+            for each_prompt_part in tqdm(self.prompt_parts):
+                try:
+                    genai.delete_file(each_prompt_part.name)
+                except:
+                    pass
+            self.image_paths = [f'data/png/{each}.png' for each in interest_ticker_list]
 
-            # model = genai.GenerativeModel(model_name="gemini-1.5-flash-latest",
-            #                             generation_config=generation_config,
-            #                             system_instruction=self.get_system_instructions_4(),
-            #                             safety_settings=safety_settings)
-            # prompt_parts = [
-            #     generative_text,
-            # ]
-            # response = model.generate_content(prompt_parts)
-            # result_dict = extract_json(response.text)[0]
-
-            execution_time = time.time() - start_time
-            execution_time = round(execution_time, 2)
-
+            # GC
             for each_prompt_part in self.prompt_parts:
                 each_prompt_part = None
                 del each_prompt_part
-            model = None
             prompt_parts = None
-            json_data = None
-            del model, prompt_parts, json_data
+            del prompt_parts
             gc.collect()
 
-            # return generative_text, execution_time, result_dict
+            # Broadcast Messages
+            # self.telegram_send_group_pdfs([f"data/pdf/{self.file_date}_minutes.pdf", f"data/pdf/{self.file_date}_summary.pdf"],
+            #                               [self.telegram_minutes_text, self.telegram_summary_text])
+            # self.telegram_send_group_images(self.image_paths, self.photo_caption_list)
+
         except Exception as e:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
             self.docker_print(temp_msg)
             try:
-                self.docker_print(generative_text)
-            except:
-                pass
-            try:
                 for each_prompt_part in tqdm(self.prompt_parts):
-                    genai.delete_file(each_prompt_part.name)
+                    try:
+                        genai.delete_file(each_prompt_part.name)
+                    except:
+                        pass
             except:
                 pass
-            execution_time = time.time() - start_time
-            execution_time = round(execution_time, 2)
-            return temp_msg, execution_time, 'error'      
     def get_candlestick_data(self):
         ohlc = self.sp100_nasdaq100_df_dict[self.ticker].copy()
         ohlc['ori_Date'] = ohlc['Date']
@@ -721,10 +630,6 @@ class autotrade:
         ohlc = self.calc_CMF(ohlc)
         ohlc['OBV'] = talib.OBV(ohlc['Close'], ohlc['Volume'])
         ohlc['ATR'] = talib.ATR(ohlc['High'], ohlc['Low'], ohlc['Close'])  
-        ds_df = pd.DataFrame({'date_column': [ohlc['ori_Date'].values[-1]]})
-        ds_df['date_column'] = pd.to_datetime(ds_df['date_column'])
-        ds_df['formatted_date'] = ds_df['date_column'].dt.strftime('%B %d, %Y, at %H:%M')
-        self.current_meeting_date = ds_df['formatted_date'].values[-1]
         ohlc = self.calculate_ichimoku(ohlc)
         ohlc = reset(ohlc.tail(self.candlestick_chart_no + self.future_cloud_no))
         concat_date_list = []
