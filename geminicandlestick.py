@@ -385,28 +385,38 @@ class GeminiCandlestick:
         url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMediaGroup'
         requests.post(url, data=data, files={f'photo{i}': open(image_paths[i], 'rb') for i in range(len(image_paths))})
 
-    def prep_sp100_nasdaq100_dataset(self, csv_path = ""):
+    def prep_sp100_nasdaq100_dataset(self):
         """Prepares a dataset containing S&P 100 and NASDAQ 100 stock information."""
 
+        # Initialize PyTickerSymbols object to fetch stock data
         stock_data = PyTickerSymbols()
 
-        # Fetch stock data for S&P 100 and NASDAQ 100
+        # Fetch stock data for S&P 100 and NASDAQ 100 indices
         sp100_df = pd.DataFrame(list(stock_data.get_stocks_by_index('S&P 100')))
         nasdaq100_df = pd.DataFrame(list(stock_data.get_stocks_by_index('NASDAQ 100')))
 
-        # Combine and deduplicate the dataframes
-        sp100_nasdaq100_df = reset_dataframe_index(pd.concat([sp100_df, nasdaq100_df]))
+        # Combine S&P 100 and NASDAQ 100 dataframes
+        sp100_nasdaq100_df = pd.concat([sp100_df, nasdaq100_df])
+
+        # Reset index and remove duplicate entries based on 'symbol'
+        sp100_nasdaq100_df = reset_dataframe_index(sp100_nasdaq100_df)
         sp100_nasdaq100_df = sp100_nasdaq100_df.groupby('symbol').first().reset_index()
 
-        # Download historical candlestick data using yfinance
+        # Download historical candlestick data for all symbols using yfinance
+        # The period is set to twice the number of candlestick charts required
         candlestick_df = yf.download(list(sp100_nasdaq100_df['symbol'].values), 
-                                     period=f'{self.candlestick_chart_no * 2}d', 
-                                     interval="1d")
+                                    period=f'{self.candlestick_chart_no * 2}d', 
+                                    interval="1d")
+        
+        # Extract date list from candlestick data index
         date_list = [str(each)[:10] for each in list(candlestick_df['Close'].index)]
 
-        # Populate the dictionary with candlestick data for each ticker
+        # Initialize an empty dictionary to store candlestick data for each ticker
         self.sp100_nasdaq100_df_dict = {}
+
+        # Iterate over each ticker symbol
         for each_ticker in tqdm(sp100_nasdaq100_df['symbol'].values):
+            # Create a temporary dictionary with candlestick data for the current ticker
             temp_dict = {'Date': date_list,
                         'Open': list(candlestick_df['Open'][each_ticker].values),
                         'High': list(candlestick_df['High'][each_ticker].values),
@@ -414,14 +424,18 @@ class GeminiCandlestick:
                         'Close': list(candlestick_df['Close'][each_ticker].values),
                         'Volume': list(candlestick_df['Volume'][each_ticker].values),
                         }
+            # Convert the temporary dictionary to a Pandas DataFrame
             temp_df = pd.DataFrame(temp_dict)
 
-            # Only keep data for tickers that have valid closing prices
+            # Check if the first closing price is not NaN (meaning data is available)
             if pd.notna(temp_df['Close'].values[0]):
+                # If data is available, add it to the dictionary with the ticker as the key
                 self.sp100_nasdaq100_df_dict[each_ticker] = temp_df
 
-        # Filter the dataframe to include only tickers with valid data
+        # Filter the sp100_nasdaq100_df to include only tickers with valid candlestick data
         self.sp100_nasdaq100_df = sp100_nasdaq100_df[sp100_nasdaq100_df['symbol'].isin(list(self.sp100_nasdaq100_df_dict.keys()))]
+        
+        # Reset the index of the filtered dataframe
         self.sp100_nasdaq100_df = reset_dataframe_index(self.sp100_nasdaq100_df)
 
         # Combine multiple industries and indices into single semicolon-separated strings
@@ -431,7 +445,7 @@ class GeminiCandlestick:
         # Save the processed dataframe to a CSV file
         self.sp100_nasdaq100_df.to_csv('data/csv/sp100_nasdaq100.csv', index=False)
 
-        # Create dictionaries to map tickers to sectors and company names
+        # Create dictionaries to map tickers to sectors and company names for later use
         self.ticker_sector_dict = dict(zip(self.sp100_nasdaq100_df['symbol'], self.sp100_nasdaq100_df['industries']))
         self.ticker_company_dict = dict(zip(self.sp100_nasdaq100_df['symbol'], self.sp100_nasdaq100_df['name']))
 
