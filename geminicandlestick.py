@@ -385,7 +385,7 @@ class GeminiCandlestick:
         url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMediaGroup'
         requests.post(url, data=data, files={f'photo{i}': open(image_paths[i], 'rb') for i in range(len(image_paths))})
 
-    def prep_sp100_nasdaq100_dataset(self):
+    def prep_sp100_nasdaq100_dataset(self, csv_path = ""):
         """Prepares a dataset containing S&P 100 and NASDAQ 100 stock information."""
 
         stock_data = PyTickerSymbols()
