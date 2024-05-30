@@ -9,7 +9,7 @@ print('OK !', flush=True)
 
 def main():
     """
-    Main function to run the candlestick data generation, charting, and Telegram notification process.
+    Main function to orchestrate the generation of candlestick data, charting, and Telegram notification.
 
     This script is designed to run continuously, performing the following tasks:
     1. Generates daily candlestick data for various assets.
@@ -17,10 +17,10 @@ def main():
     3. Sends the generated charts and reports via Telegram to a specified chat ID.
     4. Sleeps until specific times for data generation and sending to maintain a daily schedule.
 
-    The script uses the `GeminiCandlestick` class to handle data fetching, processing, and Telegram interactions.
+    The script leverages the `GeminiCandlestick` class to handle data fetching, processing, and Telegram interactions.
     """
 
-    # Define the directories for storing different data types (PDF, CSV, PNG)
+    # Define directories for storing different data types (PDF, CSV, PNG)
     data_directories = [
         'data/pdf',  # Directory for storing PDF reports
         'data/csv',  # Directory for storing CSV data files
@@ -32,16 +32,19 @@ def main():
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
 
-    # Get environment variables for API keys and configurations
+    # Retrieve environment variables for API keys and configurations
     gemini_key = str(os.getenv('gemini_key'))  # Gemini API key
     BOT_TOKEN = str(os.getenv('BOT_TOKEN'))    # Telegram Bot Token
     CHAT_ID = str(os.getenv('CHAT_ID'))        # Telegram Chat ID
 
-    # Create an instance of the GeminiCandlestick class to handle data and Telegram operations
-    gemini_instance = GeminiCandlestick(gemini_key=gemini_key,
-                                        BOT_TOKEN=BOT_TOKEN,
-                                        CHAT_ID=CHAT_ID,
-                                        freq_interval='1d')  # Set data frequency to daily ('1d')
+    # Create an instance of the GeminiCandlestick class 
+    # This handles data and Telegram operations
+    gemini_instance = GeminiCandlestick(
+        gemini_key=gemini_key,
+        BOT_TOKEN=BOT_TOKEN,
+        CHAT_ID=CHAT_ID,
+        freq_interval='1d'  # Set data frequency to daily ('1d')
+    )
 
     # Wait until the next day at 00:00 before starting the main loop
     # This ensures the script starts generating data at the beginning of each day
@@ -79,20 +82,23 @@ def main():
 
             # Send PDF reports (minutes and summary)
             gemini_instance.telegram_send_group_pdfs(
-                # List of PDF file paths to send
-                [f"data/pdf/{gemini_instance.file_date}_minutes.pdf", f"data/pdf/{gemini_instance.file_date}_summary.pdf"],
-                # List of captions for the PDFs
-                [gemini_instance.telegram_minutes_text, gemini_instance.telegram_summary_text]
+                [   # List of PDF file paths to send
+                    f"data/pdf/{gemini_instance.file_date}_minutes.pdf", 
+                    f"data/pdf/{gemini_instance.file_date}_summary.pdf"
+                ],
+                [   # List of captions for the PDFs
+                    gemini_instance.telegram_minutes_text, 
+                    gemini_instance.telegram_summary_text
+                ]
             )
 
             # Send generated images
             gemini_instance.telegram_send_group_images(
-                gemini_instance.image_paths,  # List of image paths to send
-                gemini_instance.photo_caption_list  # List of captions for the images
+                gemini_instance.image_paths,        # List of image paths to send
+                gemini_instance.photo_caption_list   # List of captions for the images
             )
 
-            # Sleep until the next day at 00:00 before generating new data
-            time.sleep(gemini_instance.until_next_day_sec)
+
 
         except Exception as e:
             # Error handling: Get exception information
@@ -104,6 +110,9 @@ def main():
 
             # Log the error message (assuming docker_print is a logging method)
             gemini_instance.docker_print(temp_msg)
+
+        # Sleep until the next day at 00:00 before generating new data
+        time.sleep(gemini_instance.until_next_day_sec)
 
 # Run the main function if the script is executed
 if __name__ == '__main__':
