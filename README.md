@@ -7,8 +7,7 @@ This repository contains a Python application that simulates the investment deci
 - [Introduction](#introduction)
 - [Features](#features)
 - [Use Cases](#use-cases)
-- [Installation](#installation)
-- [Usage](#usage)
+- [Getting Started](#getting-started)
 - [Configuration](#configuration)
 - [Structure](#structure)
 - [Contributing](#contributing)
@@ -37,11 +36,13 @@ The Gemini Candlestick Investment Fund application simulates a board of director
 - **Algorithmic Trading Inspiration:** The project can inspire the development of automated trading strategies based on technical indicators and sentiment analysis derived from LLMs.
 - **Financial Education:**  Can be used to learn about different technical indicators, candlestick patterns, and their interpretations in a simulated environment.
 
-## Installation
+## Getting Started
+
+To get the application up and running, follow these steps:
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/your-username/gemini-candlestick.git
+   git clone https://github.com/thanatchon36/gemini-candlestick.git
    ```
 
 2. **Navigate to the Project Directory:**
@@ -49,44 +50,20 @@ The Gemini Candlestick Investment Fund application simulates a board of director
    cd gemini-candlestick
    ```
 
-3. **Create and Activate a Virtual Environment (Recommended):**
+3. **Start the Application:**
    ```bash
-   python3 -m venv .venv
-   source .venv/bin/activate
+   docker-compose up -d
    ```
-
-4. **Install Dependencies:**
-   ```bash
-   pip install -r requirements.txt 
-   ```
-
-## Usage
-
-1. **Configuration:**
-   - Obtain a Google Gemini API key and set it as an environment variable named `gemini_key`.
-   - Create a Telegram bot and obtain its token. Set it as an environment variable named `BOT_TOKEN`.
-   - Get the chat ID of the Telegram chat where you want to receive notifications.  Set this as an environment variable named `CHAT_ID`.
-
-2. **Running the Application (Within a Docker Container - Recommended):**
-   - Build the Docker image:
-     ```bash
-     docker build -t gemini-candlestick .
-     ```
-   - Run the Docker container:
-     ```bash
-     docker run -d --name gemini-container -e gemini_key=YOUR_GEMINI_API_KEY -e BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN -e CHAT_ID=YOUR_TELEGRAM_CHAT_ID gemini-candlestick
-     ```
-     Replace `YOUR_GEMINI_API_KEY`, `YOUR_TELEGRAM_BOT_TOKEN`, and `YOUR_TELEGRAM_CHAT_ID` with your actual credentials.
-
-3. **The application will run continuously, generating reports and sending them to your Telegram chat each day.**
 
 ## Configuration
 
-The application relies on the following environment variables:
+Before running the application, you need to configure the following environment variables in the `docker-compose.yml` file:
 
-- **`gemini_key`:** Your Google Gemini API key.
-- **`BOT_TOKEN`:**  Your Telegram bot token.
-- **`CHAT_ID`:** The ID of your Telegram chat.
+- **`gemini_key`:** Your Google Gemini API key. Replace `YOUR_GEMINI_API_KEY` with your actual key.
+- **`BOT_TOKEN`:**  Your Telegram bot token. Replace `YOUR_TELEGRAM_BOT_TOKEN` with your bot's token.
+- **`CHAT_ID`:** The ID of your Telegram chat. Replace `YOUR_TELEGRAM_CHAT_ID` with your chat's ID.
+
+**Make sure to replace the placeholders with your actual credentials.**
 
 ## Structure
 
@@ -107,4 +84,4 @@ Contributions are welcome!
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+This project is submitted to The Gemini API Developer Competition, sponsored by Google LLC. The submission is subject to the [Official Rules of the competition](https://ai.google.dev/competition), including the intellectual property provisions.
