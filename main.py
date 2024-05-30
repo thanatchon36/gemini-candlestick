@@ -42,7 +42,7 @@ def main():
                                         BOT_TOKEN=BOT_TOKEN,
                                         CHAT_ID=CHAT_ID,
                                         freq_interval='1d')  # Set data frequency to daily ('1d')
-    
+
     # Wait until the next day at 00:00 before starting the main loop
     # This ensures the script starts generating data at the beginning of each day
     time.sleep(gemini_instance.until_next_day_sec)
@@ -52,6 +52,9 @@ def main():
         try:
             # Record the start time for candlestick generation
             start_time = time.time()
+
+            # Wait 8 minutes before starting the process
+            time.sleep(60 * 8)
 
             # Prepare the S&P 100 and Nasdaq 100 datasets for analysis
             gemini_instance.prep_sp100_nasdaq100_dataset()
@@ -67,13 +70,13 @@ def main():
             # The script aims to send reports and charts at this time
             target_time_0130 = 1.5 * 60 * 60  # 01:30 AM in seconds (1.5 hours)
             sleep_until_0130 = target_time_0130 - generate_candlestick_runtime
-            
+
             # Sleep until 01:30 AM if there's time left after data generation
             if sleep_until_0130 > 0:
                 time.sleep(sleep_until_0130)
 
             # Send the generated reports and charts via Telegram at 01:30 AM
-            
+
             # Send PDF reports (minutes and summary)
             gemini_instance.telegram_send_group_pdfs(
                 # List of PDF file paths to send
@@ -95,10 +98,10 @@ def main():
             # Error handling: Get exception information
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
-            
+
             # Format the error message
             temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            
+
             # Log the error message (assuming docker_print is a logging method)
             gemini_instance.docker_print(temp_msg)
 

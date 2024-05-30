@@ -386,7 +386,11 @@ class GeminiCandlestick:
         requests.post(url, data=data, files={f'photo{i}': open(image_paths[i], 'rb') for i in range(len(image_paths))})
 
     def prep_sp100_nasdaq100_dataset(self):
-        """Prepares a dataset containing S&P 100 and NASDAQ 100 stock information."""
+        """
+        Prepares a dataset containing S&P 100 and NASDAQ 100 stock information.
+        Downloads historical candlestick data for each stock and stores it in a dictionary.
+        Saves the processed dataframe to a CSV file.
+        """
 
         # Initialize PyTickerSymbols object to fetch stock data
         stock_data = PyTickerSymbols()
@@ -407,7 +411,7 @@ class GeminiCandlestick:
         candlestick_df = yf.download(list(sp100_nasdaq100_df['symbol'].values), 
                                     period=f'{self.candlestick_chart_no * 2}d', 
                                     interval="1d")
-        
+
         # Extract date list from candlestick data index
         date_list = [str(each)[:10] for each in list(candlestick_df['Close'].index)]
 
@@ -416,21 +420,24 @@ class GeminiCandlestick:
 
         # Iterate over each ticker symbol
         for each_ticker in tqdm(sp100_nasdaq100_df['symbol'].values):
-            # Create a temporary dictionary with candlestick data for the current ticker
-            temp_dict = {'Date': date_list,
-                        'Open': list(candlestick_df['Open'][each_ticker].values),
-                        'High': list(candlestick_df['High'][each_ticker].values),
-                        'Low': list(candlestick_df['Low'][each_ticker].values),
-                        'Close': list(candlestick_df['Close'][each_ticker].values),
-                        'Volume': list(candlestick_df['Volume'][each_ticker].values),
-                        }
-            # Convert the temporary dictionary to a Pandas DataFrame
-            temp_df = pd.DataFrame(temp_dict)
+            try:
+                # Create a temporary dictionary with candlestick data for the current ticker
+                temp_dict = {'Date': date_list,
+                            'Open': list(candlestick_df['Open'][each_ticker].values),
+                            'High': list(candlestick_df['High'][each_ticker].values),
+                            'Low': list(candlestick_df['Low'][each_ticker].values),
+                            'Close': list(candlestick_df['Close'][each_ticker].values),
+                            'Volume': list(candlestick_df['Volume'][each_ticker].values),
+                            }
+                # Convert the temporary dictionary to a Pandas DataFrame
+                temp_df = pd.DataFrame(temp_dict)
 
-            # Check if the first closing price is not NaN (meaning data is available)
-            if pd.notna(temp_df['Close'].values[0]):
-                # If data is available, add it to the dictionary with the ticker as the key
-                self.sp100_nasdaq100_df_dict[each_ticker] = temp_df
+                # Check if the first closing price is not NaN (meaning data is available)
+                if pd.notna(temp_df['Close'].values[0]):
+                    # If data is available, add it to the dictionary with the ticker as the key
+                    self.sp100_nasdaq100_df_dict[each_ticker] = temp_df
+            except:
+                pass
 
         # Filter the sp100_nasdaq100_df to include only tickers with valid candlestick data
         self.sp100_nasdaq100_df = sp100_nasdaq100_df[sp100_nasdaq100_df['symbol'].isin(list(self.sp100_nasdaq100_df_dict.keys()))]

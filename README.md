@@ -1,1 +1,110 @@
-# gemini-candlestick
+# Gemini Candlestick Investment Fund Simulation
+
+This repository contains a Python application that simulates the investment decision-making process of a fictional investment board, the "Gemini Candlestick Investment Fund," using candlestick chart analysis, technical indicators, and Google's Gemini Pro large language model.
+
+## Table of Contents
+
+- [Introduction](#introduction)
+- [Features](#features)
+- [Use Cases](#use-cases)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Structure](#structure)
+- [Contributing](#contributing)
+- [License](#license)
+
+## Introduction
+
+The Gemini Candlestick Investment Fund application simulates a board of directors' meeting, analyzing stock market data and generating hypothetical investment strategies.  It leverages candlestick charts, technical indicators, and the power of Google Gemini Pro to simulate real-world financial analysis and decision-making processes.
+
+## Features
+
+- **Data Acquisition:**  Downloads historical candlestick data for a curated list of stocks from the S&P 100 and Nasdaq 100 indices using the `yfinance` library.
+- **Technical Analysis:** Calculates a variety of technical indicators including RSI, MACD, Bollinger Bands, Fibonacci Retracement, Ichimoku Cloud, Stochastic Oscillator, Chaikin Money Flow, On-Balance Volume, and Average True Range.
+- **Candlestick Charting:**  Generates visually appealing candlestick charts with technical indicators overlaid using the `matplotlib` and `mplfinance` libraries.
+- **Gemini Pro Integration:**  Utilizes Google's Gemini Pro large language model for:
+    - Simulating the discussions and analysis of the fictional board members.
+    - Generating comprehensive meeting minutes, including market observations, individual stock analyses, and the rationale behind investment decisions.
+    - Summarizing key takeaways, actionable insights, and the fund's overall market position.
+    - Crafting engaging captions for generated charts and reports.
+- **Telegram Integration:**  Sends daily reports, summaries, and highlighted candlestick charts directly to a designated Telegram chat using the Telegram Bot API.
+
+## Use Cases
+
+- **Educational Tool:** Provides a practical example of how candlestick charts and technical indicators are used in financial analysis.
+- **Simulation Environment:** Offers a safe and controlled setting to experiment with different investment strategies and observe their hypothetical outcomes.
+- **Algorithmic Trading Inspiration:** The project can inspire the development of automated trading strategies based on technical indicators and sentiment analysis derived from LLMs.
+- **Financial Education:**  Can be used to learn about different technical indicators, candlestick patterns, and their interpretations in a simulated environment.
+
+## Installation
+
+1. **Clone the Repository:**
+   ```bash
+   git clone https://github.com/your-username/gemini-candlestick.git
+   ```
+
+2. **Navigate to the Project Directory:**
+   ```bash
+   cd gemini-candlestick
+   ```
+
+3. **Create and Activate a Virtual Environment (Recommended):**
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate
+   ```
+
+4. **Install Dependencies:**
+   ```bash
+   pip install -r requirements.txt 
+   ```
+
+## Usage
+
+1. **Configuration:**
+   - Obtain a Google Gemini API key and set it as an environment variable named `gemini_key`.
+   - Create a Telegram bot and obtain its token. Set it as an environment variable named `BOT_TOKEN`.
+   - Get the chat ID of the Telegram chat where you want to receive notifications.  Set this as an environment variable named `CHAT_ID`.
+
+2. **Running the Application (Within a Docker Container - Recommended):**
+   - Build the Docker image:
+     ```bash
+     docker build -t gemini-candlestick .
+     ```
+   - Run the Docker container:
+     ```bash
+     docker run -d --name gemini-container -e gemini_key=YOUR_GEMINI_API_KEY -e BOT_TOKEN=YOUR_TELEGRAM_BOT_TOKEN -e CHAT_ID=YOUR_TELEGRAM_CHAT_ID gemini-candlestick
+     ```
+     Replace `YOUR_GEMINI_API_KEY`, `YOUR_TELEGRAM_BOT_TOKEN`, and `YOUR_TELEGRAM_CHAT_ID` with your actual credentials.
+
+3. **The application will run continuously, generating reports and sending them to your Telegram chat each day.**
+
+## Configuration
+
+The application relies on the following environment variables:
+
+- **`gemini_key`:** Your Google Gemini API key.
+- **`BOT_TOKEN`:**  Your Telegram bot token.
+- **`CHAT_ID`:** The ID of your Telegram chat.
+
+## Structure
+
+- **`docker-compose.yml`:**  Defines the Docker container for running the application.
+- **`Dockerfile.custom`:** Specifies instructions for building the Docker image, including installing dependencies and setting up the environment. 
+- **`geminicandlestick.py`:** Contains the main class, `GeminiCandlestick`, which handles data fetching, processing, charting, and Telegram interactions.
+- **`main.py`:**  The entry point of the application.  Manages the overall workflow of data generation, charting, and Telegram notifications. 
+
+## Contributing
+
+Contributions are welcome! 
+
+1. Fork the repository.
+2. Create your feature branch (`git checkout -b feature/your-feature`).
+3. Commit your changes (`git commit -am 'Add some feature'`).
+4. Push to the branch (`git push origin feature/your-feature`).
+5. Create a new Pull Request.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
