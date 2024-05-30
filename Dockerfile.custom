@@ -56,7 +56,9 @@ RUN python3 -m pip install --no-cache-dir pdfkit
 RUN python3 -m pip install --no-cache-dir pdf2image
 RUN python3 -m pip install --no-cache-dir img2pdf
 RUN python3 -m pip install --no-cache-dir PyPDF2
+RUN python3 -m pip install --no-cache-dir pyyaml
 
 # Specify the command to run on container start. 
 # Assumes the main application script is located at '/opt/app/main.py'.
 CMD ["python", "/opt/app/main.py"]
+
