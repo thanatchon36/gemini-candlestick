@@ -11,6 +11,19 @@ def main():
     """
     Main function to run the candlestick generation and Telegram notification process.
     """
+
+    # Define the directories to store different data types
+    data_directories = [
+        'data/pdf',
+        'data/csv',
+        'data/png'
+    ]
+
+    # Loop through each directory and create it if it doesn't exist
+    for dir_path in data_directories:
+        if not os.path.exists(dir_path):
+            os.makedirs(dir_path)
+
     # Get environment variables
     gemini_key = str(os.getenv('gemini_key'))
     BOT_TOKEN = str(os.getenv('BOT_TOKEN'))
