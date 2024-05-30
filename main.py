@@ -4,7 +4,7 @@ import os
 import sys
 import time
 
-# Print a message to indicate successful initialization
+# Print a message to indicate successful initializations
 print('OK !', flush=True)
 
 def main():

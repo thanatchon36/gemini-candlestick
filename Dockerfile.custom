@@ -1,5 +1,7 @@
-# TA-Lib dependencies
+# Use the official Python image for ARM64v8 architecture as the base image.
 FROM arm64v8/python:3.12
+
+# Install system-level dependencies required to build TA-Lib.
 RUN apt-get update && apt-get install -y \
     build-essential \
     libssl-dev \
@@ -19,17 +21,27 @@ RUN apt-get update && apt-get install -y \
     libxmlsec1-dev \
     libffi-dev \
     liblzma-dev
+
+# Download TA-Lib source code, extract it, and navigate to the directory.
 RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -xzf ta-lib-0.4.0-src.tar.gz && \
     cd ta-lib && \
+
+    # Configure TA-Lib build for ARM64 architecture and install it.
     ./configure --prefix=/usr/local --build=aarch64-unknown-linux-gnu && \
     make && \
     make install && \
+
+    # Navigate back to the previous directory and clean up downloaded source files.
     cd .. && \
     rm -rf ta-lib*
 
-# Install pip, setuptools, and wheel
+# Install Python packages.
+
+# Install pip, setuptools, and wheel for Python package management.
 RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel
+
+# Install TA-Lib and other necessary Python packages.
 RUN python3 -m pip install --no-cache-dir TA-Lib
 RUN python3 -m pip install --no-cache-dir grpcio
 RUN python3 -m pip install --no-cache-dir pandas
@@ -38,6 +50,13 @@ RUN python3 -m pip install --no-cache-dir plotly
 RUN python3 -m pip install --no-cache-dir matplotlib
 RUN python3 -m pip install --no-cache-dir mplfinance
 RUN python3 -m pip install --no-cache-dir pillow
+RUN python3 -m pip install --no-cache-dir yfinance
+RUN python3 -m pip install --no-cache-dir pytickersymbols
+RUN python3 -m pip install --no-cache-dir pdfkit
+RUN python3 -m pip install --no-cache-dir pdf2image
+RUN python3 -m pip install --no-cache-dir img2pdf
+RUN python3 -m pip install --no-cache-dir PyPDF2
 
-# Specify the command to run on container start
+# Specify the command to run on container start. 
+# Assumes the main application script is located at '/opt/app/main.py'.
 CMD ["python", "/opt/app/main.py"]
