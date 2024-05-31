@@ -4,13 +4,24 @@ FROM python:3.12
 # Set environment variables to avoid user prompts during package installation
 ENV DEBIAN_FRONTEND=noninteractive
 
-# Install dependencies required for TA-Lib
+# Install dependencies required for building TA-Lib
 RUN apt-get update && \
     apt-get install -y build-essential \
-                       libta-lib0 \
-                       libta-lib-dev \
-                       wget && \
+                       wget \
+                       curl \
+                       tar \
+                       python3-dev && \
     rm -rf /var/lib/apt/lists/*
+
+# Download and install TA-Lib from source
+RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+    tar -xzf ta-lib-0.4.0-src.tar.gz && \
+    cd ta-lib && \
+    ./configure --prefix=/usr && \
+    make && \
+    make install && \
+    cd .. && \
+    rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
 
 # Install the TA-Lib Python package
 RUN pip install TA-Lib
