@@ -1,5 +1,6 @@
 # Use the official Python image for ARM64v8 architecture as the base image.
-FROM arm64v8/python:3.12
+# FROM arm64v8/python:3.12
+FROM python:3.12
 
 # Install system-level dependencies required to build TA-Lib.
 RUN apt-get update && apt-get install -y \
