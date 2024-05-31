@@ -23,8 +23,12 @@ RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     cd .. && \
     rm -rf ta-lib ta-lib-0.4.0-src.tar.gz
 
-# Install the TA-Lib Python package
-RUN pip install TA-Lib
+# Ensure pip is up-to-date
+RUN pip install --upgrade pip
+
+# Install the TA-Lib Python package without compiling
+RUN pip install numpy && \
+    pip install TA-Lib --no-build-isolation --no-cache-dir --prefer-binary
 
 # Set the working directory in the container
 WORKDIR /app
