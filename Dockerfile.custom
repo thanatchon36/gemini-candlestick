@@ -1,65 +1,56 @@
-# Use the official Python image for ARM64v8 architecture as the base image.
-# FROM arm64v8/python:3.12
+# Use the official Python 3.12 image as the base image
 FROM python:3.12
 
-# Install system-level dependencies required to build TA-Lib.
+# Install system dependencies required for TA-Lib and other Python packages
 RUN apt-get update && apt-get install -y \
-    build-essential \
-    libssl-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    wget \
-    curl \
-    llvm \
-    libc6-dev \
-    libedit-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev \
-    libxml2-dev \
-    libxmlsec1-dev \
-    libffi-dev \
-    liblzma-dev
+    build-essential \      # Essential tools for compiling software
+    libssl-dev \           # OpenSSL library for SSL/TLS support
+    zlib1g-dev \          # zlib compression library development files
+    libbz2-dev \           # bzip2 compression library development files
+    libreadline-dev \       # GNU readline library for interactive command-line editing
+    libsqlite3-dev \      # SQLite3 database library development files
+    wget \                # Command-line utility for downloading files
+    curl \                # Command-line tool for transferring data using various protocols
+    llvm \                 # LLVM compiler infrastructure
+    libc6-dev \            # C standard library development files
+    libedit-dev \          # Line editing library development files
+    libncursesw5-dev \     # ncurses library for terminal handling
+    xz-utils \             # XZ compression utilities
+    tk-dev \               # Tkinter GUI toolkit development files
+    libxml2-dev \          # XML parsing library development files
+    libxmlsec1-dev \       # XML security library development files
+    libffi-dev \           # Foreign Function Interface library development files
+    liblzma-dev            # LZMA compression library development files
 
-# Download TA-Lib source code, extract it, and navigate to the directory.
+# Download, compile, and install TA-Lib (Technical Analysis library)
 RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -xzf ta-lib-0.4.0-src.tar.gz && \
     cd ta-lib && \
-
-    # Configure TA-Lib build for ARM64 architecture and install it.
-    ./configure --prefix=/usr/local --build=aarch64-unknown-linux-gnu && \
+    ./configure --prefix=/usr/local && \
     make && \
     make install && \
-
-    # Navigate back to the previous directory and clean up downloaded source files.
     cd .. && \
     rm -rf ta-lib*
 
-# Install Python packages.
-
-# Install pip, setuptools, and wheel for Python package management.
+# Upgrade pip, setuptools, and wheel for Python package management
 RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel
 
-# Install TA-Lib and other necessary Python packages.
-RUN python3 -m pip install --no-cache-dir TA-Lib
-RUN python3 -m pip install --no-cache-dir grpcio
-RUN python3 -m pip install --no-cache-dir pandas
-RUN python3 -m pip install --no-cache-dir google-generativeai
-RUN python3 -m pip install --no-cache-dir plotly
-RUN python3 -m pip install --no-cache-dir matplotlib
-RUN python3 -m pip install --no-cache-dir mplfinance
-RUN python3 -m pip install --no-cache-dir pillow
-RUN python3 -m pip install --no-cache-dir yfinance
-RUN python3 -m pip install --no-cache-dir pytickersymbols
-RUN python3 -m pip install --no-cache-dir pdfkit
-RUN python3 -m pip install --no-cache-dir pdf2image
-RUN python3 -m pip install --no-cache-dir img2pdf
-RUN python3 -m pip install --no-cache-dir PyPDF2
-RUN python3 -m pip install --no-cache-dir pyyaml
+# Install Python packages required for the application
+RUN python3 -m pip install --no-cache-dir TA-Lib       # Technical Analysis library
+RUN python3 -m pip install --no-cache-dir grpcio      # gRPC framework for communication
+RUN python3 -m pip install --no-cache-dir pandas       # Data manipulation and analysis library
+RUN python3 -m pip install --no-cache-dir google-generativeai # Google Generative AI library
+RUN python3 -m pip install --no-cache-dir plotly       # Interactive plotting library
+RUN python3 -m pip install --no-cache-dir matplotlib    # Plotting library
+RUN python3 -m pip install --no-cache-dir mplfinance  # Matplotlib Finance for financial plotting
+RUN python3 -m pip install --no-cache-dir pillow       # Image processing library
+RUN python3 -m pip install --no-cache-dir yfinance      # Yahoo Finance API
+RUN python3 -m pip install --no-cache-dir pytickersymbols # Library for working with ticker symbols
+RUN python3 -m pip install --no-cache-dir pdfkit      # PDF generation library
+RUN python3 -m pip install --no-cache-dir pdf2image   # Convert PDF to image
+RUN python3 -m pip install --no-cache-dir img2pdf   # Convert image to PDF
+RUN python3 -m pip install --no-cache-dir PyPDF2      # PDF manipulation library
+RUN python3 -m pip install --no-cache-dir pyyaml      # YAML parsing and emitting library
 
-# Specify the command to run on container start. 
-# Assumes the main application script is located at '/opt/app/main.py'.
+# Set the default command to run when the container starts
 CMD ["python", "/opt/app/main.py"]
-
