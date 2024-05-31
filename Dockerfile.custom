@@ -1,42 +1,28 @@
 # Use the official Python 3.12 image as the base image
 FROM python:3.12
 
-# Update the package list and install necessary system dependencies
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libssl-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    wget \
-    curl \
-    llvm \
-    libc6-dev \
-    libedit-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev \
-    libxml2-dev \
-    libxmlsec1-dev \
-    libffi-dev \
-    liblzma-dev
+# Update package lists and install dependencies 
+# (using yum for AWS Linux, and including essential libraries)
+RUN yum update -y && \
+    yum install -y gcc make wget tar libffi-devel libxml2-devel libxml2-python
 
-# Download and install TA-Lib
-RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
+# Download and compile TA-Lib 
+# (using temporary directory for cleaner build process)
+RUN mkdir /tmp/ta-lib && \
+    cd /tmp/ta-lib && \
+    wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -xzf ta-lib-0.4.0-src.tar.gz && \
-    cd ta-lib && \
+    cd ta-lib-* && \
     ./configure --prefix=/usr/local && \
     make && \
     make install && \
-    cd .. && \
-    rm -rf ta-lib*
+    cd /tmp && \
+    rm -rf /tmp/ta-lib
 
-# Upgrade pip, setuptools, and wheel
-RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel
+# Install Python packages (including TA-Lib wrapper)
+RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel TA-Lib
 
 # Install Python libraries
-RUN python3 -m pip install --no-cache-dir TA-Lib             # Technical Analysis Library
 RUN python3 -m pip install --no-cache-dir grpcio             # gRPC for remote procedure calls
 RUN python3 -m pip install --no-cache-dir pandas             # Data analysis and manipulation
 RUN python3 -m pip install --no-cache-dir google-generativeai # Google Generative AI
