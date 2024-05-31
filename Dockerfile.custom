@@ -1,5 +1,7 @@
+# Use the official Python 3.12 image for ARM64 architecture as the base
 FROM arm64v8/python:3.12
 
+# Install system dependencies required for TA-Lib and other Python packages
 RUN apt-get update && apt-get install -y \
     build-essential \
     libssl-dev \
@@ -20,6 +22,7 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     liblzma-dev
 
+# Download and install TA-Lib
 RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -xzf ta-lib-0.4.0-src.tar.gz && \
     cd ta-lib && \
@@ -29,21 +32,25 @@ RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     cd .. && \
     rm -rf ta-lib*
 
+# Upgrade pip, setuptools, and wheel
 RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel
-RUN python3 -m pip install --no-cache-dir TA-Lib
-RUN python3 -m pip install --no-cache-dir grpcio           
-RUN python3 -m pip install --no-cache-dir pandas           
-RUN python3 -m pip install --no-cache-dir google-generativeai 
-RUN python3 -m pip install --no-cache-dir plotly         
-RUN python3 -m pip install --no-cache-dir matplotlib       
-RUN python3 -m pip install --no-cache-dir mplfinance       
-RUN python3 -m pip install --no-cache-dir pillow           
-RUN python3 -m pip install --no-cache-dir yfinance        
-RUN python3 -m pip install --no-cache-dir pytickersymbols  
-RUN python3 -m pip install --no-cache-dir pdfkit            
-RUN python3 -m pip install --no-cache-dir pdf2image      
-RUN python3 -m pip install --no-cache-dir img2pdf      
-RUN python3 -m pip install --no-cache-dir PyPDF2          
-RUN python3 -m pip install --no-cache-dir pyyaml        
 
+# Install Python packages
+RUN python3 -m pip install --no-cache-dir TA-Lib           # Technical Analysis library
+RUN python3 -m pip install --no-cache-dir grpcio           # gRPC support for networking
+RUN python3 -m pip install --no-cache-dir pandas           # Data analysis and manipulation library
+RUN python3 -m pip install --no-cache-dir google-generativeai # Google's generative AI API
+RUN python3 -m pip install --no-cache-dir plotly           # Interactive plotting library
+RUN python3 -m pip install --no-cache-dir matplotlib       # Plotting library
+RUN python3 -m pip install --no-cache-dir mplfinance       # Matplotlib utilities for financial plotting
+RUN python3 -m pip install --no-cache-dir pillow           # Image processing library
+RUN python3 -m pip install --no-cache-dir yfinance        # Yahoo Finance API for fetching financial data
+RUN python3 -m pip install --no-cache-dir pytickersymbols  # Library for working with ticker symbols
+RUN python3 -m pip install --no-cache-dir pdfkit            # PDF generation library
+RUN python3 -m pip install --no-cache-dir pdf2image      # Library for converting PDF to images
+RUN python3 -m pip install --no-cache-dir img2pdf      # Library for converting images to PDF
+RUN python3 -m pip install --no-cache-dir PyPDF2          # Library for working with PDF files
+RUN python3 -m pip install --no-cache-dir pyyaml        # YAML parsing and emitting library
+
+# Set the command to run when the container starts
 CMD ["python", "/opt/app/main.py"]

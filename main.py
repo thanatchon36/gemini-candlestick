@@ -65,6 +65,9 @@ def main():
             # Generate the Gemini candlestick data and charts
             gemini_instance.generate_gemini_candlestick()
 
+            # Log the current date and time
+            gemini_instance.docker_print(gemini_instance.today_time)
+
             # Record the end time and calculate the runtime for data generation
             end_time = time.time()
             generate_candlestick_runtime = end_time - start_time
@@ -97,8 +100,6 @@ def main():
                 gemini_instance.image_paths,        # List of image paths to send
                 gemini_instance.photo_caption_list   # List of captions for the images
             )
-
-
 
         except Exception as e:
             # Error handling: Get exception information
