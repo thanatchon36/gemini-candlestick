@@ -12,6 +12,7 @@ This repository contains a Python application that simulates the investment deci
 - [Structure](#structure)
 - [Contributing](#contributing)
 - [License](#license)
+- [Hardware Requirements](#hardware-requirements)
 
 ## Introduction
 
@@ -85,3 +86,9 @@ Contributions are welcome!
 ## License
 
 This project is submitted to The Gemini API Developer Competition, sponsored by Google LLC. The submission is subject to the [Official Rules of the competition](https://ai.google.dev/competition), including the intellectual property provisions.
+
+## Hardware Requirements
+
+- **Minimum & Recommended:** CPU: 2 cores (ARM64 architecture), RAM: 2GB 
+
+ This application has been developed and tested on a MacBook M1, which comfortably meets these requirements.
