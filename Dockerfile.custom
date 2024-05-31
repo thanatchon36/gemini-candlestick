@@ -1,28 +1,28 @@
 # Use the official Python 3.12 image as the base image
 FROM python:3.12
 
-# Install system dependencies required for TA-Lib and other Python packages
+# Update the package list and install necessary system dependencies
 RUN apt-get update && apt-get install -y \
-    build-essential \      # Essential tools for compiling software
-    libssl-dev \           # OpenSSL library for SSL/TLS support
-    zlib1g-dev \          # zlib compression library development files
-    libbz2-dev \           # bzip2 compression library development files
-    libreadline-dev \       # GNU readline library for interactive command-line editing
-    libsqlite3-dev \      # SQLite3 database library development files
-    wget \                # Command-line utility for downloading files
-    curl \                # Command-line tool for transferring data using various protocols
-    llvm \                 # LLVM compiler infrastructure
-    libc6-dev \            # C standard library development files
-    libedit-dev \          # Line editing library development files
-    libncursesw5-dev \     # ncurses library for terminal handling
-    xz-utils \             # XZ compression utilities
-    tk-dev \               # Tkinter GUI toolkit development files
-    libxml2-dev \          # XML parsing library development files
-    libxmlsec1-dev \       # XML security library development files
-    libffi-dev \           # Foreign Function Interface library development files
-    liblzma-dev            # LZMA compression library development files
+    build-essential \
+    libssl-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    wget \
+    curl \
+    llvm \
+    libc6-dev \
+    libedit-dev \
+    libncursesw5-dev \
+    xz-utils \
+    tk-dev \
+    libxml2-dev \
+    libxmlsec1-dev \
+    libffi-dev \
+    liblzma-dev
 
-# Download, compile, and install TA-Lib (Technical Analysis library)
+# Download and install TA-Lib
 RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -xzf ta-lib-0.4.0-src.tar.gz && \
     cd ta-lib && \
@@ -32,25 +32,25 @@ RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     cd .. && \
     rm -rf ta-lib*
 
-# Upgrade pip, setuptools, and wheel for Python package management
+# Upgrade pip, setuptools, and wheel
 RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel
 
-# Install Python packages required for the application
-RUN python3 -m pip install --no-cache-dir TA-Lib       # Technical Analysis library
-RUN python3 -m pip install --no-cache-dir grpcio      # gRPC framework for communication
-RUN python3 -m pip install --no-cache-dir pandas       # Data manipulation and analysis library
-RUN python3 -m pip install --no-cache-dir google-generativeai # Google Generative AI library
-RUN python3 -m pip install --no-cache-dir plotly       # Interactive plotting library
-RUN python3 -m pip install --no-cache-dir matplotlib    # Plotting library
-RUN python3 -m pip install --no-cache-dir mplfinance  # Matplotlib Finance for financial plotting
-RUN python3 -m pip install --no-cache-dir pillow       # Image processing library
-RUN python3 -m pip install --no-cache-dir yfinance      # Yahoo Finance API
-RUN python3 -m pip install --no-cache-dir pytickersymbols # Library for working with ticker symbols
-RUN python3 -m pip install --no-cache-dir pdfkit      # PDF generation library
-RUN python3 -m pip install --no-cache-dir pdf2image   # Convert PDF to image
-RUN python3 -m pip install --no-cache-dir img2pdf   # Convert image to PDF
-RUN python3 -m pip install --no-cache-dir PyPDF2      # PDF manipulation library
-RUN python3 -m pip install --no-cache-dir pyyaml      # YAML parsing and emitting library
+# Install Python libraries
+RUN python3 -m pip install --no-cache-dir TA-Lib             # Technical Analysis Library
+RUN python3 -m pip install --no-cache-dir grpcio             # gRPC for remote procedure calls
+RUN python3 -m pip install --no-cache-dir pandas             # Data analysis and manipulation
+RUN python3 -m pip install --no-cache-dir google-generativeai # Google Generative AI
+RUN python3 -m pip install --no-cache-dir plotly             # Interactive plotting library
+RUN python3 -m pip install --no-cache-dir matplotlib         # Plotting library
+RUN python3 -m pip install --no-cache-dir mplfinance         # Matplotlib Finance for candlestick charts
+RUN python3 -m pip install --no-cache-dir pillow             # Image processing library
+RUN python3 -m pip install --no-cache-dir yfinance            # Yahoo Finance API
+RUN python3 -m pip install --no-cache-dir pytickersymbols    # Ticker symbols for various exchanges
+RUN python3 -m pip install --no-cache-dir pdfkit             # PDF generation library
+RUN python3 -m pip install --no-cache-dir pdf2image         # Convert PDF to images
+RUN python3 -m pip install --no-cache-dir img2pdf         # Convert images to PDF
+RUN python3 -m pip install --no-cache-dir PyPDF2             # PDF manipulation library
+RUN python3 -m pip install --no-cache-dir pyyaml             # YAML parsing and emitting library
 
 # Set the default command to run when the container starts
 CMD ["python", "/opt/app/main.py"]
