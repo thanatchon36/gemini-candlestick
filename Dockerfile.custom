@@ -1,37 +1,25 @@
+# Use the official Python 3.12 image from the Docker Hub
 FROM python:3.12
 
-RUN apt-get update && apt-get install -y \
-    build-essential \
-    libssl-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    wget \
-    curl \
-    llvm \
-    libc6-dev \
-    libedit-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev \
-    libxml2-dev \
-    libxmlsec1-dev \
-    libffi-dev \
-    liblzma-dev
+# Set environment variables to avoid user prompts during package installation
+ENV DEBIAN_FRONTEND=noninteractive
 
-# Download & Install TA-Lib
-RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
-    tar -xzf ta-lib-0.4.0-src.tar.gz && \
-    cd ta-lib && \
-    ./configure --prefix=/usr/local && \
-    make && \
-    make install && \
-    cd /app && \
-    rm -rf /app/ta-lib*
+# Install dependencies required for TA-Lib
+RUN apt-get update && \
+    apt-get install -y build-essential \
+                       libta-lib0 \
+                       libta-lib-dev \
+                       wget && \
+    rm -rf /var/lib/apt/lists/*
 
-# Clean up the installation files
+# Install the TA-Lib Python package
+RUN pip install TA-Lib
 
-RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel
-RUN python3 -m pip install --no-cache-dir -U pip TA-Lib
+# Set the working directory in the container
+WORKDIR /app
 
+# Copy the current directory contents into the container at /app
+COPY . /app
+
+# Run a simple test script to verify the installation
+CMD ["python", "-c", "import talib; print(talib.__version__)"]
