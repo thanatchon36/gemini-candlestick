@@ -1,6 +1,6 @@
 # Gemini Candlestick Investment Fund Simulation
 
-This repository contains a Python application that simulates the investment decision-making process of a fictional investment board, the "Gemini Candlestick Investment Fund," using candlestick chart analysis, technical indicators, and Google's Gemini Pro large language model.
+This repository hosts a Python application that simulates the investment decision-making process of the "Gemini Candlestick Investment Fund," a fictional investment board. The simulation employs candlestick chart analysis, technical indicators, and Google's Gemini Pro large language model to inform investment strategies.
 
 ## Table of Contents
 
@@ -10,34 +10,34 @@ This repository contains a Python application that simulates the investment deci
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
 - [Structure](#structure)
-- [Contributing](#contributing)
 - [License](#license)
 - [Hardware Requirements](#hardware-requirements)
 
 ## Introduction
 
-The Gemini Candlestick Investment Fund application simulates a board of directors' meeting, analyzing stock market data and generating hypothetical investment strategies. It leverages candlestick charts, technical indicators, and the power of Google Gemini Pro to simulate real-world financial analysis and decision-making processes.
+The Gemini Candlestick Investment Fund application is a sophisticated tool designed to simulate the dynamics of a board of directors' meeting. It analyzes stock market data and formulates hypothetical investment strategies by leveraging candlestick charts and technical indicators. Utilizing the capabilities of Google Gemini Pro, the application mirrors real-world financial analysis and decision-making processes, providing a comprehensive and immersive experience.
 
 ## Features
 
-- **Data Acquisition:** Downloads historical candlestick data for a curated list of stocks from the S&P 100 and Nasdaq 100 indices using the `yfinance` library.
-- **Technical Analysis:** Calculates a variety of technical indicators, including:
-    - RSI
-    - MACD
+- **Data Acquisition:** Efficiently downloads historical candlestick data for selected stocks from the S&P 100 and Nasdaq 100 indices using the `yfinance` library.
+- **Technical Analysis:** Computes a comprehensive suite of technical indicators, including:
+    - Relative Strength Index (RSI)
+    - Moving Average Convergence Divergence (MACD)
     - Bollinger Bands
-    - Fibonacci Retracement
+    - Fibonacci Retracement Levels
     - Ichimoku Cloud
     - Stochastic Oscillator
     - Chaikin Money Flow
-    - On-Balance Volume
-    - Average True Range
-- **Candlestick Charting:** Generates visually appealing candlestick charts with technical indicators overlaid using the `matplotlib` and `mplfinance` libraries.
-- **Gemini Pro Integration:** Utilizes Google's Gemini Pro large language model for:
-    - Simulating the discussions and analysis of the fictional board members.
-    - Generating comprehensive meeting minutes, including market observations, individual stock analyses, and the rationale behind investment decisions.
-    - Summarizing key takeaways, actionable insights, and the fund's overall market position.
-    - Crafting engaging captions for generated charts and reports.
-- **Telegram Integration:** Sends daily reports, summaries, and highlighted candlestick charts directly to a designated Telegram chat using the Telegram Bot API.
+    - On-Balance Volume (OBV)
+    - Average True Range (ATR)
+    - Elliott Wave Analysis
+- **Candlestick Charting:** Produces detailed and visually appealing candlestick charts with technical indicators overlaid, utilizing `matplotlib` and `mplfinance`.
+- **Gemini Pro Integration:** Leverages Google's Gemini Pro large language model to:
+    - Simulate the discussions and analyses of fictional board members.
+    - Generate detailed meeting minutes, encompassing market observations, individual stock analyses, and the rationale behind investment decisions.
+    - Summarize key takeaways, actionable insights, and the fund's overall market strategy.
+    - Create engaging captions for generated charts and reports.
+- **Telegram Integration:** Automatically delivers daily reports, summaries, and highlighted candlestick charts to a designated Telegram chat using the Telegram Bot API.
 
 ## Use Cases
 
@@ -69,7 +69,7 @@ To get the application up and running, follow these steps:
 
 Before running the application, you need to configure the following environment variables in the `docker-compose.yml` file:
 
-- **`gemini_key`:** Your Google Gemini API key. Replace `YOUR_GEMINI_API_KEY` with your actual key.
+- **`GEMINI_KEY`:** Your Google Gemini API key. Replace `YOUR_GEMINI_API_KEY` with your actual key.
 - **`BOT_TOKEN`:** Your Telegram bot token. Replace `YOUR_TELEGRAM_BOT_TOKEN` with your bot's token.
 - **`CHAT_ID`:** The ID of your Telegram chat. Replace `YOUR_TELEGRAM_CHAT_ID` with your chat's ID.
 
@@ -81,16 +81,6 @@ Before running the application, you need to configure the following environment 
 - **`Dockerfile.custom`:** Specifies instructions for building the Docker image, including installing dependencies and setting up the environment.
 - **`geminicandlestick.py`:** Contains the main class, `GeminiCandlestick`, which handles data fetching, processing, charting, and Telegram interactions.
 - **`main.py`:** The entry point of the application. Manages the overall workflow of data generation, charting, and Telegram notifications.
-
-## Contributing
-
-Contributions are welcome! 
-
-1. Fork the repository.
-2. Create your feature branch (`git checkout -b feature/your-feature`).
-3. Commit your changes (`git commit -am 'Add some feature'`).
-4. Push to the branch (`git push origin feature/your-feature`).
-5. Create a new Pull Request.
 
 ## License
 
