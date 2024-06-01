@@ -1,5 +1,3 @@
-Sure, here is the revised document with the detailed roles of the board members included:
-
 # Gemini Candlestick Investment Fund Simulation
 
 This repository hosts a Python application that simulates the investment decision-making process of the "Gemini Candlestick Investment Fund," a fictional investment board. The simulation employs candlestick chart analysis, technical indicators, and Google's Gemini Pro large language model to inform investment strategies.
