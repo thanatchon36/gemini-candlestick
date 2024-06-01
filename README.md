@@ -41,10 +41,10 @@ The Gemini Candlestick Investment Fund application simulates a board of director
 
 ## Use Cases
 
-- **Educational Tool:** Provides a practical example of how candlestick charts and technical indicators are used in financial analysis.
-- **Simulation Environment:** Offers a safe and controlled setting to experiment with different investment strategies and observe their hypothetical outcomes.
-- **Algorithmic Trading Inspiration:** The project can inspire the development of automated trading strategies based on technical indicators and sentiment analysis derived from LLMs.
-- **Financial Education:** Can be used to learn about different technical indicators, candlestick patterns, and their interpretations in a simulated environment.
+- **Educational Tool:** Serves as a comprehensive resource for understanding the application of candlestick charts and technical indicators in financial analysis, providing concrete examples and hands-on learning opportunities.
+- **Simulation Environment:** Creates a secure and controlled platform for experimenting with various investment strategies, allowing users to observe potential outcomes without real financial risk.
+- **Algorithmic Trading Inspiration:** Acts as a catalyst for the development of automated trading strategies, utilizing technical indicators and sentiment analysis from language models.
+- **Financial Education:** Facilitates learning about different technical indicators, candlestick patterns, and their interpretations through an immersive and interactive simulated environment.
 
 ## Getting Started
 
