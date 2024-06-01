@@ -69,7 +69,6 @@ def main():
     # )
     # gemini_instance.docker_print(gemini_instance.today_time)
 
-
     # Wait until the next day at 00:00 before starting the main loop
     # This ensures the script starts generating data at the beginning of each day
     time.sleep(gemini_instance.until_next_day_sec)
