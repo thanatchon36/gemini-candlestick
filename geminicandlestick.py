@@ -50,18 +50,25 @@ import google.generativeai as genai
 
 # Plotting and visualization
 import matplotlib
-matplotlib.use('Agg')  # Set backend to 'Agg' for non-interactive plotting
+# Set backend to 'Agg' for non-interactive plotting
+matplotlib.use('Agg')  
 import matplotlib.pyplot as plt
-plt.rc('figure', figsize=(15, 12), dpi=300)  # Set default figure size and DPI
+# Set default figure size and DPI
+plt.rc('figure', figsize=(15, 12), dpi=300) 
 from matplotlib.ticker import FuncFormatter  # Custom tick formatting
 import matplotlib.dates as mdates  # Date handling in plots
-from mplfinance.original_flavor import candlestick_ohlc  # Candlestick charts
+# Candlestick charts
+from mplfinance.original_flavor import candlestick_ohlc  
 
 # PDF generation and manipulation
 import pdfkit
 from pdf2image import convert_from_path  # PDF to image conversion
 from img2pdf import convert  # Image to PDF conversion
 from PyPDF2 import PdfMerger  # PDF file merging
+
+# Suppress warnings 
+import warnings
+warnings.filterwarnings("ignore")
 
 def reset_dataframe_index(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -1338,10 +1345,20 @@ class GeminiCandlestick:
         next_days_str = [date.strftime('%d %b') for date in next_days]
         xticklabels_list.extend([next_days_str[-1]])
 
-        # Format x-axis ticks for the first subplot
-        ax1.xaxis.set_major_locator(mdates.DayLocator(interval=24))
-        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))
-        ax1.set_xticklabels(xticklabels_list)
+        # Configure x-axis ticks for the first subplot
+        # The x-axis represents dates
+        ax1.xaxis.set_major_locator(mdates.DayLocator(interval=24))  # Set major ticks every 24 hours
+        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))  # Format tick labels as 'Month Day'
+
+        # Set custom tick labels from the provided list
+        # The `warnings.catch_warnings()` block is used to suppress potential UserWarnings
+        # that might arise when plotting candlestick data consecutively and skipping 
+        # weekends (Saturday and Sunday). This is because Matplotlib's default behavior 
+        # is to expect continuous data for candlestick charts, and removing weekend data 
+        # can lead to indexing issues or misaligned labels. 
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore", UserWarning)
+            ax1.set_xticklabels(xticklabels_list)
 
         # --- Adjust layout and save the figure ---
         plt.subplots_adjust(left=0.085, right=0.925, bottom=0.025, top=0.975)
