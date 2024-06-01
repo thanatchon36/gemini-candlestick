@@ -17,20 +17,20 @@ This repository hosts a Python application that simulates the investment decisio
 
 The Gemini Candlestick Investment Fund application represents a sophisticated solution meticulously crafted to replicate the intricate dynamics of a board of directors' meeting. By harnessing advanced algorithms, it meticulously analyzes stock market data to formulate hypothetical investment strategies. Leveraging candlestick charts, technical indicators, and the computational prowess of Google's Gemini Pro large language model, this application offers a distinctive capability: reviving esteemed figures of the financial realm to engage in comprehensive discussions. This immersive feature enables these luminaries to convene and deliberate as if in a real-world setting. As a result, users are provided with an interactive environment that mirrors authentic financial analysis and decision-making processes, fostering a deeper understanding of investment strategies.
 
-### Board Members
+### Board of Directors
 
-The fictional board of directors includes renowned figures in the field of financial analysis, each assigned to analyze specific indicators and provide their expert opinions:
+The esteemed board of directors comprises notable figures in the realm of financial analysis, each tasked with analyzing specific indicators and offering their expert insights:
 
-1. **Munehisa Homma**, Chairman of the Meeting: Analyzes Candlestick Pattern Recognition and provides opinions.
-2. **John Bollinger**: Analyzes the Bollinger Bands (BB) indicator and provides opinions.
-3. **Leonardo Pisano Fibonacci**: Analyzes Fibonacci retracement levels and provides opinions.
-4. **Ralph Nelson Elliott**: Analyzes potential Elliott Wave patterns utilizing Fibonacci ratios (0.786, 0.618, 0.5, 0.382, and 0.236 on Fibonacci retracement charts), RSI, MACD, and Bollinger Bands to determine the extent of wave retracements and projections within the patterns, and provides opinions.
-5. **Goichi Hosoda**: Analyzes the Ichimoku Cloud and provides opinions.
-6. **Joseph Granville**: Analyzes Volume and On-Balance Volume (OBV) indicators and provides opinions.
-7. **Gerald Appel**: Analyzes the MACD indicator and provides opinions.
-8. **J. Welles Wilder**: Analyzes RSI and ATR indicators and provides opinions.
-9. **George Lane**: Analyzes the Stochastic Oscillator indicator and provides opinions.
-10. **Marc Chaikin**: Analyzes the Chaikin Money Flow indicator and provides opinions.
+1. **Munehisa Homma**, Chairman of the Board: Responsible for scrutinizing Candlestick Pattern Recognition and delivering informed perspectives.
+2. **John Bollinger**: Tasked with assessing the Bollinger Bands (BB) indicator and providing analytical commentary.
+3. **Leonardo Pisano Fibonacci**: Assigned to evaluate Fibonacci retracement levels and deliver insightful opinions.
+4. **Ralph Nelson Elliott**: Engaged in analyzing potential Elliott Wave patterns employing Fibonacci ratios (0.786, 0.618, 0.5, 0.382, and 0.236 on Fibonacci retracement charts), RSI, MACD, and Bollinger Bands to ascertain wave retracements and projections within the patterns, and furnishing comprehensive opinions.
+5. **Goichi Hosoda**: Entrusted with the evaluation of the Ichimoku Cloud and furnishing expert opinions.
+6. **Joseph Granville**: Responsible for analyzing Volume and On-Balance Volume (OBV) indicators and delivering expert opinions.
+7. **Gerald Appel**: Tasked with analyzing the MACD indicator and providing discerning viewpoints.
+8. **J. Welles Wilder**: Charged with analyzing RSI and ATR indicators and offering well-founded opinions.
+9. **George Lane**: Assigned to evaluate the Stochastic Oscillator indicator and provide expert insights.
+10. **Marc Chaikin**: Entrusted with the analysis of the Chaikin Money Flow indicator and delivering comprehensive opinions.
 
 ## Features
 
