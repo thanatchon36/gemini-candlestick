@@ -45,7 +45,6 @@ The esteemed board of directors comprises notable figures in the realm of financ
     - Chaikin Money Flow
     - On-Balance Volume (OBV)
     - Average True Range (ATR)
-    - Elliott Wave Analysis
 - **Candlestick Charting:** Produces detailed and visually appealing candlestick charts with technical indicators overlaid, utilizing `matplotlib` and `mplfinance`.
 - **Gemini Pro Integration:** Leverages Google's Gemini Pro large language model to:
     - Simulate the discussions and analyses of fictional board members.
