@@ -408,8 +408,8 @@ class GeminiCandlestick:
 
         # Download historical candlestick data for all symbols using yfinance
         # The period is set to twice the number of candlestick charts required
-        candlestick_df = yf.download(list(sp100_nasdaq100_df['symbol'].values), 
-                                    period=f'{self.candlestick_chart_no * 2}d', 
+        candlestick_df = yf.download(list(sp100_nasdaq100_df['symbol'].values),
+                                    period=f'1y', 
                                     interval="1d")
 
         # Extract date list from candlestick data index

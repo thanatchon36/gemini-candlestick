@@ -44,7 +44,7 @@ RUN python3 -m pip install --no-cache-dir plotly           # Interactive plottin
 RUN python3 -m pip install --no-cache-dir matplotlib       # Plotting library
 RUN python3 -m pip install --no-cache-dir mplfinance       # Matplotlib utilities for financial plotting
 RUN python3 -m pip install --no-cache-dir pillow           # Image processing library
-RUN python3 -m pip install --no-cache-dir yfinance        # Yahoo Finance API for fetching financial data
+RUN python3 -m pip install --no-cache-dir yfinance==0.2.40  # Yahoo Finance API for fetching financial data
 RUN python3 -m pip install --no-cache-dir pytickersymbols  # Library for working with ticker symbols
 RUN python3 -m pip install --no-cache-dir pdfkit            # PDF generation library
 RUN python3 -m pip install --no-cache-dir pdf2image      # Library for converting PDF to images
