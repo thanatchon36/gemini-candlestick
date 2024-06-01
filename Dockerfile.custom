@@ -20,9 +20,9 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libxmlsec1-dev \
     libffi-dev \
-    liblzma-dev
-
-RUN apt install -y wkhtmltopdf
+    liblzma-dev \
+    wkhtmltopdf \
+    poppler-utils
 
 # Download and install TA-Lib
 RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \

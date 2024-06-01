@@ -58,7 +58,7 @@ def main():
             f"data/pdf/{gemini_instance.file_date}_summary.pdf"
         ],
         [   # List of captions for the PDFs
-            gemini_instance.telegram_minutes_text, 
+            gemini_instance.telegram_minutes_text,
             gemini_instance.telegram_summary_text
         ]
     )
