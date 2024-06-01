@@ -46,6 +46,7 @@ def main():
         freq_interval='1d'  # Set data frequency to daily ('1d')
     )
 
+    # Debug
     gemini_instance.docker_print(gemini_instance.today_time)
     gemini_instance.prep_sp100_nasdaq100_dataset()
     gemini_instance.generate_gemini_candlestick()

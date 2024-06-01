@@ -22,6 +22,8 @@ RUN apt-get update && apt-get install -y \
     libffi-dev \
     liblzma-dev
 
+RUN apt install -y wkhtmltopdf
+
 # Download and install TA-Lib
 RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -xzf ta-lib-0.4.0-src.tar.gz && \
