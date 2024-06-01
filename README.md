@@ -5,7 +5,7 @@ This repository hosts a Python application that simulates the investment decisio
 ## Table of Contents
 
 - [Introduction](#introduction)
-- [Features](#features)
+- [Key Features](#key_features)
 - [Use Cases](#use-cases)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
@@ -32,10 +32,10 @@ The esteemed board of directors comprises notable figures in the realm of financ
 9. **George Lane**: Assigned to evaluate the Stochastic Oscillator indicator and provide expert insights.
 10. **Marc Chaikin**: Entrusted with the analysis of the Chaikin Money Flow indicator and delivering comprehensive opinions.
 
-## Features
+## Key Features
 
-- **Data Acquisition:** Efficiently downloads historical candlestick data for selected stocks from the S&P 100 and Nasdaq 100 indices using the `yfinance` library.
-- **Technical Analysis:** Computes a comprehensive suite of technical indicators, including:
+- **Data Acquisition:** Efficiently retrieves historical candlestick data for selected stocks from the S&P 100 and Nasdaq 100 indices utilizing the `yfinance` library.
+- **Technical Analysis:** Conducts a comprehensive analysis by computing various technical indicators, including:
     - Relative Strength Index (RSI)
     - Moving Average Convergence Divergence (MACD)
     - Bollinger Bands
@@ -45,13 +45,13 @@ The esteemed board of directors comprises notable figures in the realm of financ
     - Chaikin Money Flow
     - On-Balance Volume (OBV)
     - Average True Range (ATR)
-- **Candlestick Charting:** Produces detailed and visually appealing candlestick charts with technical indicators overlaid, utilizing `matplotlib` and `mplfinance`.
-- **Gemini Pro Integration:** Leverages Google's Gemini Pro large language model to:
-    - Simulate the discussions and analyses of fictional board members.
-    - Generate detailed meeting minutes, encompassing market observations, individual stock analyses, and the rationale behind investment decisions.
-    - Summarize key takeaways, actionable insights, and the fund's overall market strategy.
-    - Create engaging captions for generated charts and reports.
-- **Telegram Integration:** Automatically delivers daily reports, summaries, and highlighted candlestick charts to a designated Telegram chat using the Telegram Bot API.
+- **Candlestick Charting:** Generates detailed and visually appealing candlestick charts overlaid with technical indicators using `matplotlib` and `mplfinance`.
+- **Gemini Pro Integration:** Utilizes Google's Gemini Pro large language model to:
+    - Simulate discussions and analyses resembling those of board members.
+    - Generate comprehensive meeting minutes covering market observations, individual stock analyses, and investment rationale.
+    - Summarize actionable insights, key takeaways, and the fund's overall market strategy.
+    - Create engaging captions for charts and reports.
+- **Telegram Integration:** Automatically distributes daily reports, summaries, and highlighted candlestick charts to a designated Telegram chat via the Telegram Bot API.
 
 ## Use Cases
 
