@@ -15,7 +15,7 @@ This repository hosts a Python application that simulates the investment decisio
 
 ## Introduction
 
-The Gemini Candlestick Investment Fund application is a sophisticated tool designed to simulate the dynamics of a board of directors' meeting. It analyzes stock market data and formulates hypothetical investment strategies by leveraging candlestick charts and technical indicators. Utilizing the capabilities of Google Gemini Pro, the application mirrors real-world financial analysis and decision-making processes, providing a comprehensive and immersive experience.
+The Gemini Candlestick Investment Fund application represents a sophisticated solution meticulously crafted to replicate the intricate dynamics of a board of directors' meeting. By harnessing advanced algorithms, it meticulously analyzes stock market data to formulate hypothetical investment strategies. Leveraging candlestick charts, technical indicators, and the computational prowess of Google's Gemini Pro large language model, this application offers a distinctive capability: reviving esteemed figures of the financial realm to engage in comprehensive discussions. This immersive feature enables these luminaries to convene and deliberate as if in a real-world setting. As a result, users are provided with an interactive environment that mirrors authentic financial analysis and decision-making processes, fostering a deeper understanding of investment strategies.
 
 ### Board Members
 
@@ -45,6 +45,7 @@ The fictional board of directors includes renowned figures in the field of finan
     - Chaikin Money Flow
     - On-Balance Volume (OBV)
     - Average True Range (ATR)
+    - Elliott Wave Analysis
 - **Candlestick Charting:** Produces detailed and visually appealing candlestick charts with technical indicators overlaid, utilizing `matplotlib` and `mplfinance`.
 - **Gemini Pro Integration:** Leverages Google's Gemini Pro large language model to:
     - Simulate the discussions and analyses of fictional board members.
