@@ -68,7 +68,6 @@ from PyPDF2 import PdfMerger  # PDF file merging
 
 # Suppress warnings 
 import warnings
-warnings.filterwarnings("ignore")
 
 def reset_dataframe_index(df: pd.DataFrame) -> pd.DataFrame:
     """
