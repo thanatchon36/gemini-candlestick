@@ -1,3 +1,5 @@
+Sure, here is the revised document with the detailed roles of the board members included:
+
 # Gemini Candlestick Investment Fund Simulation
 
 This repository hosts a Python application that simulates the investment decision-making process of the "Gemini Candlestick Investment Fund," a fictional investment board. The simulation employs candlestick chart analysis, technical indicators, and Google's Gemini Pro large language model to inform investment strategies.
@@ -17,6 +19,21 @@ This repository hosts a Python application that simulates the investment decisio
 
 The Gemini Candlestick Investment Fund application is a sophisticated tool designed to simulate the dynamics of a board of directors' meeting. It analyzes stock market data and formulates hypothetical investment strategies by leveraging candlestick charts and technical indicators. Utilizing the capabilities of Google Gemini Pro, the application mirrors real-world financial analysis and decision-making processes, providing a comprehensive and immersive experience.
 
+### Board Members
+
+The fictional board of directors includes renowned figures in the field of financial analysis, each assigned to analyze specific indicators and provide their expert opinions:
+
+1. **Munehisa Homma**, Chairman of the Meeting: Analyzes Candlestick Pattern Recognition and provides opinions.
+2. **John Bollinger**: Analyzes the Bollinger Bands (BB) indicator and provides opinions.
+3. **Leonardo Pisano Fibonacci**: Analyzes Fibonacci retracement levels and provides opinions.
+4. **Ralph Nelson Elliott**: Analyzes potential Elliott Wave patterns utilizing Fibonacci ratios (0.786, 0.618, 0.5, 0.382, and 0.236 on Fibonacci retracement charts), RSI, MACD, and Bollinger Bands to determine the extent of wave retracements and projections within the patterns, and provides opinions.
+5. **Goichi Hosoda**: Analyzes the Ichimoku Cloud and provides opinions.
+6. **Joseph Granville**: Analyzes Volume and On-Balance Volume (OBV) indicators and provides opinions.
+7. **Gerald Appel**: Analyzes the MACD indicator and provides opinions.
+8. **J. Welles Wilder**: Analyzes RSI and ATR indicators and provides opinions.
+9. **George Lane**: Analyzes the Stochastic Oscillator indicator and provides opinions.
+10. **Marc Chaikin**: Analyzes the Chaikin Money Flow indicator and provides opinions.
+
 ## Features
 
 - **Data Acquisition:** Efficiently downloads historical candlestick data for selected stocks from the S&P 100 and Nasdaq 100 indices using the `yfinance` library.
@@ -30,7 +47,6 @@ The Gemini Candlestick Investment Fund application is a sophisticated tool desig
     - Chaikin Money Flow
     - On-Balance Volume (OBV)
     - Average True Range (ATR)
-    - Elliott Wave Analysis
 - **Candlestick Charting:** Produces detailed and visually appealing candlestick charts with technical indicators overlaid, utilizing `matplotlib` and `mplfinance`.
 - **Gemini Pro Integration:** Leverages Google's Gemini Pro large language model to:
     - Simulate the discussions and analyses of fictional board members.
