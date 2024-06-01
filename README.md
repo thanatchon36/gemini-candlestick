@@ -5,7 +5,7 @@ This repository hosts a Python application that simulates the investment decisio
 ## Table of Contents
 
 - [Introduction](#introduction)
-- [Key Features](#key_features)
+- [Key Features](#key-features)
 - [Use Cases](#use-cases)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
