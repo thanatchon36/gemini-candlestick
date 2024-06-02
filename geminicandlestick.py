@@ -125,8 +125,8 @@ class GeminiCandlestick:
         self.CHAT_ID = CHAT_ID
 
         # Configuration parameters
-        self.candlestick_chart_no = 168 
-        self.future_cloud_no = 26
+        self.candlestick_chart_no = 26*7 
+        self.future_cloud_no = 26*1
 
         # Dictionaries to store frequency-dependent values
         self.freq_dict = {
@@ -1318,50 +1318,76 @@ class GeminiCandlestick:
         colors = ['white', "#868993", "#B71C1C",]
         self.color_title(ax9, label_list, colors, y=0.92)
 
-        # --- Format x-axis ---
+        # Calculate the date difference between the first two data points for x-axis limit setting
         date_val = ohlc['Date'].values[1] - ohlc['Date'].values[0]
+        
+        # Set the x-axis limits, adding padding based on the date difference
         ax1.set_xlim([ohlc['Date'].min() - date_val, ohlc['Date'].max() + date_val])
-
-        # Generate x-tick labels
-        xticklabels_list = []
-        start_i = 19 - 1
+        
+        # Set x-axis ticks at specific intervals (assuming 26 periods per year)
+        ax1.set_xticks([
+            ohlc.iloc[0]['Date'],                     # First date
+            ohlc.iloc[26 - 1]['Date'],               # End of the 1st period
+            ohlc.iloc[26 * 2 - 1]['Date'],          # End of the 2nd period
+            ohlc.iloc[26 * 3 - 1]['Date'],          # ... and so on
+            ohlc.iloc[26 * 4 - 1]['Date'],
+            ohlc.iloc[26 * 5 - 1]['Date'],
+            ohlc.iloc[26 * 6 - 1]['Date'],
+            ohlc.iloc[(26 * 7 - 1)]['Date'],
+            ohlc.iloc[(26 * 8 - 1)]['Date'],
+        ])
+        
+        # Create a list of x-axis tick labels using 'ori_Date' column
+        xticklabels_list = [
+            ohlc.iloc[0]['ori_Date'],
+            ohlc.iloc[26 - 1]['ori_Date'],
+            ohlc.iloc[26 * 2 - 1]['ori_Date'],
+            ohlc.iloc[26 * 3 - 1]['ori_Date'],
+            ohlc.iloc[26 * 4 - 1]['ori_Date'],
+            ohlc.iloc[26 * 5 - 1]['ori_Date'],
+            ohlc.iloc[26 * 6 - 1]['ori_Date'],
+            ohlc.iloc[(26 * 7 - 1)]['ori_Date'],
+        ]
+        
+        # Format the date strings to month format
+        xticklabels_list = [self.get_date_month_text(each) for each in xticklabels_list]
+        
+        # Make a copy of the original tick labels
+        ori_xticklabels_list = xticklabels_list.copy()
+        
+        # Append additional tick labels for future dates
+        start_i = 26 - 1
         xticklabels_list.append(self.get_date_month_text(ohlc['ori_Date'].values[start_i - 1]))
-        next_i = start_i + 24
+        next_i = start_i + 26
         xticklabels_list.append(self.get_date_month_text(ohlc['ori_Date'].values[next_i]))
+        
         for _ in range(5):
-            next_i = next_i + 24
+            next_i = next_i + 26
             xticklabels_list.append(self.get_date_month_text(ohlc['ori_Date'].values[next_i]))
 
+        # Create a list for the last x-axis tick label
         xticklabels_list_2 = [xticklabels_list[-1]]
+        
+        # Convert string dates to datetime objects for calculation
         dates = [datetime.datetime.strptime(date, '%d %b') for date in xticklabels_list_2]
         last_date = dates[-1]
+        
+        # Calculate next weekdays (Monday to Friday)
         next_days = []
-
-        # Add days until we have 24 additional days
-        days_to_add = 24
+        days_to_add = 26
         while len(next_days) < days_to_add:
             last_date += datetime.timedelta(days=1)
             if last_date.weekday() < 5:  # Monday to Friday are 0-4
                 next_days.append(last_date)
-
+        
+        # Format the next weekdays and append to the original tick labels
         next_days_str = [date.strftime('%d %b') for date in next_days]
-        xticklabels_list.extend([next_days_str[-1]])
-
-        # Configure x-axis ticks for the first subplot
-        # The x-axis represents dates
-        ax1.xaxis.set_major_locator(mdates.DayLocator(interval=24))  # Set major ticks every 24 hours
-        ax1.xaxis.set_major_formatter(mdates.DateFormatter('%b %d'))  # Format tick labels as 'Month Day'
-
-        # Set custom tick labels from the provided list
-        # The `warnings.catch_warnings()` block is used to suppress potential UserWarnings
-        # that might arise when plotting candlestick data consecutively and skipping 
-        # weekends (Saturday and Sunday). This is because Matplotlib's default behavior 
-        # is to expect continuous data for candlestick charts, and removing weekend data 
-        # can lead to indexing issues or misaligned labels. 
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", UserWarning)
-            ax1.set_xticklabels(xticklabels_list)
-
+        ori_xticklabels_list.extend([next_days_str[-1]])
+        
+        # Use the modified tick labels for the plot
+        xticklabels_list = ori_xticklabels_list.copy()
+        ax1.set_xticklabels(xticklabels_list)
+        
         # --- Adjust layout and save the figure ---
         plt.subplots_adjust(left=0.085, right=0.925, bottom=0.025, top=0.975)
         fig.subplots_adjust(hspace=0.03)
