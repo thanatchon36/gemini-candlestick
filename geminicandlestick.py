@@ -66,9 +66,6 @@ from pdf2image import convert_from_path  # PDF to image conversion
 from img2pdf import convert  # Image to PDF conversion
 from PyPDF2 import PdfMerger  # PDF file merging
 
-# Suppress warnings 
-import warnings
-
 def reset_dataframe_index(df: pd.DataFrame) -> pd.DataFrame:
     """
     Resets the index of a pandas DataFrame while preserving the original columns.
