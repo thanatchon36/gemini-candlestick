@@ -947,6 +947,9 @@ class GeminiCandlestick:
             os.rename("data/pdf/minutes.pdf", f"data/pdf/{self.file_date}_minutes.pdf")
             os.rename("data/pdf/summary.pdf", f"data/pdf/{self.file_date}_summary.pdf")
 
+            # Store the paths to the interesting ticker images
+            self.image_paths = [f'data/png/{each}.png' for each in interest_ticker_list]
+
             # Generate captions for the interesting ticker images
             self.prompt_parts = []  # Clear the prompt_parts list
             for each_ticker in tqdm(interest_ticker_list):
@@ -958,17 +961,32 @@ class GeminiCandlestick:
                 )
                 self.prompt_parts.append(temp_file)
 
+            # Initialize an empty list to store photo captions.
             self.photo_caption_list = []
+            # Iterate through each part of the prompt
             for each_prompt_part in tqdm(self.prompt_parts):
-                time.sleep(30)  # Wait for 30 seconds
-                # Generate a photo caption using Gemini
-                photo_caption = str(genai.GenerativeModel(
-                    model_name="gemini-1.5-pro-latest",
-                    generation_config=generation_config,
-                    system_instruction=self.get_system_instructions_7(),  # Get instructions for the seventh part
-                    safety_settings=safety_settings
-                ).generate_content([each_prompt_part]).text)
-                self.photo_caption_list.append(photo_caption)
+                # Retry up to 6 times with a 30-second delay
+                for _ in range(6):
+                    try:
+                        time.sleep(30)  # Wait for rate limiting or server congestion
+                        # Generate a photo caption using Gemini Pro
+                        photo_caption = str(genai.GenerativeModel(
+                            model_name="gemini-1.5-pro-latest",  # Specify the Gemini model
+                            generation_config=generation_config,  # Pass the generation configuration
+                            system_instruction=self.get_system_instructions_7(),  # Get instructions for this part
+                            safety_settings=safety_settings  # Enforce safety settings
+                        ).generate_content([each_prompt_part]).text)
+
+                        # Append the generated caption to the list
+                        self.photo_caption_list.append(photo_caption)
+
+                        # Break the retry loop if successful
+                        break
+
+                    # Catch any exceptions during generation
+                    except Exception as e:
+                        self.docker_print(f"Error generating caption: {e}")
+                        # Continue to the next retry attempt
 
             # Delete uploaded images from Gemini after generating captions
             for each_prompt_part in tqdm(self.prompt_parts):
@@ -976,9 +994,6 @@ class GeminiCandlestick:
                     genai.delete_file(each_prompt_part.name)
                 except:
                     pass
-
-            # Store the paths to the interesting ticker images
-            self.image_paths = [f'data/png/{each}.png' for each in interest_ticker_list]
 
             # Garbage Collection (GC) - Explicitly delete and free up memory
             for each_prompt_part in self.prompt_parts:
