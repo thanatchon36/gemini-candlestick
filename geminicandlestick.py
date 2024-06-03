@@ -793,14 +793,16 @@ class GeminiCandlestick:
         ]
 
         try:
-            # Check if the 'data/png' directory is empty
-            if len(os.listdir('data/png')) == 0:
+            # Define the directory where candlestick charts are saved
+            charts_directory = 'data/png'
+            # Check if the charts directory is empty
+            if len(os.listdir(charts_directory)) == 0:
                 # If the directory is empty, generate candlestick charts for all tickers
                 for each_ticker in tqdm(self.sp100_nasdaq100_df['symbol'].values[:202]):
                     self.ticker = each_ticker
                     self.get_candlestick_image()
-            # If the directory is not empty and it's a weekday, generate candlestick charts for all tickers
-            elif self.today_date.lower() not in ['saturday', 'sunday']:  # Convert to lowercase for case-insensitive comparison
+            # Generate charts on days other than Sunday and Monday
+            elif self.today_date.lower() not in ['sunday', 'monday']:
                 for each_ticker in tqdm(self.sp100_nasdaq100_df['symbol'].values[:202]):
                     self.ticker = each_ticker
                     self.get_candlestick_image()
