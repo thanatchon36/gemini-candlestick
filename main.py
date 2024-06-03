@@ -47,27 +47,25 @@ def main():
     )
 
     # Debug
-    # gemini_instance.docker_print(gemini_instance.today_time)
-    # gemini_instance.prep_sp100_nasdaq100_dataset()
-    # gemini_instance.generate_gemini_candlestick()
-    # gemini_instance.docker_print(gemini_instance.today_time)
-    # # Send PDF reports (minutes and summary)
-    # gemini_instance.telegram_send_group_pdfs(
-    #     [   # List of PDF file paths to send
-    #         f"data/pdf/{gemini_instance.file_date}_minutes.pdf", 
-    #         f"data/pdf/{gemini_instance.file_date}_summary.pdf"
-    #     ],
-    #     [   # List of captions for the PDFs
-    #         gemini_instance.telegram_minutes_text,
-    #         gemini_instance.telegram_summary_text
-    #     ]
-    # )
-    # Send generated images
-    # gemini_instance.telegram_send_group_images(
-    #     gemini_instance.image_paths,        # List of image paths to send
-    #     gemini_instance.photo_caption_list   # List of captions for the images
-    # )
-    # gemini_instance.docker_print(gemini_instance.today_time)
+    gemini_instance.docker_print(gemini_instance.today_time)
+    gemini_instance.prep_sp100_nasdaq100_dataset()
+    gemini_instance.generate_gemini_candlestick()
+    gemini_instance.docker_print(gemini_instance.today_time)
+    gemini_instance.telegram_send_group_pdfs(
+        [   # List of PDF file paths to send
+            f"data/pdf/{gemini_instance.file_date}_minutes.pdf", 
+            f"data/pdf/{gemini_instance.file_date}_summary.pdf"
+        ],
+        [   # List of captions for the PDFs
+            gemini_instance.telegram_minutes_text,
+            gemini_instance.telegram_summary_text
+        ]
+    )
+    gemini_instance.telegram_send_group_images(
+        gemini_instance.image_paths,        # List of image paths to send
+        gemini_instance.photo_caption_list   # List of captions for the images
+    )
+    gemini_instance.docker_print(gemini_instance.today_time)
 
     # Wait until the next day at 00:00 before starting the main loop
     # This ensures the script starts generating data at the beginning of each day
@@ -105,24 +103,28 @@ def main():
                 time.sleep(sleep_until_0130)
 
             # Send the generated reports and charts via Telegram at 01:30 AM
+            
+            # Check if there's text content for both minutes and summary reports
+            if gemini_instance.telegram_minutes_text != "" and gemini_instance.telegram_summary_text != "":
+                # Send the PDF reports with their respective captions
+                gemini_instance.telegram_send_group_pdfs(
+                    [   # List of PDF file paths to send
+                        f"data/pdf/{gemini_instance.file_date}_minutes.pdf", 
+                        f"data/pdf/{gemini_instance.file_date}_summary.pdf"
+                    ],
+                    [   # List of captions for the PDFs
+                        gemini_instance.telegram_minutes_text, 
+                        gemini_instance.telegram_summary_text
+                    ]
+                )
 
-            # Send PDF reports (minutes and summary)
-            gemini_instance.telegram_send_group_pdfs(
-                [   # List of PDF file paths to send
-                    f"data/pdf/{gemini_instance.file_date}_minutes.pdf", 
-                    f"data/pdf/{gemini_instance.file_date}_summary.pdf"
-                ],
-                [   # List of captions for the PDFs
-                    gemini_instance.telegram_minutes_text, 
-                    gemini_instance.telegram_summary_text
-                ]
-            )
-
-            # Send generated images
-            gemini_instance.telegram_send_group_images(
-                gemini_instance.image_paths,        # List of image paths to send
-                gemini_instance.photo_caption_list   # List of captions for the images
-            )
+            # Check if there are images to send and corresponding captions
+            if len(gemini_instance.image_paths) > 0 and len(gemini_instance.photo_caption_list) > 0:
+                # Send the generated images with their respective captions
+                gemini_instance.telegram_send_group_images(
+                    gemini_instance.image_paths,        # List of image paths to send
+                    gemini_instance.photo_caption_list   # List of captions for the images
+                )
 
         except Exception as e:
             # Error handling: Get exception information
@@ -134,6 +136,12 @@ def main():
 
             # Log the error message (assuming docker_print is a logging method)
             gemini_instance.docker_print(temp_msg)
+
+        # Reset Gemini instance variables for the next iteration or request.
+        gemini_instance.telegram_minutes_text = ""  # Clear the text for the minutes summary.
+        gemini_instance.telegram_summary_text = ""  # Clear the text for the overall summary.
+        gemini_instance.image_paths = []  # Reset the list of image paths.
+        gemini_instance.photo_caption_list = []  # Reset the list of captions for the images.
 
         # Sleep until the next day at 00:00 before generating new data
         time.sleep(gemini_instance.until_next_day_sec)

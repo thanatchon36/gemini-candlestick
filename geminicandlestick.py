@@ -819,13 +819,31 @@ class GeminiCandlestick:
                 self.prompt_parts.append(temp_file)
             random.shuffle(self.prompt_parts)  # Shuffle the prompts
 
-            # Generate text describing the candlestick patterns and technical indicators
-            minutes_text = str(genai.GenerativeModel(
-                model_name="gemini-1.5-pro-latest",
-                generation_config=generation_config,
-                system_instruction=self.get_system_instructions_1(),  # Get system instructions for the first part
-                safety_settings=safety_settings
-            ).generate_content(self.prompt_parts, request_options={"timeout": 1000}).text)
+            # Define a retry mechanism for generating text using the Gemini model.
+            # The code attempts to generate text up to 6 times, with a 30-second delay between each attempt.
+            for attempt in range(6):
+                try:
+                    # Skip the delay for the first attempt.
+                    if attempt != 0:
+                        time.sleep(30)
+
+                    # Generate text using the Gemini model.
+                    minutes_text = str(genai.GenerativeModel(
+                        model_name="gemini-1.5-pro-latest",
+                        generation_config=generation_config,
+                        system_instruction=self.get_system_instructions_1(),
+                        safety_settings=safety_settings
+                    ).generate_content(self.prompt_parts, request_options={"timeout": 1000}).text)
+
+                    # Check if the generated text contains unwanted characters.
+                    # If not, break out of the retry loop.
+                    if '[' not in minutes_text and ']' not in minutes_text:
+                        break
+
+                # Catch any exceptions during text generation and continue to the next attempt.
+                except Exception as e:
+                    self.docker_print(f"Error during minutes_text generation: {e}")
+                    pass
 
             # Delete uploaded files from Gemini
             for each_prompt_part in tqdm(self.prompt_parts):
@@ -865,15 +883,27 @@ class GeminiCandlestick:
             # Process the PDF file to prevent cropping
             self.make_pdf_uncroppable('data/pdf/minutes.pdf', 'data/pdf/minutes.pdf')
 
-            time.sleep(30)  # Wait for 30 seconds
+            # Define a retry mechanism for generating text using the Gemini model.
+            # The code attempts to generate text up to 6 times, with a 30-second delay between each attempt.
+            for attempt in range(6):
+                try:
+                    time.sleep(30)  # Wait for 30 seconds
+                    # Generate a summary text from the minutes
+                    summary_text = str(genai.GenerativeModel(
+                        model_name="gemini-1.5-pro-latest",
+                        generation_config=generation_config,
+                        system_instruction=self.get_system_instructions_2(),  # Get system instructions for the second part
+                        safety_settings=safety_settings
+                    ).generate_content(minutes_text).text)
 
-            # Generate a summary text from the minutes
-            summary_text = str(genai.GenerativeModel(
-                model_name="gemini-1.5-pro-latest",
-                generation_config=generation_config,
-                system_instruction=self.get_system_instructions_2(),  # Get system instructions for the second part
-                safety_settings=safety_settings
-            ).generate_content(minutes_text).text)
+                    # Check if the generated text contains unwanted characters.
+                    # If not, break out of the retry loop.
+                    if '[' not in summary_text and ']' not in summary_text:
+                        break
+                # Catch any exceptions during text generation and continue to the next attempt.
+                except Exception as e:
+                    self.docker_print(f"Error during summary_text generation: {e}")
+                    pass
 
             time.sleep(30)  # Wait for 30 seconds
 
