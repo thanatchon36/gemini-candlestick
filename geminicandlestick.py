@@ -410,7 +410,7 @@ class GeminiCandlestick:
         sp100_nasdaq100_df = sp100_nasdaq100_df.groupby('symbol').first().reset_index()
 
         # Debug
-        sp100_nasdaq100_df = sp100_nasdaq100_df.head(5)
+        # sp100_nasdaq100_df = sp100_nasdaq100_df.head(10)
 
         # Download historical candlestick data for all symbols using yfinance
         # The period is set to twice the number of candlestick charts required
