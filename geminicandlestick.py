@@ -819,31 +819,40 @@ class GeminiCandlestick:
                 self.prompt_parts.append(temp_file)
             random.shuffle(self.prompt_parts)  # Shuffle the prompts
 
-            # Define a retry mechanism for generating text using the Gemini model.
-            # The code attempts to generate text up to 6 times, with a 30-second delay between each attempt.
+            # Initialize an empty list to store the generated minutes text.
+            minutes_text_list = []
+
+            # Attempt to generate the minutes text up to 6 times.
             for attempt in range(6):
                 try:
-                    # Skip the delay for the first attempt.
+                    # If this is not the first attempt, wait for 30 seconds before retrying.
                     if attempt != 0:
                         time.sleep(30)
 
-                    # Generate text using the Gemini model.
-                    minutes_text = str(genai.GenerativeModel(
+                    # Generate the minutes text using the specified language model and parameters.
+                    temp_minutes_text = str(genai.GenerativeModel(
                         model_name="gemini-1.5-pro-latest",
                         generation_config=generation_config,
                         system_instruction=self.get_system_instructions_1(),
                         safety_settings=safety_settings
                     ).generate_content(self.prompt_parts, request_options={"timeout": 1000}).text)
 
-                    # Check if the generated text contains unwanted characters.
-                    # If not, break out of the retry loop.
-                    if '[' not in minutes_text and ']' not in minutes_text:
-                        break
+                    # Append the generated text to the list.
+                    minutes_text_list.append(temp_minutes_text)
 
-                # Catch any exceptions during text generation and continue to the next attempt.
+                # If an exception occurs during generation, log the error and continue to the next attempt.
                 except Exception as e:
-                    self.docker_print(f"Error during minutes_text generation: {e}")
+                    self.docker_print(f"Error during temp_minutes_text generation: {e}")
                     pass
+
+            # Filter out any generated text that contains '[' or ']' characters.
+            minutes_text_list = [each for each in minutes_text_list if '[' not in each and ']' not in each]
+
+            # Sort the list of generated text by length in descending order.
+            minutes_text_list = sorted(minutes_text_list, key=len, reverse=True)
+
+            # Select the longest generated text as the final minutes text.
+            minutes_text = minutes_text_list[0]
 
             # Delete uploaded files from Gemini
             for each_prompt_part in tqdm(self.prompt_parts):
@@ -883,27 +892,41 @@ class GeminiCandlestick:
             # Process the PDF file to prevent cropping
             self.make_pdf_uncroppable('data/pdf/minutes.pdf', 'data/pdf/minutes.pdf')
 
-            # Define a retry mechanism for generating text using the Gemini model.
-            # The code attempts to generate text up to 6 times, with a 30-second delay between each attempt.
+            # Initialize an empty list to store generated summaries
+            summary_text_list = []
+
+            # Attempt to generate summaries with multiple retries
             for attempt in range(6):
                 try:
-                    time.sleep(30)  # Wait for 30 seconds
-                    # Generate a summary text from the minutes
-                    summary_text = str(genai.GenerativeModel(
+                    # Add a delay to avoid rate limiting
+                    time.sleep(30)
+
+                    # Generate a summary using the specified language model (Gemini Pro)
+                    temp_summary_text = str(genai.GenerativeModel(
                         model_name="gemini-1.5-pro-latest",
                         generation_config=generation_config,
-                        system_instruction=self.get_system_instructions_2(),  # Get system instructions for the second part
+                        system_instruction=self.get_system_instructions_2(),  # Retrieve system instructions
                         safety_settings=safety_settings
-                    ).generate_content(minutes_text).text)
+                    ).generate_content(minutes_text).text)  # Pass meeting minutes as input
 
-                    # Check if the generated text contains unwanted characters.
-                    # If not, break out of the retry loop.
-                    if '[' not in summary_text and ']' not in summary_text:
-                        break
-                # Catch any exceptions during text generation and continue to the next attempt.
+                    # Append the generated summary to the list
+                    summary_text_list.append(temp_summary_text)
+
+                # Handle any exceptions during summary generation
                 except Exception as e:
-                    self.docker_print(f"Error during summary_text generation: {e}")
+                    # Log the error message
+                    self.docker_print(f"Error during temp_summary_text generation: {e}")
+                    # Continue to the next attempt
                     pass
+
+            # Filter out summaries containing '[' or ']' (potential formatting issues)
+            summary_text_list = [each for each in summary_text_list if '[' not in each and ']' not in each]
+
+            # Sort the summaries by length in descending order
+            summary_text_list = sorted(summary_text_list, key=len, reverse=True)
+
+            # Select the longest summary as the final summary
+            summary_text = summary_text_list[0]
 
             time.sleep(30)  # Wait for 30 seconds
 
