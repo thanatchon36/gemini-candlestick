@@ -827,7 +827,7 @@ class GeminiCandlestick:
                 try:
                     # If this is not the first attempt, wait for 30 seconds before retrying.
                     if attempt != 0:
-                        time.sleep(30)
+                        time.sleep(60)
 
                     # Generate the minutes text using the specified language model and parameters.
                     temp_minutes_text = str(genai.GenerativeModel(
