@@ -817,8 +817,7 @@ class GeminiCandlestick:
                     display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)'
                 )
                 self.prompt_parts.append(temp_file)
-            random.shuffle(self.prompt_parts)  # Shuffle the prompts
-
+    
             # Initialize an empty list to store the generated minutes text.
             minutes_text_list = []
 
@@ -828,6 +827,8 @@ class GeminiCandlestick:
                     # If this is not the first attempt, wait for 30 seconds before retrying.
                     if attempt != 0:
                         time.sleep(60)
+
+                    random.shuffle(self.prompt_parts)  # Shuffle the prompts
 
                     # Generate the minutes text using the specified language model and parameters.
                     temp_minutes_text = str(genai.GenerativeModel(
