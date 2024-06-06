@@ -650,7 +650,7 @@ class GeminiCandlestick:
             * The Board will reconvene in [timeframe, e.g., one week, two weeks] to review the fund's position and make any necessary adjustments based on evolving market dynamics and new information.
 
         4. **Ticker Symbols of Interest:**
-            * Based on the discussion, list a few of the ticker symbols that were highlighted and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members.
+            * Based on the discussion, list a few of the ticker symbols that were highlighted (no more than 15 symbols) and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members.
 
         5. **Further Action:**
             * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
@@ -971,7 +971,7 @@ class GeminiCandlestick:
                         generation_config=generation_config,  # Pass in generation configuration
                         system_instruction=self.get_system_instructions_4(),  # Provide system instructions
                         safety_settings=safety_settings  # Set safety settings
-                    ).generate_content(minutes_text + '\n' + attached_text).text)  # Generate content using meeting minutes and attachments
+                    ).generate_content(summary_text).text)  # Generate content using meeting minutes and attachments
 
                     # Append the generated summary to the list
                     summary_html_list.append(temp_summary_html)
@@ -1021,7 +1021,7 @@ class GeminiCandlestick:
                         if each_ticket in self.ticker_list:
                             match_no = match_no + 1
                     if match_no == len(interest_ticker_list):
-                        interest_ticker_list = interest_ticker_list[:12]  # Limit to the first 12 tickers
+                        interest_ticker_list = interest_ticker_list[:15]  # Limit to the first 12 tickers
 
                         # Convert the PNG files to PDF
                         png_files = [f'data/png/{each}.png' for each in interest_ticker_list]
