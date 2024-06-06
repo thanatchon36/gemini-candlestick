@@ -817,20 +817,17 @@ class GeminiCandlestick:
                     display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)'
                 )
                 self.prompt_parts.append(temp_file)
-    
-            # Initialize an empty list to store the generated minutes text.
+
+            # Initialize an empty list to store the generated minutes in a text format.
             minutes_text_list = []
 
-            # Attempt to generate the minutes text up to 6 times.
-            for attempt in range(6):
+            # Generate 15 different versions of meeting minutes
+            for _ in range(15):
                 try:
-                    # If this is not the first attempt, wait for 30 seconds before retrying.
-                    if attempt != 0:
-                        time.sleep(60)
+                    # Shuffle the order of prompt parts for variation
+                    random.shuffle(self.prompt_parts)
 
-                    random.shuffle(self.prompt_parts)  # Shuffle the prompts
-
-                    # Generate the minutes text using the specified language model and parameters.
+                    # Generate meeting minutes text using the Gemini Pro model
                     temp_minutes_text = str(genai.GenerativeModel(
                         model_name="gemini-1.5-pro-latest",
                         generation_config=generation_config,
@@ -838,11 +835,11 @@ class GeminiCandlestick:
                         safety_settings=safety_settings
                     ).generate_content(self.prompt_parts, request_options={"timeout": 1000}).text)
 
-                    # Append the generated text to the list.
+                    # Append the generated text to the list
                     minutes_text_list.append(temp_minutes_text)
 
-                # If an exception occurs during generation, log the error and continue to the next attempt.
                 except Exception as e:
+                    # Log the error and continue to the next iteration
                     self.docker_print(f"Error during temp_minutes_text generation: {e}")
                     pass
 
@@ -875,31 +872,32 @@ class GeminiCandlestick:
             attached_text = attached_text.replace('"', '')
             attached_text = attached_text.replace('\n', '')
             attached_text = f'<p class="highlight">{attached_text}</p>'
-
-            # Initialize an empty list to store generated minutes in HTML format.
+            
+            # Initialize an empty list to store HTML-formatted minutes for each iteration.
             minutes_html_list = []
 
-            # Attempt to generate minutes up to 6 times.
-            for attempt in range(6):
+            # Generate 6 different versions of meeting minutes in HTML format.
+            for _ in range(6):
                 try:
-                    # Wait for 30 seconds before making the next attempt.
-                    time.sleep(30) 
+                    # Pause execution for 30 seconds.
+                    time.sleep(30)
 
-                    # Generate minutes using the specified language model and parameters.
+                    # Generate the HTML-formatted minutes using the specified language model.
                     temp_minutes_html = str(genai.GenerativeModel(
-                        model_name="gemini-1.5-pro-latest",
-                        generation_config=generation_config,
-                        system_instruction=self.get_system_instructions_4(),
-                        safety_settings=safety_settings
+                        model_name="gemini-1.5-pro-latest",  # Specify the desired Gemini model.
+                        generation_config=generation_config,  # Pass the generation configuration.
+                        system_instruction=self.get_system_instructions_4(),  # Retrieve system instructions.
+                        safety_settings=safety_settings  # Apply specified safety settings.
                     ).generate_content(minutes_text + '\n' + attached_text).text)
 
-                    # Append the generated minutes to the list.
+                    # Append the generated HTML-formatted minutes to the list.
                     minutes_html_list.append(temp_minutes_html)
 
-                # Handle any exceptions during generation.
                 except Exception as e:
+                    # Log any exceptions encountered during minutes generation.
                     self.docker_print(f"Error during temp_minutes_html generation: {e}")
-                    pass  # Continue to the next iteration if an error occurs.
+                    # Continue to the next iteration even if an error occurs.
+                    pass
 
             # Filter out any generated minutes that contain square brackets.
             minutes_html_list = [each for each in minutes_html_list if '[' not in each and ']' not in each]

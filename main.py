@@ -47,25 +47,25 @@ def main():
     )
 
     # Debug
-    # gemini_instance.docker_print(gemini_instance.today_time)
-    # gemini_instance.prep_sp100_nasdaq100_dataset()
-    # gemini_instance.generate_gemini_candlestick()
-    # gemini_instance.docker_print(gemini_instance.today_time)
-    # gemini_instance.telegram_send_group_pdfs(
-    #     [   # List of PDF file paths to send
-    #         f"data/pdf/{gemini_instance.file_date}_minutes.pdf", 
-    #         f"data/pdf/{gemini_instance.file_date}_summary.pdf"
-    #     ],
-    #     [   # List of captions for the PDFs
-    #         gemini_instance.telegram_minutes_text,
-    #         gemini_instance.telegram_summary_text
-    #     ]
-    # )
-    # gemini_instance.telegram_send_group_images(
-    #     gemini_instance.image_paths,        # List of image paths to send
-    #     gemini_instance.photo_caption_list   # List of captions for the images
-    # )
-    # gemini_instance.docker_print(gemini_instance.today_time)
+    gemini_instance.docker_print(gemini_instance.today_time)
+    gemini_instance.prep_sp100_nasdaq100_dataset()
+    gemini_instance.generate_gemini_candlestick()
+    gemini_instance.docker_print(gemini_instance.today_time)
+    gemini_instance.telegram_send_group_pdfs(
+        [   # List of PDF file paths to send
+            f"data/pdf/{gemini_instance.file_date}_minutes.pdf", 
+            f"data/pdf/{gemini_instance.file_date}_summary.pdf"
+        ],
+        [   # List of captions for the PDFs
+            gemini_instance.telegram_minutes_text,
+            gemini_instance.telegram_summary_text
+        ]
+    )
+    gemini_instance.telegram_send_group_images(
+        gemini_instance.image_paths,        # List of image paths to send
+        gemini_instance.photo_caption_list   # List of captions for the images
+    )
+    gemini_instance.docker_print(gemini_instance.today_time)
 
     # Wait until the next day at 00:00 before starting the main loop
     # This ensures the script starts generating data at the beginning of each day
@@ -77,8 +77,8 @@ def main():
             # Record the start time for candlestick generation
             start_time = time.time()
 
-            # Wait 8 minutes before starting the process
-            time.sleep(60 * 2)
+            # Wait 1 minutes before starting the process
+            time.sleep(60 * 1)
 
             # Prepare the S&P 100 and Nasdaq 100 datasets for analysis
             gemini_instance.prep_sp100_nasdaq100_dataset()
