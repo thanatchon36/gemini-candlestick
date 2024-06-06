@@ -822,11 +822,11 @@ class GeminiCandlestick:
             minutes_text_list = []
 
             # Generate 12 different versions of meeting minutes
-            for _ in range(12):
+            for _ in tqdm(range(12)):
                 try:
-                    # Pause for 30 seconds unless it's the first iteration (_ == 0) to prevent rate limiting from the API
+                    # Pause for 60 seconds unless it's the first iteration (_ == 0) to prevent rate limiting from the API
                     if _ != 0:
-                        time.sleep(30)
+                        time.sleep(60)
 
                     # Randomize the order of prompt parts for more diverse outputs
                     random.shuffle(self.prompt_parts)
@@ -881,7 +881,7 @@ class GeminiCandlestick:
             minutes_html_list = []
 
             # Generate 6 different versions of meeting minutes in HTML format.
-            for _ in range(6):
+            for _ in tqdm(range(6)):
                 try:
                     # Pause execution for 30 seconds.
                     time.sleep(30)
@@ -923,8 +923,8 @@ class GeminiCandlestick:
             # Initialize an empty list to store generated summaries
             summary_text_list = []
 
-            # Attempt to generate summaries with multiple retries
-            for attempt in range(6):
+            # Generate 6 different versions of the meeting minutes summary.
+            for _ in tqdm(range(6)):
                 try:
                     # Add a delay to avoid rate limiting
                     time.sleep(30)
@@ -959,8 +959,8 @@ class GeminiCandlestick:
             # Initialize an empty list to store generated summaries
             summary_html_list = []
 
-            # Attempt to generate a summary up to 6 times
-            for attempt in range(6):
+            # Generate 6 different versions of the meeting minutes summary in HTML format.
+            for _ in range(6):
                 try:
                     # Pause for 30 seconds between attempts to avoid rate limits
                     time.sleep(30)
@@ -1001,7 +1001,7 @@ class GeminiCandlestick:
             self.make_pdf_uncroppable('data/pdf/summary.pdf', 'data/pdf/summary.pdf')
 
             # Identify and process interesting tickers
-            for _ in range(6):  # Try up to 6 times
+            for _ in tqdm(range(6)):  # Try up to 6 times
                 try:
                     time.sleep(30)  # Wait for 30 seconds
                     # Get a list of interesting tickers from the generated minutes
