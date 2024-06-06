@@ -821,13 +821,17 @@ class GeminiCandlestick:
             # Initialize an empty list to store the generated minutes in a text format.
             minutes_text_list = []
 
-            # Generate 15 different versions of meeting minutes
-            for _ in range(15):
+            # Generate 12 different versions of meeting minutes
+            for _ in range(12):
                 try:
-                    # Shuffle the order of prompt parts for variation
+                    # Pause for 30 seconds unless it's the first iteration (_ == 0) to prevent rate limiting from the API
+                    if _ != 0:
+                        time.sleep(30)
+
+                    # Randomize the order of prompt parts for more diverse outputs
                     random.shuffle(self.prompt_parts)
 
-                    # Generate meeting minutes text using the Gemini Pro model
+                    # Generate meeting minutes text using Google's Gemini Pro model
                     temp_minutes_text = str(genai.GenerativeModel(
                         model_name="gemini-1.5-pro-latest",
                         generation_config=generation_config,
@@ -835,11 +839,11 @@ class GeminiCandlestick:
                         safety_settings=safety_settings
                     ).generate_content(self.prompt_parts, request_options={"timeout": 1000}).text)
 
-                    # Append the generated text to the list
+                    # Append the generated minutes text to the list
                     minutes_text_list.append(temp_minutes_text)
 
                 except Exception as e:
-                    # Log the error and continue to the next iteration
+                    # Log the error and continue to the next iteration without crashing
                     self.docker_print(f"Error during temp_minutes_text generation: {e}")
                     pass
 
