@@ -97,16 +97,16 @@ def main():
             end_time = time.time()
             generate_candlestick_runtime = end_time - start_time
 
-            # Calculate the sleep time until 07:00 AM
+            # Calculate the sleep time until 0X:00 AM
             # The script aims to send reports and charts at this time
-            target_time_0700 = 7.0 * 60 * 60  # 07:00 AM in seconds (7.0 hours)
-            sleep_until_0700 = target_time_0700 - generate_candlestick_runtime
+            target_time_0X00 = 4.0 * 60 * 60  # 0X:00 AM in seconds (X.0 hours)
+            target_time_0X00 = target_time_0X00 - generate_candlestick_runtime
 
-            # Sleep until 07:00 AM if there's time left after data generation
-            if sleep_until_0700 > 0:
-                time.sleep(sleep_until_0700)
+            # Sleep until 0X:00 AM if there's time left after data generation
+            if target_time_0X00 > 0:
+                time.sleep(target_time_0X00)
 
-            # Send the generated reports and charts via Telegram at 07:00 AM
+            # Send the generated reports and charts via Telegram at 0X:00 AM
             
             # Check if there's text content for both minutes and summary reports
             if gemini_instance.telegram_minutes_text != "" and gemini_instance.telegram_summary_text != "":
