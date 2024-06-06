@@ -654,11 +654,10 @@ class GeminiCandlestick:
         5. **Further Action:**
             * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
 
-        6. **Meeting Adjourned:** 01:30
+        6. **Meeting Adjourned:** 07:00
 
         7. **Approved by:**
             * Munehisa Homma, Chairman
-
         """
         return system_instructions
     def get_system_instructions_2(self):
