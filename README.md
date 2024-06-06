@@ -34,7 +34,7 @@ The esteemed board of directors comprises notable figures in the realm of financ
 
 ## Key Features
 
-- **Data Acquisition:** Efficiently retrieves historical candlestick data for selected stocks from the S&P 100 and Nasdaq 100 indices utilizing the `yfinance` library.
+- **Data Acquisition:** Efficiently retrieves historical candlestick data for selected stocks from the S&P 500 index utilizing the `yfinance` library.
 - **Technical Analysis:** Conducts a comprehensive analysis by computing various technical indicators, including:
     - Relative Strength Index (RSI)
     - Moving Average Convergence Divergence (MACD)

@@ -251,8 +251,8 @@ class GeminiCandlestick:
             list: List of company names and tickers.
         """
         company_ticker_list = []
-        # Assuming self.sp100_nasdaq100_df is defined elsewhere
-        for index, row in self.sp100_nasdaq100_df.iterrows(): 
+        # Assuming self.sp500_df is defined elsewhere
+        for index, row in self.sp500_df.iterrows(): 
             company_ticker_list.append(f"{row['name']} ({row['symbol']})")
         random.shuffle(company_ticker_list)
         return company_ticker_list
@@ -282,13 +282,13 @@ class GeminiCandlestick:
     @property
     def ticker_list(self):
         """
-        Returns a list of tickers from the sp100_nasdaq100_df DataFrame.
+        Returns a list of tickers from the sp500_df DataFrame.
 
         Returns:
             list: List of tickers.
         """
-        # Assuming self.sp100_nasdaq100_df is defined elsewhere
-        return list(self.sp100_nasdaq100_df['symbol'].values) 
+        # Assuming self.sp500_df is defined elsewhere
+        return list(self.sp500_df['symbol'].values) 
 
     @property
     def gc_collect_time(self):
@@ -388,9 +388,9 @@ class GeminiCandlestick:
         url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMediaGroup'
         requests.post(url, data=data, files={f'photo{i}': open(image_paths[i], 'rb') for i in range(len(image_paths))})
 
-    def prep_sp100_nasdaq100_dataset(self):
+    def prep_sp500_dataset(self):
         """
-        Prepares a dataset containing S&P 100 and NASDAQ 100 stock information.
+        Prepares a dataset containing S&P 500 stock information.
         Downloads historical candlestick data for each stock and stores it in a dictionary.
         Saves the processed dataframe to a CSV file.
         """
@@ -398,23 +398,18 @@ class GeminiCandlestick:
         # Initialize PyTickerSymbols object to fetch stock data
         stock_data = PyTickerSymbols()
 
-        # Fetch stock data for S&P 100 and NASDAQ 100 indices
-        sp100_df = pd.DataFrame(list(stock_data.get_stocks_by_index('S&P 100')))
-        nasdaq100_df = pd.DataFrame(list(stock_data.get_stocks_by_index('NASDAQ 100')))
+        # Fetch stock data for S&P 500
+        sp500_df = pd.DataFrame(list(stock_data.get_stocks_by_index('S&P 500')))
 
-        # Combine S&P 100 and NASDAQ 100 dataframes
-        sp100_nasdaq100_df = pd.concat([sp100_df, nasdaq100_df])
-
-        # Reset index and remove duplicate entries based on 'symbol'
-        sp100_nasdaq100_df = reset_dataframe_index(sp100_nasdaq100_df)
-        sp100_nasdaq100_df = sp100_nasdaq100_df.groupby('symbol').first().reset_index()
+        # Remove duplicate entries based on 'symbol'
+        sp500_df = reset_dataframe_index(sp500_df).groupby('symbol').first().reset_index()
 
         # Debug
-        # sp100_nasdaq100_df = sp100_nasdaq100_df.head(10)
+        # sp500_df = sp500_df.head(10)
 
         # Download historical candlestick data for all symbols using yfinance
         # The period is set to twice the number of candlestick charts required
-        candlestick_df = yf.download(list(sp100_nasdaq100_df['symbol'].values),
+        candlestick_df = yf.download(list(sp500_df['symbol'].values),
                                     period=f'1y', 
                                     interval="1d")
 
@@ -422,10 +417,10 @@ class GeminiCandlestick:
         date_list = [str(each)[:10] for each in list(candlestick_df['Close'].index)]
 
         # Initialize an empty dictionary to store candlestick data for each ticker
-        self.sp100_nasdaq100_df_dict = {}
+        self.sp500_df_dict = {}
 
         # Iterate over each ticker symbol
-        for each_ticker in tqdm(sp100_nasdaq100_df['symbol'].values):
+        for each_ticker in tqdm(sp500_df['symbol'].values):
             try:
                 # Create a temporary dictionary with candlestick data for the current ticker
                 temp_dict = {'Date': date_list,
@@ -441,26 +436,26 @@ class GeminiCandlestick:
                 # Check if the first closing price is not NaN (meaning data is available)
                 if pd.notna(temp_df['Close'].values[0]):
                     # If data is available, add it to the dictionary with the ticker as the key
-                    self.sp100_nasdaq100_df_dict[each_ticker] = temp_df
+                    self.sp500_df_dict[each_ticker] = temp_df
             except:
                 pass
 
-        # Filter the sp100_nasdaq100_df to include only tickers with valid candlestick data
-        self.sp100_nasdaq100_df = sp100_nasdaq100_df[sp100_nasdaq100_df['symbol'].isin(list(self.sp100_nasdaq100_df_dict.keys()))]
+        # Filter the sp500_df to include only tickers with valid candlestick data
+        self.sp500_df = sp500_df[sp500_df['symbol'].isin(list(self.sp500_df_dict.keys()))]
         
         # Reset the index of the filtered dataframe
-        self.sp100_nasdaq100_df = reset_dataframe_index(self.sp100_nasdaq100_df)
+        self.sp500_df = reset_dataframe_index(self.sp500_df)
 
         # Combine multiple industries and indices into single semicolon-separated strings
-        self.sp100_nasdaq100_df['indices'] = self.sp100_nasdaq100_df['indices'].apply(lambda x: ';'.join(x))
-        self.sp100_nasdaq100_df['industries'] = self.sp100_nasdaq100_df['industries'].apply(lambda x: ';'.join(x))
+        self.sp500_df['indices'] = self.sp500_df['indices'].apply(lambda x: ';'.join(x))
+        self.sp500_df['industries'] = self.sp500_df['industries'].apply(lambda x: ';'.join(x))
 
         # Save the processed dataframe to a CSV file
-        self.sp100_nasdaq100_df.to_csv('data/csv/sp100_nasdaq100.csv', index=False)
+        self.sp500_df.to_csv('data/csv/sp500_df.csv', index=False)
 
         # Create dictionaries to map tickers to sectors and company names for later use
-        self.ticker_sector_dict = dict(zip(self.sp100_nasdaq100_df['symbol'], self.sp100_nasdaq100_df['industries']))
-        self.ticker_company_dict = dict(zip(self.sp100_nasdaq100_df['symbol'], self.sp100_nasdaq100_df['name']))
+        self.ticker_sector_dict = dict(zip(self.sp500_df['symbol'], self.sp500_df['industries']))
+        self.ticker_company_dict = dict(zip(self.sp500_df['symbol'], self.sp500_df['name']))
 
     def docker_print(self, txt):
             """
@@ -534,17 +529,21 @@ class GeminiCandlestick:
 
         # List of market sectors
         sector_list = [
-            'Information Technology',
-            'Health Care',
-            'Consumer Discretionary',
-            'Communication Services',
-            'Industrials',  
-            'Consumer Staples',
-            'Utilities',
-            'Renewable Energy',
-            'Real Estate',
-            'Materials',
-            'Financials'
+        'Renewable Energy',
+        'Biotechnology',
+        'Information Technology',
+        'Health Care',
+        'Materials',
+        'Industrials',
+        'Consumer Discretionary',
+        'Consumer Staples',
+        'Communication Services',
+        'Utilities',
+        'Transportation',
+        'Energy',
+        'Financials',
+        'Real Estate',
+        'Hospitality'
         ]
 
         # Randomly shuffle the list of sectors
@@ -580,7 +579,7 @@ class GeminiCandlestick:
         **Meeting Details:**
 
         * **Date:** {self.current_meeting_date}
-        * **Time:** 00:00 - 01:30
+        * **Time:** 00:00 - 07:00
         * **Location:** Google Meet
 
         **Stock Selection:**
@@ -625,7 +624,7 @@ class GeminiCandlestick:
 
         3. **Consensus & Action:**
 
-        * **Market Sentiment:**  
+        * **Market Sentiment:**
             * The Board assessed the overall market sentiment for relevant sectors, considering: 
                 * [List specific factors analyzed, e.g., economic indicators, sector trends, investor sentiment surveys].
             * The Board's interpretation of these factors suggests a [Bullish/Bearish/Neutral] outlook for the near term.
@@ -650,7 +649,7 @@ class GeminiCandlestick:
             * The Board will reconvene in [timeframe, e.g., one week, two weeks] to review the fund's position and make any necessary adjustments based on evolving market dynamics and new information.
 
         4. **Ticker Symbols of Interest:**
-            * Based on the discussion, list a few of the ticker symbols that were highlighted (no more than 15 symbols) and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members.
+            * Based on the discussion, list a few of the ticker symbols that were highlighted (no more than 16 symbols) and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members.
 
         5. **Further Action:**
             * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
@@ -798,18 +797,18 @@ class GeminiCandlestick:
             # Check if the charts directory is empty
             if len(os.listdir(charts_directory)) == 0:
                 # If the directory is empty, generate candlestick charts for all tickers
-                for each_ticker in tqdm(self.sp100_nasdaq100_df['symbol'].values[:202]):
+                for each_ticker in tqdm(self.sp500_df['symbol'].values):
                     self.ticker = each_ticker
                     self.get_candlestick_image()
             # Generate charts on days other than Sunday and Monday
             elif self.today_date.lower() not in ['sunday', 'monday']:
-                for each_ticker in tqdm(self.sp100_nasdaq100_df['symbol'].values[:202]):
+                for each_ticker in tqdm(self.sp500_df['symbol'].values):
                     self.ticker = each_ticker
                     self.get_candlestick_image()
 
             self.prompt_parts = []  # List to store uploaded file objects
             # Upload candlestick images to Gemini and prepare prompts
-            for each_ticker in tqdm(self.ticker_list[:202]):
+            for each_ticker in tqdm(self.ticker_list):
                 self.ticker = each_ticker
                 # Upload the candlestick chart image to Gemini
                 temp_file = genai.upload_file(
@@ -918,7 +917,7 @@ class GeminiCandlestick:
             # Convert the HTML content to a PDF file
             pdfkit.from_string(minutes_html, 'data/pdf/minutes.pdf')
             # Process the PDF file to prevent cropping
-            self.make_pdf_uncroppable('data/pdf/minutes.pdf', 'data/pdf/minutes.pdf')
+            # self.make_pdf_uncroppable('data/pdf/minutes.pdf', 'data/pdf/minutes.pdf')
 
             # Initialize an empty list to store generated summaries
             summary_text_list = []
@@ -998,7 +997,7 @@ class GeminiCandlestick:
             # Convert the HTML content to a PDF file
             pdfkit.from_string(summary_html, 'data/pdf/summary.pdf')
             # Process the PDF file to prevent cropping
-            self.make_pdf_uncroppable('data/pdf/summary.pdf', 'data/pdf/summary.pdf')
+            # self.make_pdf_uncroppable('data/pdf/summary.pdf', 'data/pdf/summary.pdf')
 
             # Identify and process interesting tickers
             for _ in tqdm(range(6)):  # Try up to 6 times
@@ -1021,7 +1020,7 @@ class GeminiCandlestick:
                         if each_ticket in self.ticker_list:
                             match_no = match_no + 1
                     if match_no == len(interest_ticker_list):
-                        interest_ticker_list = interest_ticker_list[:15]  # Limit to the first 15 tickers
+                        interest_ticker_list = interest_ticker_list[:16]  # Limit to the first 16 tickers
 
                         # Convert the PNG files to PDF
                         png_files = [f'data/png/{each}.png' for each in interest_ticker_list]
@@ -1141,7 +1140,7 @@ class GeminiCandlestick:
         """
 
         # Make a copy of the stock data for the specific ticker
-        ohlc = self.sp100_nasdaq100_df_dict[self.ticker].copy()
+        ohlc = self.sp500_df_dict[self.ticker].copy()
 
         # Convert 'Date' column to matplotlib's numerical date format
         ohlc['ori_Date'] = ohlc['Date']  # Store original date for later use

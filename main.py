@@ -48,7 +48,7 @@ def main():
 
     # Debug
     gemini_instance.docker_print(gemini_instance.today_time)
-    gemini_instance.prep_sp100_nasdaq100_dataset()
+    gemini_instance.prep_sp500_dataset()
     gemini_instance.generate_gemini_candlestick()
     gemini_instance.docker_print(gemini_instance.today_time)
     gemini_instance.telegram_send_group_pdfs(
@@ -62,17 +62,13 @@ def main():
         ]
     )
     max_batch_size = 8
-    if len(gemini_instance.image_paths) > max_batch_size and len(gemini_instance.photo_caption_list) > max_batch_size:
-        first_batch_images = gemini_instance.image_paths[:max_batch_size]
-        first_batch_captions = gemini_instance.photo_caption_list[:max_batch_size]
-        
-        second_batch_images = gemini_instance.image_paths[max_batch_size:]
-        second_batch_captions = gemini_instance.photo_caption_list[max_batch_size:]
-        
-        gemini_instance.telegram_send_group_images(first_batch_images, first_batch_captions)
-        gemini_instance.telegram_send_group_images(second_batch_images, second_batch_captions)
-    else:
-        gemini_instance.telegram_send_group_images(gemini_instance.image_paths, gemini_instance.photo_caption_list)
+    image_paths = gemini_instance.image_paths
+    photo_caption_list = gemini_instance.photo_caption_list
+    for i in range(0, len(image_paths), max_batch_size):
+        end_index = min(i + max_batch_size, len(image_paths))
+        batch_images = image_paths[i:end_index]
+        batch_captions = photo_caption_list[i:end_index]
+        gemini_instance.telegram_send_group_images(batch_images, batch_captions)
     gemini_instance.docker_print(gemini_instance.today_time)
 
     # Wait until the next day at 00:00 before starting the main loop
@@ -85,11 +81,11 @@ def main():
             # Record the start time for candlestick generation
             start_time = time.time()
 
-            # Wait 1 minutes before starting the process
-            time.sleep(60 * 1)
+            # Wait 4 minutes before starting the process
+            time.sleep(60 * 4)
 
-            # Prepare the S&P 100 and Nasdaq 100 datasets for analysis
-            gemini_instance.prep_sp100_nasdaq100_dataset()
+            # Prepare the S&P 500 datasets for analysis
+            gemini_instance.prep_sp500_dataset()
 
             # Generate the Gemini candlestick data and charts
             gemini_instance.generate_gemini_candlestick()
@@ -101,16 +97,16 @@ def main():
             end_time = time.time()
             generate_candlestick_runtime = end_time - start_time
 
-            # Calculate the sleep time until 01:30 AM
+            # Calculate the sleep time until 07:00 AM
             # The script aims to send reports and charts at this time
-            target_time_0130 = 1.5 * 60 * 60  # 01:30 AM in seconds (1.5 hours)
-            sleep_until_0130 = target_time_0130 - generate_candlestick_runtime
+            target_time_0700 = 7.0 * 60 * 60  # 07:00 AM in seconds (7.0 hours)
+            sleep_until_0700 = target_time_0700 - generate_candlestick_runtime
 
-            # Sleep until 01:30 AM if there's time left after data generation
-            if sleep_until_0130 > 0:
-                time.sleep(sleep_until_0130)
+            # Sleep until 07:00 AM if there's time left after data generation
+            if sleep_until_0700 > 0:
+                time.sleep(sleep_until_0700)
 
-            # Send the generated reports and charts via Telegram at 01:30 AM
+            # Send the generated reports and charts via Telegram at 07:00 AM
             
             # Check if there's text content for both minutes and summary reports
             if gemini_instance.telegram_minutes_text != "" and gemini_instance.telegram_summary_text != "":
@@ -126,32 +122,24 @@ def main():
                     ]
                 )
 
-            # Define the maximum batch size for sending images.
+            # Set the maximum batch size for processing images.
             max_batch_size = 8
 
-            # Check if both image paths and captions lists exceed the maximum batch size.
-            if len(gemini_instance.image_paths) > max_batch_size and \
-            len(gemini_instance.photo_caption_list) > max_batch_size:
+            # Get the list of image paths and their corresponding captions.
+            image_paths = gemini_instance.image_paths
+            photo_caption_list = gemini_instance.photo_caption_list
 
-                # Split the image paths and captions into two batches.
-                # First batch: From the beginning to the maximum batch size.
-                first_batch_images = gemini_instance.image_paths[:max_batch_size]
-                first_batch_captions = gemini_instance.photo_caption_list[:max_batch_size]
-                
-                # Second batch: From the maximum batch size to the end.
-                second_batch_images = gemini_instance.image_paths[max_batch_size:]
-                second_batch_captions = gemini_instance.photo_caption_list[max_batch_size:]
-                
-                # Send the first batch of images and captions.
-                gemini_instance.telegram_send_group_images(first_batch_images, first_batch_captions)
+            # Iterate over the image paths in batches.
+            for i in range(0, len(image_paths), max_batch_size):
+                # Calculate the end index for the current batch.
+                end_index = min(i + max_batch_size, len(image_paths))  # Ensure end_index doesn't go out of bounds
 
-                # Send the second batch of images and captions.
-                gemini_instance.telegram_send_group_images(second_batch_images, second_batch_captions)
+                # Extract the batch of images and captions.
+                batch_images = image_paths[i:end_index]
+                batch_captions = photo_caption_list[i:end_index]
 
-            # If either image paths or captions lists are within the maximum batch size.
-            else:
-                # Send all images and captions as a single batch.
-                gemini_instance.telegram_send_group_images(gemini_instance.image_paths, gemini_instance.photo_caption_list)
+                # Send the batch of images and captions using the gemini instance.
+                gemini_instance.telegram_send_group_images(batch_images, batch_captions)
 
         except Exception as e:
             # Error handling: Get exception information
