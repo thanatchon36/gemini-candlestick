@@ -876,15 +876,40 @@ class GeminiCandlestick:
             attached_text = attached_text.replace('\n', '')
             attached_text = f'<p class="highlight">{attached_text}</p>'
 
-            time.sleep(30)  # Wait for 30 seconds
+            # Initialize an empty list to store generated minutes in HTML format.
+            minutes_html_list = []
 
-            # Generate HTML for the minutes using the combined text
-            minutes_html = str(genai.GenerativeModel(
-                model_name="gemini-1.5-pro-latest",
-                generation_config=generation_config,
-                system_instruction=self.get_system_instructions_4(),  # Get system instructions for the fourth part
-                safety_settings=safety_settings
-            ).generate_content(minutes_text + '\n' + attached_text).text)
+            # Attempt to generate minutes up to 6 times.
+            for attempt in range(6):
+                try:
+                    # Wait for 30 seconds before making the next attempt.
+                    time.sleep(30) 
+
+                    # Generate minutes using the specified language model and parameters.
+                    temp_minutes_html = str(genai.GenerativeModel(
+                        model_name="gemini-1.5-pro-latest",
+                        generation_config=generation_config,
+                        system_instruction=self.get_system_instructions_4(),
+                        safety_settings=safety_settings
+                    ).generate_content(minutes_text + '\n' + attached_text).text)
+
+                    # Append the generated minutes to the list.
+                    minutes_html_list.append(temp_minutes_html)
+
+                # Handle any exceptions during generation.
+                except Exception as e:
+                    self.docker_print(f"Error during temp_minutes_html generation: {e}")
+                    pass  # Continue to the next iteration if an error occurs.
+
+            # Filter out any generated minutes that contain square brackets.
+            minutes_html_list = [each for each in minutes_html_list if '[' not in each and ']' not in each]
+            
+            # Sort the remaining minutes by length in descending order.
+            minutes_html_list = sorted(minutes_html_list, key=len, reverse=True)
+            
+            # Select the longest generated minutes as the final output.
+            minutes_html = minutes_html_list[0]
+
             # Clean up the generated HTML
             minutes_html = minutes_html.replace('```html', '')
             minutes_html = minutes_html.replace('```', '')
@@ -929,15 +954,42 @@ class GeminiCandlestick:
             # Select the longest summary as the final summary
             summary_text = summary_text_list[0]
 
-            time.sleep(30)  # Wait for 30 seconds
+            # Initialize an empty list to store generated summaries
+            summary_html_list = []
 
-            # Generate HTML for the summary from the summary text
-            summary_html = str(genai.GenerativeModel(
-                model_name="gemini-1.5-pro-latest",
-                generation_config=generation_config,
-                system_instruction=self.get_system_instructions_4(),  # Get system instructions for the fourth part
-                safety_settings=safety_settings
-            ).generate_content(summary_text).text)
+            # Attempt to generate a summary up to 6 times
+            for attempt in range(6):
+                try:
+                    # Pause for 30 seconds between attempts to avoid rate limits
+                    time.sleep(30)
+
+                    # Generate the summary using the specified language model and parameters
+                    temp_summary_html = str(genai.GenerativeModel(
+                        model_name="gemini-1.5-pro-latest",  # Specify the desired language model
+                        generation_config=generation_config,  # Pass in generation configuration
+                        system_instruction=self.get_system_instructions_4(),  # Provide system instructions
+                        safety_settings=safety_settings  # Set safety settings
+                    ).generate_content(minutes_text + '\n' + attached_text).text)  # Generate content using meeting minutes and attachments
+
+                    # Append the generated summary to the list
+                    summary_html_list.append(temp_summary_html)
+
+                except Exception as e:
+                    # Log the error message if summary generation fails
+                    self.docker_print(f"Error during temp_minutes_html generation: {e}")
+
+                    # Continue to the next attempt if an error occurs
+                    pass
+
+            # Filter out summaries containing '[' or ']' characters, which might indicate incomplete generation
+            summary_html_list = [each for each in summary_html_list if '[' not in each and ']' not in each]
+
+            # Sort the generated summaries by length in descending order (longest first)
+            summary_html_list = sorted(summary_html_list, key=len, reverse=True)
+
+            # Select the longest valid summary as the final summary
+            summary_html = summary_html_list[0]
+
             # Clean up the generated HTML
             summary_html = summary_html.replace('```html', '')
             summary_html = summary_html.replace('```', '')

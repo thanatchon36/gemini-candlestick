@@ -78,7 +78,7 @@ def main():
             start_time = time.time()
 
             # Wait 8 minutes before starting the process
-            time.sleep(60 * 4)
+            time.sleep(60 * 2)
 
             # Prepare the S&P 100 and Nasdaq 100 datasets for analysis
             gemini_instance.prep_sp100_nasdaq100_dataset()
