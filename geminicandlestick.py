@@ -819,8 +819,8 @@ class GeminiCandlestick:
             # Initialize an empty list to store the generated minutes in a text format.
             minutes_text_list = []
 
-            # Generate 12 different versions of meeting minutes
-            for _ in tqdm(range(12)):
+            # Generate 15 different versions of meeting minutes
+            for _ in tqdm(range(15)):
                 try:
                     # Pause for 60 seconds unless it's the first iteration (_ == 0) to prevent rate limiting from the API
                     if _ != 0:
@@ -878,8 +878,8 @@ class GeminiCandlestick:
             # Initialize an empty list to store HTML-formatted minutes for each iteration.
             minutes_html_list = []
 
-            # Generate 6 different versions of meeting minutes in HTML format.
-            for _ in tqdm(range(6)):
+            # Generate 15 different versions of meeting minutes in HTML format.
+            for _ in tqdm(range(15)):
                 try:
                     # Pause execution for 30 seconds.
                     time.sleep(30)
@@ -921,8 +921,8 @@ class GeminiCandlestick:
             # Initialize an empty list to store generated summaries
             summary_text_list = []
 
-            # Generate 6 different versions of the meeting minutes summary.
-            for _ in tqdm(range(6)):
+            # Generate 15 different versions of the meeting minutes summary.
+            for _ in tqdm(range(15)):
                 try:
                     # Add a delay to avoid rate limiting
                     time.sleep(30)
@@ -957,8 +957,8 @@ class GeminiCandlestick:
             # Initialize an empty list to store generated summaries
             summary_html_list = []
 
-            # Generate 6 different versions of the meeting minutes summary in HTML format.
-            for _ in range(6):
+            # Generate 15 different versions of the meeting minutes summary in HTML format.
+            for _ in range(15):
                 try:
                     # Pause for 30 seconds between attempts to avoid rate limits
                     time.sleep(30)
@@ -997,41 +997,46 @@ class GeminiCandlestick:
             pdfkit.from_string(summary_html, 'data/pdf/summary.pdf')
             # Process the PDF file to prevent cropping
             # self.make_pdf_uncroppable('data/pdf/summary.pdf', 'data/pdf/summary.pdf')
-
-            # Identify and process interesting tickers
-            for _ in tqdm(range(6)):  # Try up to 6 times
+            
+            # Initialize an empty list to store all tickers of interest.
+            all_interest_ticker_list = []
+            for _ in tqdm(range(6)):  # Try up to 6 times with progress bar
                 try:
-                    time.sleep(30)  # Wait for 30 seconds
-                    # Get a list of interesting tickers from the generated minutes
+                    time.sleep(30)  # Wait for 30 seconds to avoid rate limits
+                    # Generate content using the AI model
                     interest_ticker_list = str(genai.GenerativeModel(
                         model_name="gemini-1.5-pro-latest",
                         generation_config=generation_config,
-                        system_instruction=self.get_system_instructions_3(),  # Get system instructions for the third part
+                        system_instruction=self.get_system_instructions_3(),  
                         safety_settings=safety_settings
                     ).generate_content(minutes_text).text)
-                    # Extract the list of tickers from the response
+
+                    # Extract the list of tickers from the generated content
                     key = list(self.extract_json(interest_ticker_list)[0].keys())[0]
                     interest_ticker_list = self.extract_json(interest_ticker_list)[0][key]
 
-                    # Check if all extracted tickers are valid
-                    match_no = 0
-                    for each_ticket in interest_ticker_list:
-                        if each_ticket in self.ticker_list:
-                            match_no = match_no + 1
-                    if match_no == len(interest_ticker_list):
-                        interest_ticker_list = interest_ticker_list[:16]  # Limit to the first 16 tickers
+                    # Filter for valid tickers and limit to 16
+                    interest_ticker_list = [each for each in interest_ticker_list if each in self.ticker_list]
+                    interest_ticker_list = interest_ticker_list[:16] 
 
-                        # Convert the PNG files to PDF
-                        png_files = [f'data/png/{each}.png' for each in interest_ticker_list]
-                        with open("data/pdf/png.pdf", "wb") as pdf_file:
-                            pdf_bytes = convert(png_files)  # Assuming 'convert' is a function to convert PNGs to PDF
-                            pdf_file.write(pdf_bytes)
-                        # Merge the generated PDF files
-                        pdf_paths = ["data/pdf/minutes.pdf", "data/pdf/png.pdf"]
-                        self.merge_pdfs(pdf_paths, pdf_paths[0])  # Assuming 'merge_pdfs' merges PDF files
-                        break  # Exit the loop if successful
-                except:
+                    all_interest_ticker_list.append(interest_ticker_list)
+
+                except Exception as e: 
+                    print(f"Error during ticker generation: {e}")
                     pass  # Continue to the next attempt if an error occurs
+
+            # Choose the longest list of tickers generated
+            all_interest_ticker_list = sorted(all_interest_ticker_list, key=len, reverse=True)
+            interest_ticker_list = all_interest_ticker_list[0]
+
+            # Convert the PNG files to PDF
+            png_files = [f'data/png/{each}.png' for each in interest_ticker_list]
+            with open("data/pdf/png.pdf", "wb") as pdf_file:
+                pdf_bytes = convert(png_files)  # Assuming 'convert' is a function to convert PNGs to PDF
+                pdf_file.write(pdf_bytes)
+            # Merge the generated PDF files
+            pdf_paths = ["data/pdf/minutes.pdf", "data/pdf/png.pdf"]
+            self.merge_pdfs(pdf_paths, pdf_paths[0])  # Assuming 'merge_pdfs' merges PDF files
 
             time.sleep(30)  # Wait for 30 seconds
 
