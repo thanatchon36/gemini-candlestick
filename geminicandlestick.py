@@ -841,14 +841,14 @@ class GeminiCandlestick:
                 try:
                     # Pause for 60 seconds unless it's the first iteration (_ == 0) to prevent rate limiting from the API
                     if _ != 0:
-                        time.sleep(60)
+                        time.sleep(4)
 
                     # Randomize the order of prompt parts for more diverse outputs
                     random.shuffle(self.prompt_parts)
 
                     # Generate meeting minutes text using Google's Gemini Pro model
                     temp_minutes_text = str(genai.GenerativeModel(
-                        model_name="gemini-1.5-pro-latest",
+                        model_name="gemini-1.5-flash-latest",
                         generation_config=generation_config,
                         system_instruction=self.get_system_instructions_1(),
                         safety_settings=safety_settings
@@ -878,11 +878,11 @@ class GeminiCandlestick:
                 except:
                     pass
 
-            time.sleep(30)  # Wait for 30 seconds
+            time.sleep(4)  # Wait for 4 seconds
 
             # Generate additional text to be attached to the minutes
             attached_text = str(genai.GenerativeModel(
-                model_name="gemini-1.5-pro-latest",
+                model_name="gemini-1.5-flash-latest",
                 generation_config=generation_config,
                 system_instruction=self.get_system_instructions_6(),  # Get system instructions for the sixth part
                 safety_settings=safety_settings
@@ -898,12 +898,12 @@ class GeminiCandlestick:
             # Generate 15 different versions of meeting minutes in HTML format.
             for _ in tqdm(range(15)):
                 try:
-                    # Pause execution for 30 seconds.
-                    time.sleep(30)
+                    # Pause execution for 4 seconds.
+                    time.sleep(4)
 
                     # Generate the HTML-formatted minutes using the specified language model.
                     temp_minutes_html = str(genai.GenerativeModel(
-                        model_name="gemini-1.5-pro-latest",  # Specify the desired Gemini model.
+                        model_name="gemini-1.5-flash-latest",  # Specify the desired Gemini model.
                         generation_config=generation_config,  # Pass the generation configuration.
                         system_instruction=self.get_system_instructions_4(),  # Retrieve system instructions.
                         safety_settings=safety_settings  # Apply specified safety settings.
@@ -942,11 +942,11 @@ class GeminiCandlestick:
             for _ in tqdm(range(15)):
                 try:
                     # Add a delay to avoid rate limiting
-                    time.sleep(30)
+                    time.sleep(4)
 
                     # Generate a summary using the specified language model (Gemini Pro)
                     temp_summary_text = str(genai.GenerativeModel(
-                        model_name="gemini-1.5-pro-latest",
+                        model_name="gemini-1.5-flash-latest",
                         generation_config=generation_config,
                         system_instruction=self.get_system_instructions_2(),  # Retrieve system instructions
                         safety_settings=safety_settings
@@ -977,12 +977,12 @@ class GeminiCandlestick:
             # Generate 15 different versions of the meeting minutes summary in HTML format.
             for _ in range(15):
                 try:
-                    # Pause for 30 seconds between attempts to avoid rate limits
-                    time.sleep(30)
+                    # Pause for 4 seconds between attempts to avoid rate limits
+                    time.sleep(4)
 
                     # Generate the summary using the specified language model and parameters
                     temp_summary_html = str(genai.GenerativeModel(
-                        model_name="gemini-1.5-pro-latest",  # Specify the desired language model
+                        model_name="gemini-1.5-flash-latest",  # Specify the desired language model
                         generation_config=generation_config,  # Pass in generation configuration
                         system_instruction=self.get_system_instructions_4(),  # Provide system instructions
                         safety_settings=safety_settings  # Set safety settings
@@ -1019,10 +1019,10 @@ class GeminiCandlestick:
             all_interest_ticker_list = []
             for _ in tqdm(range(6)):  # Try up to 6 times with progress bar
                 try:
-                    time.sleep(30)  # Wait for 30 seconds to avoid rate limits
+                    time.sleep(4)  # Wait for 4 seconds to avoid rate limits
                     # Generate content using the AI model
                     interest_ticker_list = str(genai.GenerativeModel(
-                        model_name="gemini-1.5-pro-latest",
+                        model_name="gemini-1.5-flash-latest",
                         generation_config=generation_config,
                         system_instruction=self.get_system_instructions_3(),  
                         safety_settings=safety_settings
@@ -1055,20 +1055,20 @@ class GeminiCandlestick:
             pdf_paths = ["data/pdf/minutes.pdf", "data/pdf/png.pdf"]
             self.merge_pdfs(pdf_paths, pdf_paths[0])  # Assuming 'merge_pdfs' merges PDF files
 
-            time.sleep(30)  # Wait for 30 seconds
+            time.sleep(4)  # Wait for 4 seconds
 
             # Generate text for Telegram for minutes and summary
             self.telegram_minutes_text = str(genai.GenerativeModel(
-                model_name="gemini-1.5-pro-latest",
+                model_name="gemini-1.5-flash-latest",
                 generation_config=generation_config,
                 system_instruction=self.get_system_instructions_7(),  # Get instructions for the seventh part
                 safety_settings=safety_settings
             ).generate_content(minutes_text).text)
 
-            time.sleep(30)  # Wait for 30 seconds
+            time.sleep(4)  # Wait for 4 seconds
 
             self.telegram_summary_text = str(genai.GenerativeModel(
-                model_name="gemini-1.5-pro-latest",
+                model_name="gemini-1.5-flash-latest",
                 generation_config=generation_config,
                 system_instruction=self.get_system_instructions_7(),  # Get instructions for the seventh part
                 safety_settings=safety_settings
@@ -1114,10 +1114,10 @@ class GeminiCandlestick:
                 # Retry up to 6 times with a 30-second delay
                 for _ in range(6):
                     try:
-                        time.sleep(30)  # Wait for rate limiting or server congestion
+                        time.sleep(4)  # Wait for rate limiting or server congestion
                         # Generate a photo caption using Gemini Pro
                         photo_caption = str(genai.GenerativeModel(
-                            model_name="gemini-1.5-pro-latest",  # Specify the Gemini model
+                            model_name="gemini-1.5-flash-latest",  # Specify the Gemini model
                             generation_config=generation_config,  # Pass the generation configuration
                             system_instruction=self.get_system_instructions_7(),  # Get instructions for this part
                             safety_settings=safety_settings  # Enforce safety settings
