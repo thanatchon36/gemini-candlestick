@@ -716,7 +716,17 @@ class GeminiCandlestick:
             str: Instructions for extracting ticker symbols in JSON format.
         """
         system_instructions = """
-        Your role is to extract ticker symbols of "2. **Discussion:**" into JSON object format.
+        Your role is to extract ticker symbols of "Ticker Symbols of Interest" into a JSON object format.
+
+        **JSON FORMAT**
+        {
+            "TickerSymbolsOfInterest": [
+                "symbol_1",
+                "symbol_2",
+                "symbol_3",
+                ...
+            ]
+        }
         """
         return system_instructions
 
