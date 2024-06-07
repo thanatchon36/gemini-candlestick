@@ -805,16 +805,33 @@ class GeminiCandlestick:
                     self.ticker = each_ticker
                     self.get_candlestick_image()
 
-            self.prompt_parts = []  # List to store uploaded file objects
-            # Upload candlestick images to Gemini and prepare prompts
+            # Initialize an empty list to store prompt parts
+            self.prompt_parts = []
+            
+            # Iterate over each ticker in the ticker list with a progress bar
             for each_ticker in tqdm(self.ticker_list):
-                self.ticker = each_ticker
-                # Upload the candlestick chart image to Gemini
-                temp_file = genai.upload_file(
-                    path=f"data/png/{each_ticker}.png",
-                    display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)'
-                )
-                self.prompt_parts.append(temp_file)
+                # Try uploading the chart image for the current ticker 6 times
+                for _ in range(6):
+                    try:
+                        # Set the current ticker
+                        self.ticker = each_ticker
+                        
+                        # Upload the chart image to GenAI and store the returned object
+                        temp_file = genai.upload_file(
+                            path=f"data/png/{each_ticker}.png",  # Path to the image file
+                            display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)'  # Display name for the image
+                        )
+                        
+                        # Append the uploaded file object to the prompt parts list
+                        self.prompt_parts.append(temp_file)
+                        
+                        # Break the inner loop if the upload is successful
+                        break
+                    except Exception as e:
+                        # Log the error and continue to the next iteration without crashing
+                        self.docker_print(f"Error during genai upload_file: {e}")
+                        # If an exception occurs, pass and try again (up to 6 times)
+                        pass
 
             # Initialize an empty list to store the generated minutes in a text format.
             minutes_text_list = []
@@ -1060,19 +1077,35 @@ class GeminiCandlestick:
             os.rename("data/pdf/minutes.pdf", f"data/pdf/{self.file_date}_minutes.pdf")
             os.rename("data/pdf/summary.pdf", f"data/pdf/{self.file_date}_summary.pdf")
 
-            # Store the paths to the interesting ticker images
-            self.image_paths = [f'data/png/{each}.png' for each in interest_ticker_list]
+            # Initialize lists to store image paths and prompt parts
+            self.image_paths = []
+            self.prompt_parts = []
 
-            # Generate captions for the interesting ticker images
-            self.prompt_parts = []  # Clear the prompt_parts list
+            # Iterate over each ticker in the list
             for each_ticker in tqdm(interest_ticker_list):
-                self.ticker = each_ticker
-                # Upload each ticker's image to Gemini
-                temp_file = genai.upload_file(
-                    path=f"data/png/{each_ticker}.png",
-                    display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)'
-                )
-                self.prompt_parts.append(temp_file)
+                # Attempt to upload the image 6 times
+                for _ in range(6):
+                    try:
+                        # Set the current ticker
+                        self.ticker = each_ticker
+
+                        # Upload the image to genai
+                        temp_file = genai.upload_file(
+                            path=f"data/png/{each_ticker}.png", 
+                            display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)' 
+                        )
+
+                        # Append the uploaded file to prompt parts and image path to image paths list
+                        self.prompt_parts.append(temp_file)
+                        self.image_paths.append(f'data/png/{each_ticker}.png')
+
+                        # Exit the retry loop if successful
+                        break
+
+                    except Exception as e:
+                        # Log the error and continue to the next retry attempt
+                        self.docker_print(f"Error during genai upload_file: {e}")
+                        pass
 
             # Initialize an empty list to store photo captions.
             self.photo_caption_list = []
