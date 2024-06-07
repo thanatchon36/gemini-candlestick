@@ -576,7 +576,7 @@ class GeminiCandlestick:
 
         **User Needs:**  Users need a clear and concise summary of expert opinions on various stocks and overall market sectors based on technical indicators and market trends. This information aids in making informed investment decisions. 
 
-        **Meeting Details:**
+        **Gemini Candlestick Investment Fund Daily Meeting Minutes Details:**
 
         * **Date:** {self.current_meeting_date}
         * **Time:** 00:00 - 04:00
@@ -618,7 +618,7 @@ class GeminiCandlestick:
 
         2. **Discussion:**
             * Following the broad market analysis, describe a hypothetical discussion flow focusing on specific stock analysis examples.
-            * **Example:** "{self.example_analysis_text}"
+            * **Technical Instances:** "{self.example_analysis_text}"
             * Continue creating a narrative for the meeting, incorporating various opinions and disagreements, connecting board member expertise with specific ticker symbols from the list.
             * Highlight at least one stock from each market sector.
 
@@ -671,7 +671,7 @@ class GeminiCandlestick:
         system_instructions = f"""
         {self.get_judge_instructions()}
         
-        ## Gemini Candlestick Investment Fund Meeting Summary - {self.current_meeting_date}
+        ## Gemini Candlestick Investment Fund Daily Meeting Summary - {self.current_meeting_date}
 
         You are provided with detailed minutes from the latest Gemini Candlestick Investment Fund meeting.  Your task is to analyze this information and create a concise and insightful summary for the fund's managers. 
 
@@ -716,7 +716,7 @@ class GeminiCandlestick:
             str: Instructions for extracting ticker symbols in JSON format.
         """
         system_instructions = """
-        Your role is to extract ticker symbols of "**4. Ticker Symbols of Interest:**" into JSON object format.
+        Your role is to extract ticker symbols of "2. **Discussion:**" into JSON object format.
         """
         return system_instructions
 
@@ -740,7 +740,7 @@ class GeminiCandlestick:
             str: Instructions describing the enclosed candlestick chart documents.
         """
         system_instructions = """
-        The enclosed documents contain 1-day candlestick charts and corresponding technical indicators for the ticker symbols listed in Section 4, which can be found on the following pages.
+        The enclosed documents contain 1-day candlestick charts and corresponding technical indicators for the ticker symbols listed in the Discussion of Section 2, which can be found on the following pages.
         """
         return system_instructions
 
