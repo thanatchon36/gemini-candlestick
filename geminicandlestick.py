@@ -649,7 +649,7 @@ class GeminiCandlestick:
             * The Board will reconvene in [timeframe, e.g., one week, two weeks] to review the fund's position and make any necessary adjustments based on evolving market dynamics and new information.
 
         4. **Ticker Symbols of Interest:**
-            * Based on the discussion, list a few of the ticker symbols that were highlighted (no more than 16 symbols) and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members.
+            * Based on the discussion, list a few of the ticker symbols that were highlighted (no more than 14 symbols) and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members.
 
         5. **Further Action:**
             * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.

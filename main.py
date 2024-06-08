@@ -140,8 +140,7 @@ def main():
 
                 # Send the batch of images and captions using the gemini instance.
                 gemini_instance.telegram_send_group_images(batch_images, batch_captions)
-                time.sleep(4)
-
+                
         except Exception as e:
             # Error handling: Get exception information
             exc_type, exc_obj, exc_tb = sys.exc_info()
