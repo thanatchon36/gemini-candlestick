@@ -50,7 +50,6 @@ def main():
     gemini_instance.docker_print(gemini_instance.today_time)
     gemini_instance.prep_sp500_dataset()
     gemini_instance.generate_gemini_candlestick()
-    gemini_instance.docker_print(gemini_instance.today_time)
     gemini_instance.telegram_send_group_pdfs(
         [   # List of PDF file paths to send
             f"data/pdf/{gemini_instance.file_date}_minutes.pdf", 
@@ -61,7 +60,7 @@ def main():
             gemini_instance.telegram_summary_text
         ]
     )
-    max_batch_size = 8
+    max_batch_size = 7
     image_paths = gemini_instance.image_paths
     photo_caption_list = gemini_instance.photo_caption_list
     for i in range(0, len(image_paths), max_batch_size):
