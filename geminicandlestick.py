@@ -806,12 +806,12 @@ class GeminiCandlestick:
             # Check if the charts directory is empty
             if len(os.listdir(charts_directory)) == 0:
                 # If the directory is empty, generate candlestick charts for all tickers
-                for each_ticker in tqdm(self.sp500_df['symbol'].values, desc="Generating self.get_candlestick_image()"):
+                for each_ticker in tqdm(self.sp500_df['symbol'].values, desc="Generating get_candlestick_image()"):
                     self.ticker = each_ticker
                     self.get_candlestick_image()
             # Generate charts on days other than Sunday and Monday
             elif self.today_date.lower() not in ['sunday', 'monday']:
-                for each_ticker in tqdm(self.sp500_df['symbol'].values, desc="Generating self.get_candlestick_image()"):
+                for each_ticker in tqdm(self.sp500_df['symbol'].values, desc="Generating get_candlestick_image()"):
                     self.ticker = each_ticker
                     self.get_candlestick_image()
 
@@ -1068,10 +1068,10 @@ class GeminiCandlestick:
 
             # Choose the longest list of tickers generated
             all_interest_ticker_list = sorted(all_interest_ticker_list, key=len, reverse=True)
-            interest_ticker_list = all_interest_ticker_list[0]
+            self.interest_ticker_list = all_interest_ticker_list[0]
 
             # Convert the PNG files to PDF
-            png_files = [f'data/png/{each}.png' for each in interest_ticker_list]
+            png_files = [f'data/png/{each}.png' for each in self.interest_ticker_list]
             with open("data/pdf/png.pdf", "wb") as pdf_file:
                 pdf_bytes = convert(png_files)  # Assuming 'convert' is a function to convert PNGs to PDF
                 pdf_file.write(pdf_bytes)
@@ -1132,7 +1132,7 @@ class GeminiCandlestick:
             self.prompt_parts = []
 
             # Iterate over each ticker in the list
-            for each_ticker in tqdm(interest_ticker_list, desc="genai.upload_file"):
+            for each_ticker in tqdm(self.interest_ticker_list, desc="genai.upload_file"):
                 # Attempt to upload the image 6 times
                 for _ in range(6):
                     try:
