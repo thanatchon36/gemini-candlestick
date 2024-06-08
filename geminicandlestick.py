@@ -420,7 +420,7 @@ class GeminiCandlestick:
         self.sp500_df_dict = {}
 
         # Iterate over each ticker symbol
-        for each_ticker in tqdm(sp500_df['symbol'].values):
+        for each_ticker in tqdm(sp500_df['symbol'].values, desc="Iterate over each ticker symbol"):
             try:
                 # Create a temporary dictionary with candlestick data for the current ticker
                 temp_dict = {'Date': date_list,
@@ -806,12 +806,12 @@ class GeminiCandlestick:
             # Check if the charts directory is empty
             if len(os.listdir(charts_directory)) == 0:
                 # If the directory is empty, generate candlestick charts for all tickers
-                for each_ticker in tqdm(self.sp500_df['symbol'].values):
+                for each_ticker in tqdm(self.sp500_df['symbol'].values, desc="Generating self.get_candlestick_image()"):
                     self.ticker = each_ticker
                     self.get_candlestick_image()
             # Generate charts on days other than Sunday and Monday
             elif self.today_date.lower() not in ['sunday', 'monday']:
-                for each_ticker in tqdm(self.sp500_df['symbol'].values):
+                for each_ticker in tqdm(self.sp500_df['symbol'].values, desc="Generating self.get_candlestick_image()"):
                     self.ticker = each_ticker
                     self.get_candlestick_image()
 
@@ -819,7 +819,7 @@ class GeminiCandlestick:
             self.prompt_parts = []
             
             # Iterate over each ticker in the ticker list with a progress bar
-            for each_ticker in tqdm(self.ticker_list):
+            for each_ticker in tqdm(self.ticker_list, desc="genai.upload_file"):
                 # Try uploading the chart image for the current ticker 6 times
                 for _ in range(6):
                     try:
@@ -847,7 +847,7 @@ class GeminiCandlestick:
             minutes_text_list = []
 
             # Generate 15 different versions of meeting minutes
-            for _ in tqdm(range(15)):
+            for _ in tqdm(range(15), desc="Generating temp_minutes_text"):
                 try:
                     # Pause for 60 seconds unless it's the first iteration (_ == 0) to prevent rate limiting from the API
                     if _ != 0:
@@ -882,31 +882,45 @@ class GeminiCandlestick:
             minutes_text = minutes_text_list[0]
 
             # Delete uploaded files from Gemini
-            for each_prompt_part in tqdm(self.prompt_parts):
+            for each_prompt_part in tqdm(self.prompt_parts, desc="genai.delete_file"):
                 try:
                     genai.delete_file(each_prompt_part.name)
                 except:
                     pass
 
-            time.sleep(4)  # Wait for 4 seconds
+            # Generate attached text with retries
+            for _ in tqdm(range(6), desc="Generating attached_text"):  # Try up to 6 times
+                try:
+                    time.sleep(4)  # Wait for 4 seconds before making the API call
 
-            # Generate additional text to be attached to the minutes
-            attached_text = str(genai.GenerativeModel(
-                model_name="gemini-1.5-flash-latest",
-                generation_config=generation_config,
-                system_instruction=self.get_system_instructions_6(),  # Get system instructions for the sixth part
-                safety_settings=safety_settings
-            ).generate_content(self.get_system_instructions_5()).text)  # Pass the fifth part as input
-            # Clean up the generated attached text
-            attached_text = attached_text.replace('"', '')
-            attached_text = attached_text.replace('\n', '')
-            attached_text = f'<p class="highlight">{attached_text}</p>'
+                    # Generate content using the Gemini Pro model
+                    genai_model = genai.GenerativeModel(
+                        model_name="gemini-1.5-flash-latest",  # Specify the Gemini Pro model
+                        generation_config=generation_config,
+                        system_instruction=self.get_system_instructions_6(),  # Set system instructions
+                        safety_settings=safety_settings
+                    )
+                    attached_text = str(genai_model.generate_content(
+                        self.get_system_instructions_5()  # Provide instructions for content generation
+                    ).text)
+
+                    # Remove quotes and newlines from the generated text
+                    attached_text = attached_text.replace('"', '')
+                    attached_text = attached_text.replace('\n', '')
+
+                    # Wrap the generated text in a paragraph tag with the class 'highlight'
+                    attached_text = f'<p class="highlight">{attached_text}</p>'
+                    break  # Exit the loop if generation is successful
+
+                except Exception as e:
+                    self.docker_print(f"Error during attached_text generation: {e}")
+                    pass  # Continue to the next iteration if an error occurs
             
             # Initialize an empty list to store HTML-formatted minutes for each iteration.
             minutes_html_list = []
 
             # Generate 15 different versions of meeting minutes in HTML format.
-            for _ in tqdm(range(15)):
+            for _ in tqdm(range(15), desc="Generating temp_minutes_html"):
                 try:
                     # Pause execution for 4 seconds.
                     time.sleep(4)
@@ -949,7 +963,7 @@ class GeminiCandlestick:
             summary_text_list = []
 
             # Generate 15 different versions of the meeting minutes summary.
-            for _ in tqdm(range(15)):
+            for _ in tqdm(range(15), desc="Generating temp_summary_text"):
                 try:
                     # Add a delay to avoid rate limiting
                     time.sleep(4)
@@ -1027,7 +1041,7 @@ class GeminiCandlestick:
             
             # Initialize an empty list to store all tickers of interest.
             all_interest_ticker_list = []
-            for _ in tqdm(range(6)):  # Try up to 6 times with progress bar
+            for _ in tqdm(range(6), desc="Generating interest_ticker_list"):  # Try up to 6 times with progress bar
                 try:
                     time.sleep(4)  # Wait for 4 seconds to avoid rate limits
                     # Generate content using the AI model
@@ -1065,25 +1079,51 @@ class GeminiCandlestick:
             pdf_paths = ["data/pdf/minutes.pdf", "data/pdf/png.pdf"]
             self.merge_pdfs(pdf_paths, pdf_paths[0])  # Assuming 'merge_pdfs' merges PDF files
 
-            time.sleep(4)  # Wait for 4 seconds
+            # Generate summary text for Telegram, retrying up to 6 times with delays
+            for _ in tqdm(range(6), desc="Generating telegram_minutes_text"):
+                try:
+                    time.sleep(4)  # Wait for 4 seconds before each attempt
 
-            # Generate text for Telegram for minutes and summary
-            self.telegram_minutes_text = str(genai.GenerativeModel(
-                model_name="gemini-1.5-flash-latest",
-                generation_config=generation_config,
-                system_instruction=self.get_system_instructions_7(),  # Get instructions for the seventh part
-                safety_settings=safety_settings
-            ).generate_content(minutes_text).text)
+                    # Generate the summary text using the Gemini model
+                    self.telegram_minutes_text = str(genai.GenerativeModel(
+                        model_name="gemini-1.5-flash-latest",
+                        generation_config=generation_config,
+                        system_instruction=self.get_system_instructions_7(),  
+                        safety_settings=safety_settings
+                    ).generate_content(minutes_text).text)
 
-            time.sleep(4)  # Wait for 4 seconds
+                    # Exit the loop if generation is successful
+                    break 
 
-            self.telegram_summary_text = str(genai.GenerativeModel(
-                model_name="gemini-1.5-flash-latest",
-                generation_config=generation_config,
-                system_instruction=self.get_system_instructions_7(),  # Get instructions for the seventh part
-                safety_settings=safety_settings
-            ).generate_content(summary_text).text)
-            # Rename the PDF files with the current date
+                except Exception as e: 
+                    # Print error message if generation fails
+                    print(f"Error during telegram_minutes_text generation: {e}")
+                    # Continue to the next iteration of the loop
+                    pass
+
+            # Attempt to generate the summary text up to 6 times.
+            for _ in tqdm(range(6), desc="Generating telegram_summary_text"):
+                try:
+                    # Wait for 4 seconds before trying again to avoid overwhelming the API.
+                    time.sleep(4)
+
+                    # Generate the summary text using the Gemini model.
+                    self.telegram_summary_text = str(genai.GenerativeModel(
+                        model_name="gemini-1.5-flash-latest",
+                        generation_config=generation_config,
+                        system_instruction=self.get_system_instructions_7(),
+                        safety_settings=safety_settings
+                    ).generate_content(summary_text).text)
+
+                    # Exit the loop if successful.
+                    break
+
+                except Exception as e: 
+                    # Log the error and continue to the next attempt.
+                    print(f"Error during telegram_summary_text generation: {e}")
+                    pass
+
+            # Rename the meeting minutes and summary PDF files to include the date.
             os.rename("data/pdf/minutes.pdf", f"data/pdf/{self.file_date}_minutes.pdf")
             os.rename("data/pdf/summary.pdf", f"data/pdf/{self.file_date}_summary.pdf")
 
@@ -1092,7 +1132,7 @@ class GeminiCandlestick:
             self.prompt_parts = []
 
             # Iterate over each ticker in the list
-            for each_ticker in tqdm(interest_ticker_list):
+            for each_ticker in tqdm(interest_ticker_list, desc="genai.upload_file"):
                 # Attempt to upload the image 6 times
                 for _ in range(6):
                     try:
@@ -1120,7 +1160,7 @@ class GeminiCandlestick:
             # Initialize an empty list to store photo captions.
             self.photo_caption_list = []
             # Iterate through each part of the prompt
-            for each_prompt_part in tqdm(self.prompt_parts):
+            for each_prompt_part in tqdm(self.prompt_parts, desc="Generating photo_caption"):
                 # Retry up to 6 times with a 30-second delay
                 for _ in range(6):
                     try:
@@ -1145,7 +1185,7 @@ class GeminiCandlestick:
                         # Continue to the next retry attempt
 
             # Delete uploaded images from Gemini after generating captions
-            for each_prompt_part in tqdm(self.prompt_parts):
+            for each_prompt_part in tqdm(self.prompt_parts, desc="genai.delete_file"):
                 try:
                     genai.delete_file(each_prompt_part.name)
                 except:
@@ -1166,7 +1206,7 @@ class GeminiCandlestick:
             self.docker_print(temp_msg)  # Assuming 'docker_print' logs the error message
             try:
                 # Attempt to delete uploaded files from Gemini in case of an error
-                for each_prompt_part in tqdm(self.prompt_parts):
+                for each_prompt_part in tqdm(self.prompt_parts, desc="genai.delete_file"):
                     try:
                         genai.delete_file(each_prompt_part.name)
                     except:
