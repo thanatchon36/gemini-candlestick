@@ -789,7 +789,7 @@ class GeminiCandlestick:
             "temperature": 1,  # Temperature controls the randomness of the generated text
             "top_p": 0.95,  # Top_p controls the diversity of the generated text
             "top_k": 64,  # Top_k controls the number of possible next words considered
-            "max_output_tokens": 500000,  # Maximum number of tokens allowed in the generated text
+            "max_output_tokens": 1e+6,  # Maximum number of tokens allowed in the generated text
             "response_mime_type": "text/plain",  # Response format
         }
         # Configure safety settings for the Gemini model
@@ -805,12 +805,16 @@ class GeminiCandlestick:
             charts_directory = 'data/png'
             # Check if the charts directory is empty
             if len(os.listdir(charts_directory)) == 0:
+                # Prepare the S&P 500 datasets for analysis
+                self.prep_sp500_dataset()
                 # If the directory is empty, generate candlestick charts for all tickers
                 for each_ticker in tqdm(self.sp500_df['symbol'].values, desc="Generating get_candlestick_image()"):
                     self.ticker = each_ticker
                     self.get_candlestick_image()
             # Generate charts on days other than Sunday and Monday
             elif self.today_date.lower() not in ['sunday', 'monday']:
+                # Prepare the S&P 500 datasets for analysis
+                self.prep_sp500_dataset()
                 for each_ticker in tqdm(self.sp500_df['symbol'].values, desc="Generating get_candlestick_image()"):
                     self.ticker = each_ticker
                     self.get_candlestick_image()
@@ -846,8 +850,8 @@ class GeminiCandlestick:
             # Initialize an empty list to store the generated minutes in a text format.
             minutes_text_list = []
 
-            # Generate 15 different versions of meeting minutes
-            for _ in tqdm(range(15), desc="Generating temp_minutes_text"):
+            # Generate 24 different versions of meeting minutes
+            for _ in tqdm(range(24), desc="Generating temp_minutes_text"):
                 try:
                     # Pause for 60 seconds unless it's the first iteration (_ == 0) to prevent rate limiting from the API
                     if _ != 0:
@@ -874,6 +878,9 @@ class GeminiCandlestick:
 
             # Filter out any generated text that contains '[' or ']' characters.
             minutes_text_list = [each for each in minutes_text_list if '[' not in each and ']' not in each]
+
+            # Check if "approved by" is present in the lowercase string
+            minutes_text_list = [each for each in minutes_text_list if 'approved by' in each.lower()]
 
             # Sort the list of generated text by length in descending order.
             minutes_text_list = sorted(minutes_text_list, key=len, reverse=True)
@@ -944,6 +951,9 @@ class GeminiCandlestick:
 
             # Filter out any generated minutes that contain square brackets.
             minutes_html_list = [each for each in minutes_html_list if '[' not in each and ']' not in each]
+
+            # Check if "approved by" is present in the lowercase string
+            minutes_html_list = [each for each in minutes_html_list if 'approved by' in each.lower()]
             
             # Sort the remaining minutes by length in descending order.
             minutes_html_list = sorted(minutes_html_list, key=len, reverse=True)
@@ -962,8 +972,8 @@ class GeminiCandlestick:
             # Initialize an empty list to store generated summaries
             summary_text_list = []
 
-            # Generate 15 different versions of the meeting minutes summary.
-            for _ in tqdm(range(15), desc="Generating temp_summary_text"):
+            # Generate 24 different versions of the meeting minutes summary.
+            for _ in tqdm(range(24), desc="Generating temp_summary_text"):
                 try:
                     # Add a delay to avoid rate limiting
                     time.sleep(4)
@@ -988,6 +998,9 @@ class GeminiCandlestick:
 
             # Filter out summaries containing '[' or ']' (potential formatting issues)
             summary_text_list = [each for each in summary_text_list if '[' not in each and ']' not in each]
+
+            # Check if "approved by" is present in the lowercase string
+            summary_text_list = [each for each in summary_text_list if 'approved by' in each.lower()]
 
             # Sort the summaries by length in descending order
             summary_text_list = sorted(summary_text_list, key=len, reverse=True)
@@ -1024,6 +1037,9 @@ class GeminiCandlestick:
 
             # Filter out summaries containing '[' or ']' characters, which might indicate incomplete generation
             summary_html_list = [each for each in summary_html_list if '[' not in each and ']' not in each]
+
+            # Check if "approved by" is present in the lowercase string
+            summary_html_list = [each for each in summary_html_list if 'approved by' in each.lower()]
 
             # Sort the generated summaries by length in descending order (longest first)
             summary_html_list = sorted(summary_html_list, key=len, reverse=True)

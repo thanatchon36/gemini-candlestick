@@ -48,7 +48,6 @@ def main():
 
     # Debug
     gemini_instance.docker_print(gemini_instance.today_time)
-    gemini_instance.prep_sp500_dataset()
     gemini_instance.generate_gemini_candlestick()
     gemini_instance.telegram_send_group_pdfs(
         [   # List of PDF file paths to send
@@ -83,9 +82,6 @@ def main():
 
             # Wait 4 minutes before starting the process
             time.sleep(60 * 4)
-
-            # Prepare the S&P 500 datasets for analysis
-            gemini_instance.prep_sp500_dataset()
 
             # Generate the Gemini candlestick data and charts
             gemini_instance.generate_gemini_candlestick()
