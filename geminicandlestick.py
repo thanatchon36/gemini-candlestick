@@ -42,6 +42,8 @@ from PIL import Image
 # Progress bar creation
 from tqdm import tqdm
 
+import numpy as np # Import the NumPy library and give it the alias 'np'.
+
 # Stock ticker symbols retrieval
 from pytickersymbols import PyTickerSymbols
 
@@ -851,8 +853,8 @@ class GeminiCandlestick:
             # Initialize an empty list to store the generated minutes in a text format.
             minutes_text_list = []
 
-            # Generate 24 different versions of meeting minutes
-            for _ in tqdm(range(24), desc="Generating temp_minutes_text"):
+            # Generate 36 different versions of meeting minutes
+            for _ in tqdm(range(36), desc="Generating temp_minutes_text"):
                 try:
                     # Pause for 60 seconds unless it's the first iteration (_ == 0) to prevent rate limiting from the API
                     if _ != 0:
@@ -877,14 +879,21 @@ class GeminiCandlestick:
                     self.docker_print(f"Error during temp_minutes_text generation: {e}")
                     pass
 
-            # Filter out any generated text that contains '[' or ']' characters.
+            # Filter out generated text containing '[' or ']' characters.
             minutes_text_list = [each for each in minutes_text_list if '[' not in each and ']' not in each]
 
-            # Sort the list of generated text by length in descending order.
-            minutes_text_list = sorted(minutes_text_list, key=len, reverse=True)
-
-            # Select the longest generated text as the final minutes text.
-            minutes_text = minutes_text_list[0]
+            # Find the best generated text based on the number of contained tickers.
+            score_i_list = []
+            for each_i in minutes_text_list:
+                # Calculate a score based on the number of matching tickers.
+                score_i = 0
+                for each_j in self.ticker_list:
+                    if each_j in each_i:
+                        score_i = score_i + 1
+                score_i_list.append(score_i)
+            
+            # Select the text with the highest score.
+            minutes_text = minutes_text_list[np.argmax(score_i_list)]
 
             # Delete uploaded files from Gemini
             for each_prompt_part in tqdm(self.prompt_parts, desc="genai.delete_file"):
@@ -928,8 +937,8 @@ class GeminiCandlestick:
             # Initialize an empty list to store generated summaries
             summary_text_list = []
 
-            # Generate 24 different versions of the meeting minutes summary.
-            for _ in tqdm(range(24), desc="Generating temp_summary_text"):
+            # Generate 36 different versions of the meeting minutes summary.
+            for _ in tqdm(range(36), desc="Generating temp_summary_text"):
                 try:
                     # Add a delay to avoid rate limiting
                     time.sleep(4)
@@ -952,14 +961,21 @@ class GeminiCandlestick:
                     # Continue to the next attempt
                     pass
 
-            # Filter out summaries containing '[' or ']' (potential formatting issues)
+            # Filter out generated text containing '[' or ']' characters.
             summary_text_list = [each for each in summary_text_list if '[' not in each and ']' not in each]
 
-            # Sort the summaries by length in descending order
-            summary_text_list = sorted(summary_text_list, key=len, reverse=True)
-
-            # Select the longest summary as the final summary
-            summary_text = summary_text_list[0]
+            # Find the best generated text based on the number of contained tickers.
+            score_i_list = []
+            for each_i in summary_text_list:
+                # Calculate a score based on the number of matching tickers.
+                score_i = 0
+                for each_j in self.ticker_list:
+                    if each_j in each_i:
+                        score_i = score_i + 1
+                score_i_list.append(score_i)
+            
+            # Select the text with the highest score.
+            summary_text = summary_text_list[np.argmax(score_i_list)]
 
             # Call the markdown_to_pdf method to convert the summary text to a PDF file
             self.markdown_to_pdf(summary_text, 'data/pdf/summary.pdf')
