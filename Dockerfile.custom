@@ -53,6 +53,7 @@ RUN python3 -m pip install --no-cache-dir pdf2image      # Library for convertin
 RUN python3 -m pip install --no-cache-dir img2pdf      # Library for converting images to PDF
 RUN python3 -m pip install --no-cache-dir PyPDF2          # Library for working with PDF files
 RUN python3 -m pip install --no-cache-dir pyyaml        # YAML parsing and emitting library
+RUN python3 -m pip install --no-cache-dir markdown        # Library for converting markdown
 
 # Set the command to run when the container starts
 CMD ["python", "/opt/app/main.py"]

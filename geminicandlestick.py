@@ -65,6 +65,7 @@ import pdfkit
 from pdf2image import convert_from_path  # PDF to image conversion
 from img2pdf import convert  # Image to PDF conversion
 from PyPDF2 import PdfMerger  # PDF file merging
+import markdown
 
 def reset_dataframe_index(df: pd.DataFrame) -> pd.DataFrame:
     """
@@ -762,7 +763,7 @@ class GeminiCandlestick:
             str: Instructions for rewording user statements with professionalism.
         """
         system_instructions = """
-        One of the key responsibilities associated with your position is to reword the statements provided by users, ensuring that the revised phrasing upholds an appropriate level of professionalism.
+        One of the key responsibilities associated with your position is to rephrase the statements provided by users, ensuring that the revised wording maintains a suitable level of professionalism and outputs it in markdown format.
         """
         return system_instructions
 
@@ -789,7 +790,7 @@ class GeminiCandlestick:
             "temperature": 1,  # Temperature controls the randomness of the generated text
             "top_p": 0.95,  # Top_p controls the diversity of the generated text
             "top_k": 64,  # Top_k controls the number of possible next words considered
-            "max_output_tokens": 1e+6,  # Maximum number of tokens allowed in the generated text
+            "max_output_tokens": 1000000,  # Maximum number of tokens allowed in the generated text
             "response_mime_type": "text/plain",  # Response format
         }
         # Configure safety settings for the Gemini model
@@ -879,9 +880,6 @@ class GeminiCandlestick:
             # Filter out any generated text that contains '[' or ']' characters.
             minutes_text_list = [each for each in minutes_text_list if '[' not in each and ']' not in each]
 
-            # Check if "approved by" is present in the lowercase string
-            minutes_text_list = [each for each in minutes_text_list if 'approved by' in each.lower()]
-
             # Sort the list of generated text by length in descending order.
             minutes_text_list = sorted(minutes_text_list, key=len, reverse=True)
 
@@ -914,60 +912,18 @@ class GeminiCandlestick:
                     # Remove quotes and newlines from the generated text
                     attached_text = attached_text.replace('"', '')
                     attached_text = attached_text.replace('\n', '')
+                    attached_text = attached_text.strip()
 
                     # Wrap the generated text in a paragraph tag with the class 'highlight'
-                    attached_text = f'<p class="highlight">{attached_text}</p>'
+                    attached_text = f'**{attached_text}**'
                     break  # Exit the loop if generation is successful
 
                 except Exception as e:
                     self.docker_print(f"Error during attached_text generation: {e}")
                     pass  # Continue to the next iteration if an error occurs
             
-            # Initialize an empty list to store HTML-formatted minutes for each iteration.
-            minutes_html_list = []
-
-            # Generate 15 different versions of meeting minutes in HTML format.
-            for _ in tqdm(range(15), desc="Generating temp_minutes_html"):
-                try:
-                    # Pause execution for 4 seconds.
-                    time.sleep(4)
-
-                    # Generate the HTML-formatted minutes using the specified language model.
-                    temp_minutes_html = str(genai.GenerativeModel(
-                        model_name="gemini-1.5-flash-latest",  # Specify the desired Gemini model.
-                        generation_config=generation_config,  # Pass the generation configuration.
-                        system_instruction=self.get_system_instructions_4(),  # Retrieve system instructions.
-                        safety_settings=safety_settings  # Apply specified safety settings.
-                    ).generate_content(minutes_text + '\n' + attached_text).text)
-
-                    # Append the generated HTML-formatted minutes to the list.
-                    minutes_html_list.append(temp_minutes_html)
-
-                except Exception as e:
-                    # Log any exceptions encountered during minutes generation.
-                    self.docker_print(f"Error during temp_minutes_html generation: {e}")
-                    # Continue to the next iteration even if an error occurs.
-                    pass
-
-            # Filter out any generated minutes that contain square brackets.
-            minutes_html_list = [each for each in minutes_html_list if '[' not in each and ']' not in each]
-
-            # Check if "approved by" is present in the lowercase string
-            minutes_html_list = [each for each in minutes_html_list if 'approved by' in each.lower()]
-            
-            # Sort the remaining minutes by length in descending order.
-            minutes_html_list = sorted(minutes_html_list, key=len, reverse=True)
-            
-            # Select the longest generated minutes as the final output.
-            minutes_html = minutes_html_list[0]
-
-            # Clean up the generated HTML
-            minutes_html = minutes_html.replace('```html', '')
-            minutes_html = minutes_html.replace('```', '')
-            # Convert the HTML content to a PDF file
-            pdfkit.from_string(minutes_html, 'data/pdf/minutes.pdf')
-            # Process the PDF file to prevent cropping
-            # self.make_pdf_uncroppable('data/pdf/minutes.pdf', 'data/pdf/minutes.pdf')
+            # Convert the combined text to PDF and save it to the specified path.
+            self.markdown_to_pdf(minutes_text + '\n' + attached_text, 'data/pdf/minutes.pdf')
 
             # Initialize an empty list to store generated summaries
             summary_text_list = []
@@ -999,62 +955,15 @@ class GeminiCandlestick:
             # Filter out summaries containing '[' or ']' (potential formatting issues)
             summary_text_list = [each for each in summary_text_list if '[' not in each and ']' not in each]
 
-            # Check if "approved by" is present in the lowercase string
-            summary_text_list = [each for each in summary_text_list if 'approved by' in each.lower()]
-
             # Sort the summaries by length in descending order
             summary_text_list = sorted(summary_text_list, key=len, reverse=True)
 
             # Select the longest summary as the final summary
             summary_text = summary_text_list[0]
 
-            # Initialize an empty list to store generated summaries
-            summary_html_list = []
+            # Call the markdown_to_pdf method to convert the summary text to a PDF file
+            self.markdown_to_pdf(summary_text, 'data/pdf/summary.pdf')
 
-            # Generate 15 different versions of the meeting minutes summary in HTML format.
-            for _ in range(15):
-                try:
-                    # Pause for 4 seconds between attempts to avoid rate limits
-                    time.sleep(4)
-
-                    # Generate the summary using the specified language model and parameters
-                    temp_summary_html = str(genai.GenerativeModel(
-                        model_name="gemini-1.5-flash-latest",  # Specify the desired language model
-                        generation_config=generation_config,  # Pass in generation configuration
-                        system_instruction=self.get_system_instructions_4(),  # Provide system instructions
-                        safety_settings=safety_settings  # Set safety settings
-                    ).generate_content(summary_text).text)  # Generate content using the meeting minutes summary
-
-                    # Append the generated summary to the list
-                    summary_html_list.append(temp_summary_html)
-
-                except Exception as e:
-                    # Log the error message if summary generation fails
-                    self.docker_print(f"Error during temp_minutes_html generation: {e}")
-
-                    # Continue to the next attempt if an error occurs
-                    pass
-
-            # Filter out summaries containing '[' or ']' characters, which might indicate incomplete generation
-            summary_html_list = [each for each in summary_html_list if '[' not in each and ']' not in each]
-
-            # Check if "approved by" is present in the lowercase string
-            summary_html_list = [each for each in summary_html_list if 'approved by' in each.lower()]
-
-            # Sort the generated summaries by length in descending order (longest first)
-            summary_html_list = sorted(summary_html_list, key=len, reverse=True)
-
-            # Select the longest valid summary as the final summary
-            summary_html = summary_html_list[0]
-
-            # Clean up the generated HTML
-            summary_html = summary_html.replace('```html', '')
-            summary_html = summary_html.replace('```', '')
-            # Convert the HTML content to a PDF file
-            pdfkit.from_string(summary_html, 'data/pdf/summary.pdf')
-            # Process the PDF file to prevent cropping
-            # self.make_pdf_uncroppable('data/pdf/summary.pdf', 'data/pdf/summary.pdf')
-            
             # Initialize an empty list to store all tickers of interest.
             all_interest_ticker_list = []
             for _ in tqdm(range(6), desc="Generating interest_ticker_list"):  # Try up to 6 times with progress bar
@@ -2090,3 +1999,17 @@ class GeminiCandlestick:
 
         # Close the PdfMerger object
         merger.close()
+
+    def markdown_to_pdf(self, markdown_text, output_pdf_path):
+        """Converts Markdown text to a PDF file.
+
+        Args:
+            markdown_text (str): The Markdown text to convert.
+            output_pdf_path (str): The path to save the output PDF file.
+        """
+        
+        # Convert Markdown to HTML using the markdown library
+        html_text = markdown.markdown(markdown_text)
+        
+        # Convert the HTML to PDF using the pdfkit library
+        pdfkit.from_string(html_text, output_pdf_path)
