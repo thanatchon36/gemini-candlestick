@@ -65,7 +65,7 @@ import pdfkit
 from pdf2image import convert_from_path  # PDF to image conversion
 from img2pdf import convert  # Image to PDF conversion
 from PyPDF2 import PdfMerger  # PDF file merging
-import markdown
+import markdown # Import the "markdown" library. 
 
 def reset_dataframe_index(df: pd.DataFrame) -> pd.DataFrame:
     """
