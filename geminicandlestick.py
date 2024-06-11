@@ -139,6 +139,25 @@ class GeminiCandlestick:
             '1d': 48 - 1,  # Garbage collection time for daily interval
         }
 
+        # List of market sectors
+        self.sector_list = [
+        'Renewable Energy',
+        'Biotechnology',
+        'Information Technology',
+        'Health Care',
+        'Materials',
+        'Industrials',
+        'Consumer Discretionary',
+        'Consumer Staples',
+        'Communication Services',
+        'Utilities',
+        'Transportation',
+        'Energy',
+        'Financials',
+        'Real Estate',
+        'Hospitality'
+        ]
+
     @property
     def until_next_day_sec(self):
         """
@@ -530,30 +549,11 @@ class GeminiCandlestick:
             str: A string of market sectors, each starting with "- " and separated by a newline. 
         """
 
-        # List of market sectors
-        sector_list = [
-        'Renewable Energy',
-        'Biotechnology',
-        'Information Technology',
-        'Health Care',
-        'Materials',
-        'Industrials',
-        'Consumer Discretionary',
-        'Consumer Staples',
-        'Communication Services',
-        'Utilities',
-        'Transportation',
-        'Energy',
-        'Financials',
-        'Real Estate',
-        'Hospitality'
-        ]
-
         # Randomly shuffle the list of sectors
-        random.shuffle(sector_list)
+        random.shuffle(self.sector_list)
 
         # Join the shuffled sectors with a newline and "- " prefix
-        return "- " + "\n- ".join(sector_list)
+        return "- " + "\n- ".join(self.sector_list)
     
     def get_system_instructions_1(self):
         """
@@ -881,6 +881,21 @@ class GeminiCandlestick:
 
             # Filter out generated text containing '[' or ']' characters.
             minutes_text_list = [each for each in minutes_text_list if '[' not in each and ']' not in each]
+
+            # Initializes an empty list in Python called minutes_text_list_2
+            minutes_text_list_2 = []
+            for each_minutes in minutes_text_list:
+                # Initialize sector score for each minute entry
+                sector_score = 0
+                # Check if all sectors are present in the minute entry
+                for each_sector in self.sector_list:
+                    if each_sector.lower() in each_minutes.lower():
+                        sector_score += 1
+                # Append the minute entry to the new list if all sectors are present
+                if sector_score == len(self.sector_list):
+                    minutes_text_list_2.append(each_minutes)
+            # Update the original list with entries containing all sectors
+            minutes_text_list = minutes_text_list_2.copy()
 
             # Find the best generated text based on the number of contained tickers.
             score_i_list = []
