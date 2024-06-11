@@ -753,7 +753,7 @@ class GeminiCandlestick:
             str: Instructions describing the enclosed candlestick chart documents.
         """
         system_instructions = """
-        The enclosed documents contain 1-day candlestick charts and corresponding technical indicators for the ticker symbols listed in the "Ticker Symbols of Interest," which can be found on the following pages.
+        **Important Notice:** The enclosed documents contain 1-day candlestick charts and corresponding technical indicators for the ticker symbols listed in the "Ticker Symbols of Interest" section, which can be found on the subsequent pages.
         """
         return system_instructions
 
@@ -895,6 +895,13 @@ class GeminiCandlestick:
             # Select the text with the highest score.
             minutes_text = minutes_text_list[np.argmax(score_i_list)]
 
+            # Define the file path for saving the meeting minutes.
+            file_path = f'data/txt/{self.file_date}_minutes.txt'
+            # Open the file in write mode ('w'). 
+            with open(file_path, 'w') as file:
+                # Write the meeting minutes text to the file.
+                file.write(minutes_text)
+
             # Delete uploaded files from Gemini
             for each_prompt_part in tqdm(self.prompt_parts, desc="genai.delete_file"):
                 try:
@@ -918,13 +925,6 @@ class GeminiCandlestick:
                         self.get_system_instructions_5()  # Provide instructions for content generation
                     ).text)
 
-                    # Remove quotes and newlines from the generated text
-                    attached_text = attached_text.replace('"', '')
-                    attached_text = attached_text.replace('\n', '')
-                    attached_text = attached_text.strip()
-
-                    # Wrap the generated text in a paragraph tag with the class 'highlight'
-                    attached_text = f'**{attached_text}**'
                     break  # Exit the loop if generation is successful
 
                 except Exception as e:
@@ -976,6 +976,13 @@ class GeminiCandlestick:
             
             # Select the text with the highest score.
             summary_text = summary_text_list[np.argmax(score_i_list)]
+
+            # Define the file path for saving the meeting minutes summary.
+            file_path = f'data/txt/{self.file_date}_summary.txt'
+            # Open the file in write mode ('w'). 
+            with open(file_path, 'w') as file:
+                # Write the meeting minutes summary text to the file.
+                file.write(summary_text)
 
             # Call the markdown_to_pdf method to convert the summary text to a PDF file
             self.markdown_to_pdf(summary_text, 'data/pdf/summary.pdf')

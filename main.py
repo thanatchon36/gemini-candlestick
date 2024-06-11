@@ -24,7 +24,8 @@ def main():
     data_directories = [
         'data/pdf',  # Directory for storing PDF reports
         'data/csv',  # Directory for storing CSV data files
-        'data/png'   # Directory for storing PNG image charts
+        'data/png',   # Directory for storing PNG image charts
+        'data/txt'   # Directory for storing text files
     ]
 
     # Create the data directories if they don't exist
