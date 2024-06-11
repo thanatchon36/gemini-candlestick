@@ -582,7 +582,7 @@ class GeminiCandlestick:
         **Gemini Candlestick Investment Fund Daily Meeting Minutes Details:**
 
         * **Date:** {self.current_meeting_date}
-        * **Time:** 00:00 - 04:00
+        * **Time:** 00:00 - 03:00
         * **Location:** Google Meet
 
         **Stock Selection:**
@@ -657,7 +657,7 @@ class GeminiCandlestick:
         5. **Further Action:**
             * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
 
-        6. **Meeting Adjourned:** 04:00
+        6. **Meeting Adjourned:** 03:00
 
         7. **Approved by:**
             * Munehisa Homma, Chairman
