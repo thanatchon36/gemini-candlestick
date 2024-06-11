@@ -1017,36 +1017,41 @@ class GeminiCandlestick:
             # Call the markdown_to_pdf method to convert the summary text to a PDF file
             self.markdown_to_pdf(summary_text, 'data/pdf/summary.pdf')
 
-            # Initialize an empty list to store all tickers of interest.
-            all_interest_ticker_list = []
-            for _ in tqdm(range(6), desc="Generating interest_ticker_list"):  # Try up to 6 times with progress bar
+            # Try generating the interest_ticker_list up to 6 times
+            for each_attempt in tqdm(range(6), desc="Generating interest_ticker_list"):
                 try:
-                    time.sleep(4)  # Wait for 4 seconds to avoid rate limits
-                    # Generate content using the AI model
-                    interest_ticker_list = str(genai.GenerativeModel(
-                        model_name="gemini-1.5-flash-latest",
+                    # Avoid rate limits by waiting 30 seconds after the first attempt
+                    if each_attempt != 0:
+                        time.sleep(30) 
+                    
+                    # Generate content using the AI model (Gemini Pro)
+                    generation_result = genai.GenerativeModel(
+                        model_name="gemini-1.5-pro-latest",
                         generation_config=generation_config,
                         system_instruction=self.get_system_instructions_3(),  
                         safety_settings=safety_settings
-                    ).generate_content(minutes_text).text)
+                    ).generate_content(minutes_text).text
+                    
+                    interest_ticker_list = str(generation_result) # Convert to string
 
-                    # Extract the list of tickers from the generated content
-                    key = list(self.extract_json(interest_ticker_list)[0].keys())[0]
-                    interest_ticker_list = self.extract_json(interest_ticker_list)[0][key]
+                    # Extract the list of tickers from the generated JSON content
+                    extracted_data = self.extract_json(interest_ticker_list)[0]
+                    key = list(extracted_data.keys())[0] # Get the first key of the dictionary
+                    interest_ticker_list = extracted_data[key]
 
-                    # Filter for valid tickers and limit to 16
-                    interest_ticker_list = [each for each in interest_ticker_list if each in self.ticker_list]
-                    interest_ticker_list = interest_ticker_list[:16] 
+                    # Filter for valid tickers and limit the list to 15 tickers
+                    interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list][:15]
+                    
+                    # Assign the generated list to the object's attribute
+                    self.interest_ticker_list = interest_ticker_list
 
-                    all_interest_ticker_list.append(interest_ticker_list)
+                    # Exit the loop if successful
+                    break 
 
                 except Exception as e: 
+                    # Print error message and continue to the next attempt
                     print(f"Error during ticker generation: {e}")
-                    pass  # Continue to the next attempt if an error occurs
-
-            # Choose the longest list of tickers generated
-            all_interest_ticker_list = sorted(all_interest_ticker_list, key=len, reverse=True)
-            self.interest_ticker_list = all_interest_ticker_list[0]
+                    pass
 
             # Convert the PNG files to PDF
             png_files = [f'data/png/{each}.png' for each in self.interest_ticker_list]
