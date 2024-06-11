@@ -979,6 +979,21 @@ class GeminiCandlestick:
             # Filter out generated text containing '[' or ']' characters.
             summary_text_list = [each for each in summary_text_list if '[' not in each and ']' not in each]
 
+            # Initializes an empty list in Python called summary_text_list_2
+            summary_text_list_2 = []
+            for each_summary in summary_text_list:
+                # Initialize sector score for each minute entry
+                sector_score = 0
+                # Check if all sectors are present in the minute entry
+                for each_sector in self.sector_list:
+                    if each_sector.lower() in each_summary.lower():
+                        sector_score += 1
+                # Append the minute summary entry to the new list if all sectors are present
+                if sector_score == len(self.sector_list):
+                    summary_text_list_2.append(each_summary)
+            # Update the original list with entries containing all sectors
+            summary_text_list = summary_text_list_2.copy()
+
             # Find the best generated text based on the number of contained tickers.
             score_i_list = []
             for each_i in summary_text_list:
