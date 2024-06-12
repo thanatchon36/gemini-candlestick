@@ -25,6 +25,7 @@ def main():
         'data/pdf',  # Directory for storing PDF reports
         'data/csv',  # Directory for storing CSV data files
         'data/png',   # Directory for storing PNG image charts
+        'data/png_optimized' # Directory for storing optimized PNG image charts
         'data/txt'   # Directory for storing text files
     ]
 

@@ -753,7 +753,7 @@ class GeminiCandlestick:
             str: Instructions describing the enclosed candlestick chart documents.
         """
         system_instructions = """
-        **Important Notice:** The enclosed technical charts feature 1-day candlestick charts and corresponding technical indicators for the ticker symbols listed in the "Ticker Symbols of Interest" section. These charts have been shared as group images in the Gemini Candlestick Telegram channel for your review.
+        **Important Notice:** The enclosed documents contain 1-day candlestick charts and corresponding technical indicators for the ticker symbols listed in the "Ticker Symbols of Interest" section, which can be found on the subsequent pages.
         """
         return system_instructions
 
@@ -835,7 +835,7 @@ class GeminiCandlestick:
                         
                         # Upload the chart image to GenAI and store the returned object
                         temp_file = genai.upload_file(
-                            path=f"data/png/{each_ticker}.png",  # Path to the image file
+                            path=f"data/png_optimized/{each_ticker}.png",  # Path to the image file
                             display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)'  # Display name for the image
                         )
                         
@@ -1056,14 +1056,14 @@ class GeminiCandlestick:
                     print(f"Error during ticker generation: {e}")
                     pass
 
-            # # Convert the PNG files to PDF
-            # png_files = [f'data/png/{each}.png' for each in self.interest_ticker_list]
-            # with open("data/pdf/png.pdf", "wb") as pdf_file:
-            #     pdf_bytes = convert(png_files)  # Assuming 'convert' is a function to convert PNGs to PDF
-            #     pdf_file.write(pdf_bytes)
-            # # Merge the generated PDF files
-            # pdf_paths = ["data/pdf/minutes.pdf", "data/pdf/png.pdf"]
-            # self.merge_pdfs(pdf_paths, pdf_paths[0])  # Assuming 'merge_pdfs' merges PDF files
+            # Convert the PNG files to PDF
+            png_files = [f'data/png_optimized/{each}.png' for each in self.interest_ticker_list]
+            with open("data/pdf/png.pdf", "wb") as pdf_file:
+                pdf_bytes = convert(png_files)  # Assuming 'convert' is a function to convert PNGs to PDF
+                pdf_file.write(pdf_bytes)
+            # Merge the generated PDF files
+            pdf_paths = ["data/pdf/minutes.pdf", "data/pdf/png.pdf"]
+            self.merge_pdfs(pdf_paths, pdf_paths[0])  # Assuming 'merge_pdfs' merges PDF files
 
             # Generate summary text for Telegram, retrying up to 6 times with delays
             for _ in tqdm(range(6), desc="Generating telegram_minutes_text"):
@@ -1127,7 +1127,7 @@ class GeminiCandlestick:
 
                         # Upload the image to genai
                         temp_file = genai.upload_file(
-                            path=f"data/png/{each_ticker}.png", 
+                            path=f"data/png_optimized/{each_ticker}.png", 
                             display_name=f'{self.ticker_company} ({each_ticker}): 1d Candlestick Chart (with Technical Indicators)' 
                         )
 
@@ -1587,11 +1587,25 @@ class GeminiCandlestick:
         fig.subplots_adjust(hspace=0.03)
         plt.savefig('data/png/temp.png')
 
-        # Resize the image to 2048x3072
+        # Open the image file
         with Image.open("data/png/temp.png") as img:
+            # Define the new dimensions required for resizing, specifically for the input images used in the Gemini project.
             new_width, new_height = 2048, 3072
+            
+            # Resize the image using LANCZOS resampling for high quality
             img_resized = img.resize((new_width, new_height), resample=Image.LANCZOS)
+            
+            # Save the resized image with the ticker as the filename
             img_resized.save(f"data/png/{self.ticker}.png")
+
+        # Open the resized image
+        with Image.open(f"data/png/{self.ticker}.png") as img:
+            # Convert the image to an 8-bit palette mode with 256 colors
+            # using adaptive palette generation for optimal color representation
+            img = img.convert("P", palette=Image.ADAPTIVE, colors=256)
+            
+            # Save the optimized image with reduced file size
+            img.save(f"data/png_optimized/{self.ticker}.png", optimize=True)
 
         # Remove temporary files and clear memory
         os.remove('data/png/temp.png')
