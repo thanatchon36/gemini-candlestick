@@ -652,7 +652,7 @@ class GeminiCandlestick:
             * The Board will reconvene in [timeframe, e.g., one week, two weeks] to review the fund's position and make any necessary adjustments based on evolving market dynamics and new information.
 
         4. **Ticker Symbols of Interest:**
-            * Based on the discussion, list a few of the ticker symbols that were highlighted (no more than 15 symbols) and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members and should be proportionately diverse among technical Candlestick Pattern Recognition, BB indicator, analysis of Fibonacci retracement, analysis of potential Elliott Wave patterns, analysis of the Ichimoku Cloud, analysis of the Volume and On Balance Volume indicators, analysis of the MACD indicator, analysis of RSI and ATR indicators, stochastic oscillator indicator, and the Chaikin Money Flow indicator.
+            * Based on the discussion, list a few of the ticker symbols that were highlighted (no more than 16 symbols) and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members and should be proportionately diverse among technical Candlestick Pattern Recognition, BB indicator, analysis of Fibonacci retracement, analysis of potential Elliott Wave patterns, analysis of the Ichimoku Cloud, analysis of the Volume and On Balance Volume indicators, analysis of the MACD indicator, analysis of RSI and ATR indicators, stochastic oscillator indicator, and the Chaikin Money Flow indicator.
 
         5. **Further Action:**
             * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
@@ -1042,8 +1042,8 @@ class GeminiCandlestick:
                     key = list(extracted_data.keys())[0] # Get the first key of the dictionary
                     interest_ticker_list = extracted_data[key]
 
-                    # Filter for valid tickers and limit the list to 36 tickers
-                    interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list][:36]
+                    # Filter for valid tickers and limit the list to 24 tickers
+                    interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list][:24]
                     
                     # Assign the generated list to the object's attribute
                     self.interest_ticker_list = interest_ticker_list
