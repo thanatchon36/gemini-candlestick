@@ -753,7 +753,7 @@ class GeminiCandlestick:
             str: Instructions describing the enclosed candlestick chart documents.
         """
         system_instructions = """
-        **Important Notice:** The enclosed documents contain 1-day candlestick charts and corresponding technical indicators for the ticker symbols listed in the "Ticker Symbols of Interest" section, which can be found on the subsequent pages.
+        **Important Notice:** The enclosed technical charts feature 1-day candlestick charts and corresponding technical indicators for the ticker symbols listed in the "Ticker Symbols of Interest" section. These charts have been shared as group images in the Gemini Candlestick Telegram channel for your review.
         """
         return system_instructions
 
@@ -881,6 +881,9 @@ class GeminiCandlestick:
 
             # Filter out generated text containing '[' or ']' characters.
             minutes_text_list = [each for each in minutes_text_list if '[' not in each and ']' not in each]
+
+            # Create a new list 'minutes_text_list' containing only items where 'approved by' is present.
+            minutes_text_list = [each for each in minutes_text_list if 'approved by' in each.lower()]
 
             # Initializes an empty list in Python called minutes_text_list_2
             minutes_text_list_2 = []
@@ -1039,8 +1042,8 @@ class GeminiCandlestick:
                     key = list(extracted_data.keys())[0] # Get the first key of the dictionary
                     interest_ticker_list = extracted_data[key]
 
-                    # Filter for valid tickers and limit the list to 15 tickers
-                    interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list][:15]
+                    # Filter for valid tickers and limit the list to 36 tickers
+                    interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list][:36]
                     
                     # Assign the generated list to the object's attribute
                     self.interest_ticker_list = interest_ticker_list
@@ -1053,14 +1056,14 @@ class GeminiCandlestick:
                     print(f"Error during ticker generation: {e}")
                     pass
 
-            # Convert the PNG files to PDF
-            png_files = [f'data/png/{each}.png' for each in self.interest_ticker_list]
-            with open("data/pdf/png.pdf", "wb") as pdf_file:
-                pdf_bytes = convert(png_files)  # Assuming 'convert' is a function to convert PNGs to PDF
-                pdf_file.write(pdf_bytes)
-            # Merge the generated PDF files
-            pdf_paths = ["data/pdf/minutes.pdf", "data/pdf/png.pdf"]
-            self.merge_pdfs(pdf_paths, pdf_paths[0])  # Assuming 'merge_pdfs' merges PDF files
+            # # Convert the PNG files to PDF
+            # png_files = [f'data/png/{each}.png' for each in self.interest_ticker_list]
+            # with open("data/pdf/png.pdf", "wb") as pdf_file:
+            #     pdf_bytes = convert(png_files)  # Assuming 'convert' is a function to convert PNGs to PDF
+            #     pdf_file.write(pdf_bytes)
+            # # Merge the generated PDF files
+            # pdf_paths = ["data/pdf/minutes.pdf", "data/pdf/png.pdf"]
+            # self.merge_pdfs(pdf_paths, pdf_paths[0])  # Assuming 'merge_pdfs' merges PDF files
 
             # Generate summary text for Telegram, retrying up to 6 times with delays
             for _ in tqdm(range(6), desc="Generating telegram_minutes_text"):
