@@ -882,7 +882,10 @@ class GeminiCandlestick:
             # Filter out generated text containing '[' or ']' characters.
             minutes_text_list = [each for each in minutes_text_list if '[' not in each and ']' not in each]
 
-            # Create a new list 'minutes_text_list' containing only items where 'approved by' is present.
+            # Filter a list 'minutes_text_list' containing only items where 'Ticker Symbols of Interest' is present.
+            minutes_text_list = [each for each in minutes_text_list if 'Ticker Symbols of Interest'.lower() in each.lower()]
+
+            # Filter a list 'minutes_text_list' containing only items where 'approved by' is present.
             minutes_text_list = [each for each in minutes_text_list if 'approved by' in each.lower()]
 
             # Initializes an empty list in Python called minutes_text_list_2
@@ -1026,14 +1029,18 @@ class GeminiCandlestick:
                     # Avoid rate limits by waiting 30 seconds after the first attempt
                     if each_attempt != 0:
                         time.sleep(30) 
-                    
+
+                    # Find the starting index of the "Ticker Symbols of Interest" section in the `minutes_text` string.
+                    # Search is case-insensitive due to converting both strings to lowercase.
+                    start_index = minutes_text.lower().find("Ticker Symbols of Interest".lower())
+
                     # Generate content using the AI model (Gemini Pro)
                     generation_result = genai.GenerativeModel(
                         model_name="gemini-1.5-pro-latest",
                         generation_config=generation_config,
                         system_instruction=self.get_system_instructions_3(),  
                         safety_settings=safety_settings
-                    ).generate_content(minutes_text).text
+                    ).generate_content(minutes_text[start_index:]).text
                     
                     interest_ticker_list = str(generation_result) # Convert to string
 
@@ -1133,7 +1140,7 @@ class GeminiCandlestick:
 
                         # Append the uploaded file to prompt parts and image path to image paths list
                         self.prompt_parts.append(temp_file)
-                        self.image_paths.append(f'data/png/{each_ticker}.png')
+                        self.image_paths.append(f'data/png_optimized/{each_ticker}.png')
 
                         # Exit the retry loop if successful
                         break
