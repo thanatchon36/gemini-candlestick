@@ -963,18 +963,75 @@ class GeminiCandlestick:
             # Update the original list with entries containing all sectors
             minutes_text_list = minutes_text_list_2.copy()
 
-            # Find the best generated text based on the number of contained tickers.
-            score_i_list = []
+            # Initialize an empty list to store ticker scores for each minute segment
+            score_minutes_text_list = []
+
+            # Iterate over each minute segment in the transcript
             for each_i in minutes_text_list:
-                # Calculate a score based on the number of matching tickers.
+                # Find the starting index of the phrase "Ticker Symbols of Interest" in lowercase
+                start_index = each_i.lower().find("Ticker Symbols of Interest".lower())
+
+                # Initialize the ticker score for the current minute segment to 0
                 score_i = 0
+
+                # Iterate over each ticker in the predefined ticker list
                 for each_j in self.ticker_list:
-                    if each_j in each_i:
+                    # Check if the ticker is mentioned before the "Ticker Symbols of Interest" phrase
+                    if each_j in each_i[:start_index]:
+                        # Increment the ticker score if a match is found
                         score_i = score_i + 1
-                score_i_list.append(score_i)
+
+                # Append the ticker score for the current minute segment to the list
+                score_minutes_text_list.append(score_i)
             
-            # Select the text with the highest score.
-            minutes_text = minutes_text_list[np.argmax(score_i_list)]
+            # Create an empty list to store the tickers of interest.
+            list_of_interest_ticker_list = []
+            
+            # Iterate through each meeting minutes text
+            for each_i in minutes_text_list:
+                # Attempt to generate and extract ticker symbols, retrying up to 6 times
+                for _ in tqdm(range(6), desc="Generating interest_ticker_list"):
+                    try:
+                        time.sleep(4)  # Pause to avoid rate limiting
+                        
+                        # Find the starting point for extracting tickers of interest
+                        start_index = each_i.lower().find("Ticker Symbols of Interest".lower()) 
+
+                        # Generate content using a generative model (e.g., GPT)
+                        generation_result = genai.GenerativeModel(
+                            model_name="gemini-1.5-flash-latest",
+                            generation_config=generation_config,
+                            system_instruction=self.get_system_instructions_3(),  
+                            safety_settings=safety_settings
+                        ).generate_content(each_i[start_index:]).text
+
+                        interest_ticker_list = str(generation_result)
+
+                        # Extract data assuming a JSON-like structure is returned
+                        extracted_data = self.extract_json(interest_ticker_list)[0]
+                        key = list(extracted_data.keys())[0]
+                        interest_ticker_list = extracted_data[key]
+
+                        # Filter ticker list to only include valid tickers
+                        interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list]
+
+                        list_of_interest_ticker_list.append(interest_ticker_list)
+                        break  # Exit the retry loop if successful
+                    except Exception as e: 
+                        print(f"Error during ticker generation: {e}")
+                        pass
+
+            # Score the extracted ticker lists based on their length (penalize long lists)
+            list_of_interest_ticker_list = [1 if len(each) <= 24 else -1 for each in list_of_interest_ticker_list]
+            list_of_interest_ticker_list = np.array(list_of_interest_ticker_list)
+            score_minutes_text_list = np.array(score_minutes_text_list)
+
+            # Combine the scores of the minutes text and the ticker lists
+            score_minutes_text_list = score_minutes_text_list * list_of_interest_ticker_list
+
+            # Select the minutes text with the highest combined score
+            minutes_text = minutes_text_list[np.argmax(score_minutes_text_list)]
+            self.interest_ticker_list = list_of_interest_ticker_list[np.argmax(score_minutes_text_list)]
 
             # Define the file path for saving the meeting minutes.
             file_path = f'data/txt/{self.file_date}_minutes.txt'
@@ -1082,46 +1139,6 @@ class GeminiCandlestick:
 
             # Call the markdown_to_pdf method to convert the summary text to a PDF file
             self.markdown_to_pdf(summary_text, 'data/pdf/summary.pdf')
-
-            # Try generating the interest_ticker_list up to 6 times
-            for each_attempt in tqdm(range(6), desc="Generating interest_ticker_list"):
-                try:
-                    # Avoid rate limits by waiting 30 seconds after the first attempt
-                    if each_attempt != 0:
-                        time.sleep(30) 
-
-                    # Find the starting index of the "Ticker Symbols of Interest" section in the `minutes_text` string.
-                    # Search is case-insensitive due to converting both strings to lowercase.
-                    start_index = minutes_text.lower().find("Ticker Symbols of Interest".lower())
-
-                    # Generate content using the AI model (Gemini Pro)
-                    generation_result = genai.GenerativeModel(
-                        model_name="gemini-1.5-pro-latest",
-                        generation_config=generation_config,
-                        system_instruction=self.get_system_instructions_3(),  
-                        safety_settings=safety_settings
-                    ).generate_content(minutes_text[start_index:]).text
-                    
-                    interest_ticker_list = str(generation_result) # Convert to string
-
-                    # Extract the list of tickers from the generated JSON content
-                    extracted_data = self.extract_json(interest_ticker_list)[0]
-                    key = list(extracted_data.keys())[0] # Get the first key of the dictionary
-                    interest_ticker_list = extracted_data[key]
-
-                    # Filter for valid tickers and limit the list to 24 tickers
-                    interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list][:24]
-                    
-                    # Assign the generated list to the object's attribute
-                    self.interest_ticker_list = interest_ticker_list
-
-                    # Exit the loop if successful
-                    break 
-
-                except Exception as e: 
-                    # Print error message and continue to the next attempt
-                    print(f"Error during ticker generation: {e}")
-                    pass
 
             # Convert the PNG files to PDF
             png_files = [f'data/png_optimized/{each}.png' for each in self.interest_ticker_list]
