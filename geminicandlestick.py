@@ -341,12 +341,23 @@ class GeminiCandlestick:
             message: The text message to send.
         """
 
-        url = f"https://api.telegram.org/bot{self.BOT_TOKEN}/sendMessage"
-        payload = {
-            "chat_id": self.CHAT_ID,
-            "text": message
-        }
-        requests.post(url, json=payload)
+        with requests.post(
+            f"https://api.telegram.org/bot{self.BOT_TOKEN}/sendMessage",  # URL for the Telegram API endpoint
+            json={
+                "chat_id": self.CHAT_ID,  # The ID of the chat/group where the message will be sent
+                "text": message  # The text of the message to be sent
+            }
+        ) as response:
+            # The `with` statement ensures that the response object is properly closed
+            # after the request is completed, even if an exception occurs.
+
+            if response.status_code == 200:
+                # If the status code is 200 (OK), the message was sent successfully
+                self.docker_print("Message sent successfully!")
+            else:
+                # If the status code is not 200, there was an error
+                self.docker_print(f"Error: {response.status_code} - {response.text}")
+                # Print the error code and the error message from the Telegram API
 
     def telegram_send_pdfs(self, pdf_paths, caption_list):
         """Sends multiple PDFs individually to a Telegram chat.
@@ -356,12 +367,23 @@ class GeminiCandlestick:
             caption_list: A list of captions for each PDF.
         """
 
-        url = f"https://api.telegram.org/bot{self.BOT_TOKEN}/sendDocument"
+        url = f"https://api.telegram.org/bot{self.BOT_TOKEN}/sendDocument"  # URL for the Telegram API endpoint
         for i, pdf_file in enumerate(pdf_paths):
-            files = {"document": open(pdf_file, "rb")}
-            data = {"chat_id": self.CHAT_ID, "caption": caption_list[i]}
-            requests.post(url, files=files, data=data)
-            time.sleep(180)
+            with open(pdf_file, "rb") as file:
+                # Open the PDF file in binary mode
+                files = {"document": file}  # Prepare the file data for the request
+                data = {"chat_id": self.CHAT_ID, "caption": caption_list[i]}  # Prepare the request data
+                with requests.post(url, files=files, data=data) as response:
+                    # Send the POST request to the Telegram API
+                    self.docker_print(f"Status Code for {pdf_file}: {response.status_code}")  # Print the status code for the request
+                    if response.status_code == 200:
+                        # If the status code is 200 (OK), the file was sent successfully
+                        self.docker_print(f"File {pdf_file} sent successfully!")
+                    else:
+                        # If the status code is not 200, there was an error
+                        self.docker_print(f"Error sending {pdf_file}: {response.status_code} - {response.text}")
+                        # Print the error code and the error message from the Telegram API
+            time.sleep(168)  # Wait for 168 seconds
 
     def telegram_send_group_pdfs(self, pdf_paths, caption_list):
         """Sends multiple PDFs as a group (album) to a Telegram chat.
@@ -374,11 +396,24 @@ class GeminiCandlestick:
         media = []
         for i, pdf_path in enumerate(pdf_paths):
             with open(pdf_path, 'rb') as f:
+                # Open the PDF file in binary mode
                 data = {'type': 'document', 'media': f'attach://document{i}', 'caption': caption_list[i]}
-                media.append(data)
-        data = {'chat_id': self.CHAT_ID, 'media': json.dumps(media)}
-        url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMediaGroup'
-        requests.post(url, data=data, files={f'document{i}': open(pdf_paths[i], 'rb') for i in range(len(pdf_paths))})
+                # Prepare the data for the current file
+                media.append(data)  # Add the file data to the media list
+
+        data = {'chat_id': self.CHAT_ID, 'media': json.dumps(media)}  # Prepare the request data
+        url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMediaGroup'  # URL for the Telegram API endpoint
+
+        with requests.post(url, data=data, files={f'document{i}': open(pdf_path, 'rb') for i, pdf_path in enumerate(pdf_paths)}) as response:
+            # Send the POST request to the Telegram API
+            self.docker_print(f"Status Code: {response.status_code}")  # Print the status code for the request
+            if response.status_code == 200:
+                # If the status code is 200 (OK), the files were sent successfully
+                self.docker_print("Files sent successfully!")
+            else:
+                # If the status code is not 200, there was an error
+                self.docker_print(f"Error: {response.status_code} - {response.text}")
+                # Print the error code and the error message from the Telegram API
 
     def telegram_send_images(self, image_paths, caption_list):
         """Sends multiple images individually to a Telegram chat.
@@ -388,11 +423,22 @@ class GeminiCandlestick:
             caption_list: A list of captions for each image.
         """
 
-        url = f"https://api.telegram.org/bot{self.BOT_TOKEN}/sendPhoto"
+        url = f"https://api.telegram.org/bot{self.BOT_TOKEN}/sendPhoto"  # URL for the Telegram API endpoint
+
         for i, photo_file in enumerate(image_paths):
-            files = {"photo": open(photo_file, "rb")}
-            data = {"chat_id": self.CHAT_ID, "caption": caption_list[i]}
-            requests.post(url, files=files, data=data)
+            with open(photo_file, "rb") as file:
+                # Open the image file in binary mode
+                files = {"photo": file}  # Prepare the file data for the request
+                data = {"chat_id": self.CHAT_ID, "caption": caption_list[i]}  # Prepare the request data
+                with requests.post(url, files=files, data=data) as response:
+                    # Send the POST request to the Telegram API
+                    if response.status_code == 200:
+                        # If the status code is 200 (OK), the image was sent successfully
+                        self.docker_print(f"Image {photo_file} sent successfully!")
+                    else:
+                        # If the status code is not 200, there was an error
+                        self.docker_print(f"Error sending {photo_file}: {response.status_code} - {response.text}")
+                        # Print the error code and the error message from the Telegram API
 
     def telegram_send_group_images(self, image_paths, caption_list):
         """Sends multiple images as a group (album) to a Telegram chat.
@@ -405,11 +451,24 @@ class GeminiCandlestick:
         media = []
         for i, image_path in enumerate(image_paths):
             with open(image_path, 'rb') as f:
+                # Open the image file in binary mode
                 data = {'type': 'photo', 'media': f'attach://photo{i}', 'caption': caption_list[i]}
-                media.append(data)
-        data = {'chat_id': self.CHAT_ID, 'media': json.dumps(media)}
-        url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMediaGroup'
-        requests.post(url, data=data, files={f'photo{i}': open(image_paths[i], 'rb') for i in range(len(image_paths))})
+                # Prepare the data for the current image
+                media.append(data)  # Add the image data to the media list
+
+        data = {'chat_id': self.CHAT_ID, 'media': json.dumps(media)}  # Prepare the request data
+        url = f'https://api.telegram.org/bot{self.BOT_TOKEN}/sendMediaGroup'  # URL for the Telegram API endpoint
+
+        with requests.post(url, data=data, files={f'photo{i}': open(image_path, 'rb') for i, image_path in enumerate(image_paths)}) as response:
+            # Send the POST request to the Telegram API
+            self.docker_print(f"Status Code: {response.status_code}")  # Print the status code for the request
+            if response.status_code == 200:
+                # If the status code is 200 (OK), the images were sent successfully
+                self.docker_print("Images sent successfully!")
+            else:
+                # If the status code is not 200, there was an error
+                self.docker_print(f"Error: {response.status_code} - {response.text}")
+                # Print the error code and the error message from the Telegram API
 
     def prep_sp500_dataset(self):
         """

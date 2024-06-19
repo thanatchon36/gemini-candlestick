@@ -65,7 +65,7 @@ def main():
     image_paths = gemini_instance.image_paths
     photo_caption_list = gemini_instance.photo_caption_list
     for i in range(0, len(image_paths), max_batch_size):
-        time.sleep(180)  # Wait for 180 seconds
+        time.sleep(168)  # Wait for 168 seconds
         end_index = min(i + max_batch_size, len(image_paths))
         batch_images = image_paths[i:end_index]
         batch_captions = photo_caption_list[i:end_index]
