@@ -361,7 +361,7 @@ class GeminiCandlestick:
             files = {"document": open(pdf_file, "rb")}
             data = {"chat_id": self.CHAT_ID, "caption": caption_list[i]}
             requests.post(url, files=files, data=data)
-            time.sleep(60)
+            time.sleep(180)
 
     def telegram_send_group_pdfs(self, pdf_paths, caption_list):
         """Sends multiple PDFs as a group (album) to a Telegram chat.
