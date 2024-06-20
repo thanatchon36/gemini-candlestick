@@ -841,12 +841,7 @@ class GeminiCandlestick:
         """
         return system_instructions
     
-    def generate_gemini_candlestick(self):
-        """Generates reports and summaries based on candlestick chart data using the Gemini API."""
-
-        # Configure the Gemini API
-        genai.configure(api_key=self.gemini_key)
-
+    def get_generation_config_1(self):
         # Set up the model parameters for Gemini
         generation_config = {
             "temperature": 1,  # Temperature controls the randomness of the generated text
@@ -855,6 +850,27 @@ class GeminiCandlestick:
             "max_output_tokens": 1000000,  # Maximum number of tokens allowed in the generated text
             "response_mime_type": "text/plain",  # Response format
         }
+        return generation_config
+    
+    def get_generation_config_2(self):
+        # Set up the model parameters for Gemini
+        generation_config = {
+            "temperature": 1,  # Temperature controls the randomness of the generated text
+            "top_p": 0.95,  # Top_p controls the diversity of the generated text
+            "top_k": 64,  # Top_k controls the number of possible next words considered
+            "max_output_tokens": 168,  # Maximum number of tokens allowed in the generated text
+            "response_mime_type": "text/plain",  # Response format
+        }
+        return generation_config
+    
+    def generate_gemini_candlestick(self):
+        """Generates reports and summaries based on candlestick chart data using the Gemini API."""
+
+        # Configure the Gemini API
+        genai.configure(api_key=self.gemini_key)
+
+        # Set up the model parameters for Gemini
+        generation_config = self.get_generation_config_1()
         # Configure safety settings for the Gemini model
         safety_settings = [
             {"category": "HARM_CATEGORY_HARASSMENT", "threshold": "BLOCK_NONE"},
@@ -1167,6 +1183,8 @@ class GeminiCandlestick:
             pdf_paths = ["data/pdf/minutes.pdf", "data/pdf/png.pdf"]
             self.merge_pdfs(pdf_paths, pdf_paths[0])  # Assuming 'merge_pdfs' merges PDF files
 
+            # Set up the model parameters for Gemini
+            generation_config = self.get_generation_config_2()
             # Generate summary text for Telegram, retrying up to 6 times with delays
             for _ in tqdm(range(6), desc="Generating telegram_minutes_text"):
                 try:
@@ -1189,6 +1207,8 @@ class GeminiCandlestick:
                     # Continue to the next iteration of the loop
                     pass
 
+            # Set up the model parameters for Gemini
+            generation_config = self.self.get_generation_config_2()
             # Attempt to generate the summary text up to 6 times.
             for _ in tqdm(range(6), desc="Generating telegram_summary_text"):
                 try:
@@ -1244,7 +1264,9 @@ class GeminiCandlestick:
                         # Log the error and continue to the next retry attempt
                         self.docker_print(f"Error during genai upload_file: {e}")
                         pass
-
+            
+            # Set up the model parameters for Gemini
+            generation_config = self.get_generation_config_2()
             # Initialize an empty list to store photo captions.
             self.photo_caption_list = []
             # Iterate through each part of the prompt
@@ -1271,6 +1293,9 @@ class GeminiCandlestick:
                     except Exception as e:
                         self.docker_print(f"Error generating caption: {e}")
                         # Continue to the next retry attempt
+
+            # Set up the model parameters for Gemini
+            generation_config = self.get_generation_config_1()
 
             # Delete uploaded images from Gemini after generating captions
             for each_prompt_part in tqdm(self.prompt_parts, desc="genai.delete_file"):
