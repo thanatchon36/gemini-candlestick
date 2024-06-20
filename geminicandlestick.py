@@ -988,9 +988,9 @@ class GeminiCandlestick:
             list_of_interest_ticker_list = []
             
             # Iterate through each meeting minutes text
-            for each_i in minutes_text_list:
+            for each_i in tqdm(minutes_text_list, desc="Generating interest_ticker_list"):
                 # Attempt to generate and extract ticker symbols, retrying up to 6 times
-                for _ in tqdm(range(6), desc="Generating interest_ticker_list"):
+                for _ in range(6):
                     try:
                         time.sleep(4)  # Pause to avoid rate limiting
                         
@@ -1022,12 +1022,12 @@ class GeminiCandlestick:
                         pass
 
             # Score the extracted ticker lists based on their length (penalize long lists)
-            list_of_interest_ticker_list = [1 if len(each) <= 24 else -1 for each in list_of_interest_ticker_list]
-            list_of_interest_ticker_list = np.array(list_of_interest_ticker_list)
+            list_of_interest_ticker_score_list = [1 if len(each) <= 24 else -1 for each in list_of_interest_ticker_list]
+            list_of_interest_ticker_score_list = np.array(list_of_interest_ticker_score_list)
             score_minutes_text_list = np.array(score_minutes_text_list)
 
             # Combine the scores of the minutes text and the ticker lists
-            score_minutes_text_list = score_minutes_text_list * list_of_interest_ticker_list
+            score_minutes_text_list = score_minutes_text_list * list_of_interest_ticker_score_list
 
             # Select the minutes text with the highest combined score
             minutes_text = minutes_text_list[np.argmax(score_minutes_text_list)]
