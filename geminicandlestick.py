@@ -1102,33 +1102,51 @@ class GeminiCandlestick:
             # Filter out generated text containing '[' or ']' characters.
             summary_text_list = [each for each in summary_text_list if '[' not in each and ']' not in each]
 
-            # Initializes an empty list in Python called summary_text_list_2
-            summary_text_list_2 = []
-            for each_summary in summary_text_list:
-                # Initialize sector score for each minute entry
-                sector_score = 0
-                # Check if all sectors are present in the minute entry
-                for each_sector in self.sector_list:
-                    if each_sector.lower() in each_summary.lower():
-                        sector_score += 1
-                # Append the minute summary entry to the new list if all sectors are present
-                if sector_score == len(self.sector_list):
-                    summary_text_list_2.append(each_summary)
-            # Update the original list with entries containing all sectors
-            summary_text_list = summary_text_list_2.copy()
+            # Initialize an empty list to store sector scores for each summary
+            summary_text_score_list_1 = []
 
-            # Find the best generated text based on the number of contained tickers.
-            score_i_list = []
-            for each_i in summary_text_list:
-                # Calculate a score based on the number of matching tickers.
-                score_i = 0
-                for each_j in self.ticker_list:
-                    if each_j in each_i:
-                        score_i = score_i + 1
-                score_i_list.append(score_i)
-            
-            # Select the text with the highest score.
-            summary_text = summary_text_list[np.argmax(score_i_list)]
+            # Iterate through each summary in the list of summaries
+            for each_summary in summary_text_list:
+                # Initialize the sector score to 0 for each summary
+                sector_score = 0
+
+                # Iterate through each sector in the predefined sector list
+                for each_sector in self.sector_list:
+                    # Convert both the sector and summary to lowercase for case-insensitive comparison
+                    if each_sector.lower() in each_summary.lower():
+                        # Increment the sector score if the sector is found in the summary
+                        sector_score += 1
+
+                # Append the sector score to the list of sector scores
+                summary_text_score_list_1.append(sector_score)
+
+            # Find the maximum sector score from the list of sector scores
+            max_sector_score = max(summary_text_score_list_1)
+
+            # Initialize an empty list to store summaries with the maximum sector score
+            summary_text_score_list_2 = []
+
+            # Iterate through each summary in the list of summaries
+            for each_summary in summary_text_list:
+                # Initialize the sector score to 0 for each summary
+                sector_score = 0
+
+                # Iterate through each sector in the predefined sector list
+                for each_sector in self.sector_list:
+                    # Convert both the sector and summary to lowercase for case-insensitive comparison
+                    if each_sector.lower() in each_summary.lower():
+                        # Increment the sector score if the sector is found in the summary
+                        sector_score += 1
+
+                # Append the summary to the list if its sector score is equal to the maximum sector score
+                if sector_score == max_sector_score:
+                    summary_text_score_list_2.append(each_summary)
+
+            # Sort the list of summaries with the maximum sector score by length in descending order
+            summary_text_score_list_2.sort(key=len, reverse=True)
+
+            # Select the first summary (the longest one) from the sorted list
+            summary_text = summary_text_score_list_2[0]
 
             # Define the file path for saving the meeting minutes summary.
             file_path = f'data/txt/{self.file_date}_summary.txt'
