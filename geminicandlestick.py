@@ -1208,7 +1208,7 @@ class GeminiCandlestick:
                     pass
 
             # Set up the model parameters for Gemini
-            generation_config = self.self.get_generation_config_2()
+            generation_config = self.get_generation_config_2()
             # Attempt to generate the summary text up to 6 times.
             for _ in tqdm(range(6), desc="Generating telegram_summary_text"):
                 try:
