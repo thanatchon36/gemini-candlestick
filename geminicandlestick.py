@@ -1000,38 +1000,51 @@ class GeminiCandlestick:
                 # Append the ticker score for the current minute segment to the list
                 score_minutes_text_list.append(score_i)
             
-            list_of_interest_ticker_list = []  # List to store extracted ticker lists
-            score_minutes_text_list_2 = []  # List to store scores corresponding to processed minutes
+            # Initialize empty lists to store data
+            list_of_interest_ticker_list = []  # List to store tickers of interest
+            score_minutes_text_list_2 = []   # List to store scores associated with meeting minutes 
+            minutes_text_list_3 = []          # List to store the actual text of meeting minutes
 
+            # Iterate through each minute's text in the original list
             for i, each_i in enumerate(tqdm(minutes_text_list, desc="Generating interest_ticker_list")):
-                for _ in range(6):  # Retry loop for up to 6 attempts
+                # Retry loop for up to 6 attempts in case of errors
+                for _ in range(6):  
                     try:
-                        time.sleep(4)  # Wait to avoid rate limiting
+                        # Wait to avoid rate limiting
+                        time.sleep(4) 
+                        
+                        # Find the starting index of the "Ticker Symbols of Interest" section
                         start_index = each_i.lower().find("Ticker Symbols of Interest".lower()) 
                         
-                        # Generate content using a generative model
+                        # Generate content using the specified generative model and system instructions
                         generation_result = genai.GenerativeModel(
                             model_name="gemini-1.5-flash-latest",
                             generation_config=generation_config,
-                            system_instruction=self.get_system_instructions_3(),  # Assuming this method exists
+                            system_instruction=self.get_system_instructions_3(), 
                             safety_settings=safety_settings
                         ).generate_content(each_i[start_index:]).text
 
-                        # Extract and process ticker symbols
+                        # Extract the list of tickers from the generated content
                         interest_ticker_list = str(generation_result)
-                        extracted_data = self.extract_json(interest_ticker_list)[0]  # Assuming 'extract_json' method exists
+                        extracted_data = self.extract_json(interest_ticker_list)[0] 
                         key = list(extracted_data.keys())[0]
                         interest_ticker_list = extracted_data[key]
+                        
+                        # Filter the ticker list to include only valid tickers
                         interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list] 
 
-                        # Store results
+                        # Append the extracted data to the corresponding lists
                         list_of_interest_ticker_list.append(interest_ticker_list)
                         score_minutes_text_list_2.append(score_minutes_text_list[i])
-                        break  # Exit retry loop if successful
+                        minutes_text_list_3.append(each_i)
+                        
+                        # Break the retry loop if successful
+                        break 
 
                     except Exception as e: 
+                        # Print error message and continue to the next iteration
                         print(f"Error during ticker generation: {e}")
-                        pass  # Continue to the next attempt
+                        pass
 
             # Score based on the number of tickers (positive if <= 24, negative otherwise)
             list_of_interest_ticker_score_list = [1 if len(each) <= 24 else -1 for each in list_of_interest_ticker_list]
@@ -1044,7 +1057,7 @@ class GeminiCandlestick:
             score_minutes_text_list = score_minutes_text_list_2 * list_of_interest_ticker_score_list
 
             # Select the minutes text with the highest combined score
-            minutes_text = minutes_text_list[np.argmax(score_minutes_text_list)]
+            minutes_text = minutes_text_list_3[np.argmax(score_minutes_text_list)]
             self.interest_ticker_list = list_of_interest_ticker_list[np.argmax(score_minutes_text_list)]
 
             # Define the file path for saving the meeting minutes.
