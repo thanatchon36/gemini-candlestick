@@ -1000,50 +1000,48 @@ class GeminiCandlestick:
                 # Append the ticker score for the current minute segment to the list
                 score_minutes_text_list.append(score_i)
             
-            # Create an empty list to store the tickers of interest.
-            list_of_interest_ticker_list = []
-            
-            # Iterate through each meeting minutes text
-            for each_i in tqdm(minutes_text_list, desc="Generating interest_ticker_list"):
-                # Attempt to generate and extract ticker symbols, retrying up to 6 times
-                for _ in range(6):
-                    try:
-                        time.sleep(4)  # Pause to avoid rate limiting
-                        
-                        # Find the starting point for extracting tickers of interest
-                        start_index = each_i.lower().find("Ticker Symbols of Interest".lower()) 
+            list_of_interest_ticker_list = []  # List to store extracted ticker lists
+            score_minutes_text_list_2 = []  # List to store scores corresponding to processed minutes
 
-                        # Generate content using a generative model (e.g., GPT)
+            for i, each_i in enumerate(tqdm(minutes_text_list, desc="Generating interest_ticker_list")):
+                for _ in range(6):  # Retry loop for up to 6 attempts
+                    try:
+                        time.sleep(4)  # Wait to avoid rate limiting
+                        start_index = each_i.lower().find("Ticker Symbols of Interest".lower()) 
+                        
+                        # Generate content using a generative model
                         generation_result = genai.GenerativeModel(
                             model_name="gemini-1.5-flash-latest",
                             generation_config=generation_config,
-                            system_instruction=self.get_system_instructions_3(),  
+                            system_instruction=self.get_system_instructions_3(),  # Assuming this method exists
                             safety_settings=safety_settings
                         ).generate_content(each_i[start_index:]).text
 
+                        # Extract and process ticker symbols
                         interest_ticker_list = str(generation_result)
-
-                        # Extract data assuming a JSON-like structure is returned
-                        extracted_data = self.extract_json(interest_ticker_list)[0]
+                        extracted_data = self.extract_json(interest_ticker_list)[0]  # Assuming 'extract_json' method exists
                         key = list(extracted_data.keys())[0]
                         interest_ticker_list = extracted_data[key]
+                        interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list] 
 
-                        # Filter ticker list to only include valid tickers
-                        interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list]
-
+                        # Store results
                         list_of_interest_ticker_list.append(interest_ticker_list)
-                        break  # Exit the retry loop if successful
+                        score_minutes_text_list_2.append(score_minutes_text_list[i])
+                        break  # Exit retry loop if successful
+
                     except Exception as e: 
                         print(f"Error during ticker generation: {e}")
-                        pass
+                        pass  # Continue to the next attempt
 
-            # Score the extracted ticker lists based on their length (penalize long lists)
+            # Score based on the number of tickers (positive if <= 24, negative otherwise)
             list_of_interest_ticker_score_list = [1 if len(each) <= 24 else -1 for each in list_of_interest_ticker_list]
+            
+            # Convert lists to NumPy arrays for further processing
             list_of_interest_ticker_score_list = np.array(list_of_interest_ticker_score_list)
-            score_minutes_text_list = np.array(score_minutes_text_list)
+            score_minutes_text_list_2 = np.array(score_minutes_text_list_2)
 
             # Combine the scores of the minutes text and the ticker lists
-            score_minutes_text_list = score_minutes_text_list * list_of_interest_ticker_score_list
+            score_minutes_text_list = score_minutes_text_list_2 * list_of_interest_ticker_score_list
 
             # Select the minutes text with the highest combined score
             minutes_text = minutes_text_list[np.argmax(score_minutes_text_list)]
