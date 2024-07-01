@@ -956,7 +956,7 @@ class GeminiCandlestick:
                         generation_config=generation_config,
                         system_instruction=self.get_system_instructions_2(),  # Set system instructions for summary generation
                         safety_settings=safety_settings
-                    ).generate_content(minutes_text).text)
+                    ).generate_content(temp_minutes_text).text)
 
                     # Apply quality checks to ensure the generated text meets specific criteria
                     # Check if the generated text does not contain '[' or ']' characters
