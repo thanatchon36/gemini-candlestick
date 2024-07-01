@@ -42,7 +42,7 @@ RUN python3 -m pip install --no-cache-dir grpcio==1.64.1           # gRPC suppor
 RUN python3 -m pip install --no-cache-dir pandas==2.2.2           # Data analysis and manipulation library
 RUN python3 -m pip install --no-cache-dir google-generativeai       # Google's generative AI API
 RUN python3 -m pip install --no-cache-dir plotly==5.22.0           # Interactive plotting library
-RUN python3 -m pip install --no-cache-dir matplotlib==3.9.1       # Plotting library
+RUN python3 -m pip install --no-cache-dir matplotlib           # Plotting library
 RUN python3 -m pip install --no-cache-dir mplfinance==0.12.10b0       # Matplotlib utilities for financial plotting
 RUN python3 -m pip install --no-cache-dir pillow==10.3.0           # Image processing library
 RUN python3 -m pip install --no-cache-dir yfinance==0.2.40  # Yahoo Finance API for fetching financial data
