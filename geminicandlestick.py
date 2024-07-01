@@ -926,58 +926,75 @@ class GeminiCandlestick:
                         # If an exception occurs, pass and try again (up to 6 times)
                         pass
 
-            # Initialize an empty list to store the generated minutes in a text format.
-            minutes_text_list = []
+            minutes_text_list = []  # Initialize an empty list to store generated meeting minutes
+            summary_text_list = []  # Initialize an empty list to store generated summaries
 
-            # Generate 36 different versions of meeting minutes
-            for _ in tqdm(range(36), desc="Generating temp_minutes_text"):
+            # Generate 36 candidate meeting minutes and summaries
+            for _ in tqdm(range(36), desc="Generating temp_minutes_text and temp_summary_text"):
                 try:
-                    # Pause for 60 seconds unless it's the first iteration (_ == 0) to prevent rate limiting from the API
+                    # Introduce a delay between API calls to avoid rate limiting (except for the first iteration)
                     if _ != 0:
                         time.sleep(4)
 
-                    # Randomize the order of prompt parts for more diverse outputs
+                    # Shuffle the prompt components to introduce variation in the generated text
                     random.shuffle(self.prompt_parts)
 
-                    # Generate meeting minutes text using Google's Gemini Pro model
+                    # Generate meeting minutes using the Gemini Pro model
                     temp_minutes_text = str(genai.GenerativeModel(
+                        model_name="gemini-1.5-flash-latest",  # Specify the model name
+                        generation_config=generation_config,   # Pass the generation configuration
+                        system_instruction=self.get_system_instructions_1(),  # Set the system instructions for minutes generation
+                        safety_settings=safety_settings       # Enforce safety settings during text generation
+                    ).generate_content(self.prompt_parts, request_options={"timeout": 1000}).text) 
+
+                    # Introduce a delay to avoid rate limiting
+                    time.sleep(4)
+
+                    # Generate a summary of the meeting minutes
+                    temp_summary_text = str(genai.GenerativeModel(
                         model_name="gemini-1.5-flash-latest",
                         generation_config=generation_config,
-                        system_instruction=self.get_system_instructions_1(),
+                        system_instruction=self.get_system_instructions_2(),  # Set system instructions for summary generation
                         safety_settings=safety_settings
-                    ).generate_content(self.prompt_parts, request_options={"timeout": 1000}).text)
+                    ).generate_content(minutes_text).text)
 
-                    # Append the generated minutes text to the list
-                    minutes_text_list.append(temp_minutes_text)
-
+                    # Apply quality checks to ensure the generated text meets specific criteria
+                    # Check if the generated text does not contain '[' or ']' characters
+                    if '[' not in temp_minutes_text and ']' not in temp_minutes_text:
+                        if '[' not in temp_summary_text and ']' not in temp_summary_text:
+                            # Check if the minutes contain specific keywords
+                            if 'Ticker Symbols of Interest'.lower() in temp_minutes_text.lower():
+                                if 'approved by' in temp_minutes_text.lower():
+                                    # Append the generated minutes and summary to their respective lists
+                                    minutes_text_list.append(temp_minutes_text)
+                                    summary_text_list.append(temp_summary_text)
                 except Exception as e:
-                    # Log the error and continue to the next iteration without crashing
+                    # Handle exceptions during text generation and print error messages
                     self.docker_print(f"Error during temp_minutes_text generation: {e}")
                     pass
 
-            # Filter out generated text containing '[' or ']' characters.
-            minutes_text_list = [each for each in minutes_text_list if '[' not in each and ']' not in each]
-
-            # Filter a list 'minutes_text_list' containing only items where 'Ticker Symbols of Interest' is present.
-            minutes_text_list = [each for each in minutes_text_list if 'Ticker Symbols of Interest'.lower() in each.lower()]
-
-            # Filter a list 'minutes_text_list' containing only items where 'approved by' is present.
-            minutes_text_list = [each for each in minutes_text_list if 'approved by' in each.lower()]
-
-            # Initializes an empty list in Python called minutes_text_list_2
+            # Initialize empty lists to store filtered minutes and summaries
             minutes_text_list_2 = []
-            for each_minutes in minutes_text_list:
-                # Initialize sector score for each minute entry
+            summary_text_list_2 = []
+
+            # Iterate through each minute in the original list
+            for i_each_minutes, each_minutes in enumerate(minutes_text_list):
+                # Initialize a score to track the presence of sectors
                 sector_score = 0
-                # Check if all sectors are present in the minute entry
+
+                # Check if each sector is present in the minutes text
                 for each_sector in self.sector_list:
                     if each_sector.lower() in each_minutes.lower():
                         sector_score += 1
-                # Append the minute entry to the new list if all sectors are present
+
+                # If all sectors are present, add the minutes and corresponding summary to the filtered lists
                 if sector_score == len(self.sector_list):
                     minutes_text_list_2.append(each_minutes)
-            # Update the original list with entries containing all sectors
+                    summary_text_list_2.append(summary_text_list[i_each_minutes])
+
+            # Update the original lists with the filtered results
             minutes_text_list = minutes_text_list_2.copy()
+            summary_text_list = summary_text_list_2.copy()
 
             # Initialize an empty list to store ticker scores for each minute segment
             score_minutes_text_list = []
@@ -1000,23 +1017,22 @@ class GeminiCandlestick:
                 # Append the ticker score for the current minute segment to the list
                 score_minutes_text_list.append(score_i)
             
-            # Initialize empty lists to store data
-            list_of_interest_ticker_list = []  # List to store tickers of interest
-            score_minutes_text_list_2 = []   # List to store scores associated with meeting minutes 
-            minutes_text_list_3 = []          # List to store the actual text of meeting minutes
+            list_of_interest_ticker_list = []  # List to store lists of tickers of interest
+            score_minutes_text_list_2 = []  # List to store scores corresponding to the processed minutes
+            minutes_text_list_3 = []       # List to store minutes text after ticker extraction
+            summary_text_list_3 = []        # List to store summary text corresponding to the processed minutes
 
-            # Iterate through each minute's text in the original list
+            # Iterate through each minutes text in the input list
             for i, each_i in enumerate(tqdm(minutes_text_list, desc="Generating interest_ticker_list")):
-                # Retry loop for up to 6 attempts in case of errors
+                # Retry ticker extraction up to 6 times
                 for _ in range(6):  
                     try:
-                        # Wait to avoid rate limiting
-                        time.sleep(4) 
-                        
-                        # Find the starting index of the "Ticker Symbols of Interest" section
+                        time.sleep(4)  # Wait for 4 seconds to avoid rate limiting
+
+                        # Find the starting index of "Ticker Symbols of Interest" section
                         start_index = each_i.lower().find("Ticker Symbols of Interest".lower()) 
                         
-                        # Generate content using the specified generative model and system instructions
+                        # Generate content from the "Ticker Symbols of Interest" section using the generative model
                         generation_result = genai.GenerativeModel(
                             model_name="gemini-1.5-flash-latest",
                             generation_config=generation_config,
@@ -1024,7 +1040,7 @@ class GeminiCandlestick:
                             safety_settings=safety_settings
                         ).generate_content(each_i[start_index:]).text
 
-                        # Extract the list of tickers from the generated content
+                        # Extract ticker list from the generated content
                         interest_ticker_list = str(generation_result)
                         extracted_data = self.extract_json(interest_ticker_list)[0] 
                         key = list(extracted_data.keys())[0]
@@ -1033,32 +1049,37 @@ class GeminiCandlestick:
                         # Filter the ticker list to include only valid tickers
                         interest_ticker_list = [ticker for ticker in interest_ticker_list if ticker in self.ticker_list] 
 
-                        # Append the extracted data to the corresponding lists
+                        # Append the extracted data to corresponding lists
                         list_of_interest_ticker_list.append(interest_ticker_list)
                         score_minutes_text_list_2.append(score_minutes_text_list[i])
                         minutes_text_list_3.append(each_i)
+                        summary_text_list_3.append(summary_text_list[i])
                         
-                        # Break the retry loop if successful
-                        break 
+                        break  # Exit the retry loop if successful
 
                     except Exception as e: 
-                        # Print error message and continue to the next iteration
                         print(f"Error during ticker generation: {e}")
-                        pass
+                        pass  # Continue to the next retry if an error occurs
 
-            # Score based on the number of tickers (positive if <= 24, negative otherwise)
+            # Assign a score to each ticker in the list based on its length.
+            # Ticker with length <= 24 get a score of 1, otherwise -1
             list_of_interest_ticker_score_list = [1 if len(each) <= 24 else -1 for each in list_of_interest_ticker_list]
             
-            # Convert lists to NumPy arrays for further processing
+            # Convert the lists to NumPy arrays for element-wise multiplication
             list_of_interest_ticker_score_list = np.array(list_of_interest_ticker_score_list)
             score_minutes_text_list_2 = np.array(score_minutes_text_list_2)
 
-            # Combine the scores of the minutes text and the ticker lists
+            # Multiply the scores with the corresponding text scores
+            # This will prioritize texts related to tickers with shorter lengths
             score_minutes_text_list = score_minutes_text_list_2 * list_of_interest_ticker_score_list
 
-            # Select the minutes text with the highest combined score
-            minutes_text = minutes_text_list_3[np.argmax(score_minutes_text_list)]
-            self.interest_ticker_list = list_of_interest_ticker_list[np.argmax(score_minutes_text_list)]
+            # Find the index with the highest combined score
+            max_score_index = np.argmax(score_minutes_text_list)
+
+            # Select the minutes text, summary text, and the interest ticker based on the index
+            minutes_text = minutes_text_list_3[max_score_index]
+            summary_text = summary_text_list_3[max_score_index]
+            self.interest_ticker_list = list_of_interest_ticker_list[max_score_index]
 
             # Define the file path for saving the meeting minutes.
             file_path = f'data/txt/{self.file_date}_minutes.txt'
@@ -1066,6 +1087,13 @@ class GeminiCandlestick:
             with open(file_path, 'w') as file:
                 # Write the meeting minutes text to the file.
                 file.write(minutes_text)
+
+            # Define the file path for saving the meeting minutes.
+            file_path = f'data/txt/{self.file_date}_summary.txt'
+            # Open the file in write mode ('w'). 
+            with open(file_path, 'w') as file:
+                # Write the meeting minutes text to the file.
+                file.write(summary_text)
 
             # Delete uploaded files from Gemini
             for each_prompt_part in tqdm(self.prompt_parts, desc="genai.delete_file"):
@@ -1098,89 +1126,6 @@ class GeminiCandlestick:
             
             # Convert the combined text to PDF and save it to the specified path.
             self.markdown_to_pdf(minutes_text + '\n' + attached_text, 'data/pdf/minutes.pdf')
-
-            # Initialize an empty list to store generated summaries
-            summary_text_list = []
-
-            # Generate 36 different versions of the meeting minutes summary.
-            for _ in tqdm(range(36), desc="Generating temp_summary_text"):
-                try:
-                    # Add a delay to avoid rate limiting
-                    time.sleep(4)
-
-                    # Generate a summary using the specified language model (Gemini Pro)
-                    temp_summary_text = str(genai.GenerativeModel(
-                        model_name="gemini-1.5-flash-latest",
-                        generation_config=generation_config,
-                        system_instruction=self.get_system_instructions_2(),  # Retrieve system instructions
-                        safety_settings=safety_settings
-                    ).generate_content(minutes_text).text)  # Pass meeting minutes as input
-
-                    # Append the generated summary to the list
-                    summary_text_list.append(temp_summary_text)
-
-                # Handle any exceptions during summary generation
-                except Exception as e:
-                    # Log the error message
-                    self.docker_print(f"Error during temp_summary_text generation: {e}")
-                    # Continue to the next attempt
-                    pass
-
-            # Filter out generated text containing '[' or ']' characters.
-            summary_text_list = [each for each in summary_text_list if '[' not in each and ']' not in each]
-
-            # Initialize an empty list to store sector scores for each summary
-            summary_text_score_list_1 = []
-
-            # Iterate through each summary in the list of summaries
-            for each_summary in summary_text_list:
-                # Initialize the sector score to 0 for each summary
-                sector_score = 0
-
-                # Iterate through each sector in the predefined sector list
-                for each_sector in self.sector_list:
-                    # Convert both the sector and summary to lowercase for case-insensitive comparison
-                    if each_sector.lower() in each_summary.lower():
-                        # Increment the sector score if the sector is found in the summary
-                        sector_score += 1
-
-                # Append the sector score to the list of sector scores
-                summary_text_score_list_1.append(sector_score)
-
-            # Find the maximum sector score from the list of sector scores
-            max_sector_score = max(summary_text_score_list_1)
-
-            # Initialize an empty list to store summaries with the maximum sector score
-            summary_text_score_list_2 = []
-
-            # Iterate through each summary in the list of summaries
-            for each_summary in summary_text_list:
-                # Initialize the sector score to 0 for each summary
-                sector_score = 0
-
-                # Iterate through each sector in the predefined sector list
-                for each_sector in self.sector_list:
-                    # Convert both the sector and summary to lowercase for case-insensitive comparison
-                    if each_sector.lower() in each_summary.lower():
-                        # Increment the sector score if the sector is found in the summary
-                        sector_score += 1
-
-                # Append the summary to the list if its sector score is equal to the maximum sector score
-                if sector_score == max_sector_score:
-                    summary_text_score_list_2.append(each_summary)
-
-            # Sort the list of summaries with the maximum sector score by length in descending order
-            summary_text_score_list_2.sort(key=len, reverse=True)
-
-            # Select the first summary (the longest one) from the sorted list
-            summary_text = summary_text_score_list_2[0]
-
-            # Define the file path for saving the meeting minutes summary.
-            file_path = f'data/txt/{self.file_date}_summary.txt'
-            # Open the file in write mode ('w'). 
-            with open(file_path, 'w') as file:
-                # Write the meeting minutes summary text to the file.
-                file.write(summary_text)
 
             # Call the markdown_to_pdf method to convert the summary text to a PDF file
             self.markdown_to_pdf(summary_text, 'data/pdf/summary.pdf')
