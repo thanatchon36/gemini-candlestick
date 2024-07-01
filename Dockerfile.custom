@@ -38,23 +38,22 @@ RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
 RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel
 
 # Install Python packages
-RUN python3 -m pip install --no-cache-dir grpcio           # gRPC support for networking
-RUN python3 -m pip install --no-cache-dir pandas           # Data analysis and manipulation library
-RUN python3 -m pip install --no-cache-dir google-generativeai # Google's generative AI API
-RUN python3 -m pip install --no-cache-dir plotly           # Interactive plotting library
-RUN python3 -m pip install --no-cache-dir matplotlib       # Plotting library
-RUN python3 -m pip install --no-cache-dir mplfinance       # Matplotlib utilities for financial plotting
-RUN python3 -m pip install --no-cache-dir pillow           # Image processing library
+RUN python3 -m pip install --no-cache-dir grpcio==1.64.1           # gRPC support for networking
+RUN python3 -m pip install --no-cache-dir pandas==2.2.2           # Data analysis and manipulation library
+RUN python3 -m pip install --no-cache-dir google-generativeai       # Google's generative AI API
+RUN python3 -m pip install --no-cache-dir plotly==5.22.0           # Interactive plotting library
+RUN python3 -m pip install --no-cache-dir matplotlib==3.9.1       # Plotting library
+RUN python3 -m pip install --no-cache-dir mplfinance==0.12.10b0       # Matplotlib utilities for financial plotting
+RUN python3 -m pip install --no-cache-dir pillow==10.3.0           # Image processing library
 RUN python3 -m pip install --no-cache-dir yfinance==0.2.40  # Yahoo Finance API for fetching financial data
-RUN python3 -m pip install --no-cache-dir pytickersymbols  # Library for working with ticker symbols
-RUN python3 -m pip install --no-cache-dir pdfkit            # PDF generation library
-RUN python3 -m pip install --no-cache-dir pdf2image      # Library for converting PDF to images
-RUN python3 -m pip install --no-cache-dir img2pdf      # Library for converting images to PDF
-RUN python3 -m pip install --no-cache-dir PyPDF2          # Library for working with PDF files
-RUN python3 -m pip install --no-cache-dir pyyaml        # YAML parsing and emitting library
-RUN python3 -m pip install --no-cache-dir markdown        # Library for converting markdown
-RUN python3 -m pip install --no-cache-dir TA-Lib           # Technical Analysis library
-RUN python3 -m pip install --no-cache-dir numpy==1.19.3     # Install the NumPy library for numerical computing in Python.
+RUN python3 -m pip install --no-cache-dir pytickersymbols==1.15.0  # Library for working with ticker symbols
+RUN python3 -m pip install --no-cache-dir pdfkit==1.0.0           # PDF generation library
+RUN python3 -m pip install --no-cache-dir pdf2image==1.17.0     # Library for converting PDF to images
+RUN python3 -m pip install --no-cache-dir img2pdf==0.5.1      # Library for converting images to PDF
+RUN python3 -m pip install --no-cache-dir PyPDF2==3.0.1          # Library for working with PDF files
+RUN python3 -m pip install --no-cache-dir pyyaml==6.0.1        # YAML parsing and emitting library
+RUN python3 -m pip install --no-cache-dir markdown==3.6      # Library for converting markdown
+RUN python3 -m pip install --no-cache-dir TA-Lib==0.4.31           # Technical Analysis library
 
 # Set the command to run when the container starts
 CMD ["python", "/opt/app/main.py"]
