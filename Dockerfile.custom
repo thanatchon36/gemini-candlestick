@@ -25,7 +25,7 @@ RUN apt-get update && apt-get install -y \
     poppler-utils
 
 # Download and install TA-Lib
-RUN wget https://sourceforge.net/projects/ta-lib/files/ta-lib/0.4.0/ta-lib-0.4.0-src.tar.gz/download && \
+RUN wget http://prdownloads.sourceforge.net/ta-lib/ta-lib-0.4.0-src.tar.gz && \
     tar -xzf ta-lib-0.4.0-src.tar.gz && \
     cd ta-lib && \
     ./configure --prefix=/usr/local --build=aarch64-unknown-linux-gnu && \
@@ -39,6 +39,7 @@ RUN python3 -m pip install --no-cache-dir -U pip setuptools wheel
 
 # Install Python packages
 RUN python3 -m pip install --no-cache-dir grpcio==1.64.1           # gRPC support for networking
+RUN python3 -m pip install --no-cache-dir TA-Lib==0.4.32         # Technical Analysis library
 RUN python3 -m pip install --no-cache-dir pandas==2.2.2           # Data analysis and manipulation library
 RUN python3 -m pip install --no-cache-dir google-generativeai==0.7.0       # Google's generative AI API
 RUN python3 -m pip install --no-cache-dir plotly==5.22.0           # Interactive plotting library
@@ -53,7 +54,6 @@ RUN python3 -m pip install --no-cache-dir img2pdf==0.5.1      # Library for conv
 RUN python3 -m pip install --no-cache-dir PyPDF2==3.0.1          # Library for working with PDF files
 RUN python3 -m pip install --no-cache-dir pyyaml==6.0.1        # YAML parsing and emitting library
 RUN python3 -m pip install --no-cache-dir markdown==3.6      # Library for converting markdown
-RUN python3 -m pip install --no-cache-dir TA-Lib==0.4.32         # Technical Analysis library
 
 # Set the command to run when the container starts
 CMD ["python", "/opt/app/main.py"]
