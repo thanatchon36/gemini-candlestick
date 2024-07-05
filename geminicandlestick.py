@@ -2103,37 +2103,37 @@ class GeminiCandlestick:
         return date_obj.strftime("%d %b")
     
     def make_pdf_uncroppable(self, input_pdf_path, output_pdf_path):
-            """
-            Converts a PDF to a sequence of images, effectively making it 'uncroppable'.
+        """
+        Converts a PDF to a sequence of images, effectively making it 'uncroppable'.
 
-            This is achieved by treating each page of the PDF as a distinct image. 
-            When opened, the PDF will appear as a single image per page, 
-            preventing traditional cropping methods from being effective.
+        This is achieved by treating each page of the PDF as a distinct image. 
+        When opened, the PDF will appear as a single image per page, 
+        preventing traditional cropping methods from being effective.
 
-            Args:
-                input_pdf_path (str): The path to the input PDF file.
-                output_pdf_path (str): The path where the output 'uncroppable' PDF will be saved.
-            """
+        Args:
+            input_pdf_path (str): The path to the input PDF file.
+            output_pdf_path (str): The path where the output 'uncroppable' PDF will be saved.
+        """
 
-            # Convert the input PDF to a list of PIL Image objects
-            images = convert_from_path(input_pdf_path)
+        # Convert the input PDF to a list of PIL Image objects
+        images = convert_from_path(input_pdf_path)
 
-            # Handle cases where the PDF has multiple pages
-            if len(images) > 1:
-                # Save the first image as a PDF
-                # Use save_all=True to indicate that multiple images will be saved
-                # Append all subsequent images to the PDF
-                images[0].save(
-                    output_pdf_path,
-                    "PDF",
-                    resolution=100.0,
-                    save_all=True,
-                    append_images=images[1:],
-                )
-            # Handle cases where the PDF has only one page
-            else:
-                # Save the single image as a PDF
-                images[0].save(output_pdf_path, "PDF", resolution=100.0)
+        # Handle cases where the PDF has multiple pages
+        if len(images) > 1:
+            # Save the first image as a PDF
+            # Use save_all=True to indicate that multiple images will be saved
+            # Append all subsequent images to the PDF
+            images[0].save(
+                output_pdf_path,
+                "PDF",
+                resolution=100.0,
+                save_all=True,
+                append_images=images[1:],
+            )
+        # Handle cases where the PDF has only one page
+        else:
+            # Save the single image as a PDF
+            images[0].save(output_pdf_path, "PDF", resolution=100.0)
 
     def merge_pdfs(self, paths, output_filename):
         """
