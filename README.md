@@ -87,6 +87,8 @@ Before running the application, you need to configure the following environment 
 - **`BOT_TOKEN`:** Your Telegram bot token. Replace `YOUR_TELEGRAM_BOT_TOKEN` with your bot's token.
 - **`CHAT_ID`:** The ID of your Telegram chat. Replace `YOUR_TELEGRAM_CHAT_ID` with your chat's ID.
 
+**How to get your Telegram Bot Token & Chat ID: [https://www.youtube.com/watch?v=M1VOnJQ6-YE](https://www.youtube.com/watch?v=M1VOnJQ6-YE)**
+
 **Make sure to replace the placeholders with your actual credentials.**
 
 ## Structure
