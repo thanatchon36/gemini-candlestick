@@ -12,11 +12,11 @@ services:
     # Set environment variables for the container
     environment:
       # Gemini API Key
-      - gemini_key=AIzaSyCY2krWzRCAMU9n4BP4KAeQgDeQ2cM9NgI
+      - gemini_key=XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
       # Telegram Bot Token
-      - BOT_TOKEN=6634636445:AAE4FORei5yEjJmEZmEOHLrHQ4URFKB-yqI
+      - BOT_TOKEN=XXXXXXXXXX:XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX-XXX
       # Telegram Chat ID
-      - CHAT_ID=-1002105947055
+      - CHAT_ID=-XXXXXXXXXXXXX
     # Set the container name
     container_name: Container01
     # Map the current directory on the host to /opt/app in the container

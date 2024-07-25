@@ -486,9 +486,6 @@ class GeminiCandlestick:
         # Remove duplicate entries based on 'symbol'
         sp500_df = reset_dataframe_index(sp500_df).groupby('symbol').first().reset_index()
 
-        # Debug
-        # sp500_df = sp500_df.head(10)
-
         # Download historical candlestick data for all symbols using yfinance
         # The period is set to twice the number of candlestick charts required
         candlestick_df = yf.download(list(sp500_df['symbol'].values),
