@@ -940,9 +940,9 @@ class GeminiCandlestick:
                     temp_minutes_text = str(genai.GenerativeModel(
                         model_name="gemini-1.5-flash-latest",  # Specify the model name
                         generation_config=generation_config,   # Pass the generation configuration
-                        system_instruction=self.get_system_instructions_1(),  # Set the system instructions for minutes generation
+                        # system_instruction=self.get_system_instructions_1(),  # Set the system instructions for minutes generation
                         safety_settings=safety_settings       # Enforce safety settings during text generation
-                    ).generate_content(self.prompt_parts, request_options={"timeout": 1000}).text) 
+                    ).generate_content([self.get_system_instructions_1()] + self.prompt_parts, request_options={"timeout": 1000}).text) 
 
                     # Introduce a delay to avoid rate limiting
                     time.sleep(4)
@@ -1232,9 +1232,9 @@ class GeminiCandlestick:
                         photo_caption = str(genai.GenerativeModel(
                             model_name="gemini-1.5-flash-latest",  # Specify the Gemini model
                             generation_config=generation_config,  # Pass the generation configuration
-                            system_instruction=self.get_system_instructions_7(),  # Get instructions for this part
+                            # system_instruction=self.get_system_instructions_7(),  # Get instructions for this part
                             safety_settings=safety_settings  # Enforce safety settings
-                        ).generate_content([each_prompt_part]).text)
+                        ).generate_content([self.get_system_instructions_7(), each_prompt_part]).text)
 
                         # Append the generated caption to the list
                         self.photo_caption_list.append(photo_caption)
