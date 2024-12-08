@@ -843,7 +843,7 @@ class GeminiCandlestick:
         generation_config = {
             "temperature": 1,  # Temperature controls the randomness of the generated text
             "top_p": 0.95,  # Top_p controls the diversity of the generated text
-            "top_k": 64,  # Top_k controls the number of possible next words considered
+            "top_k": 40,  # Top_k controls the number of possible next words considered
             "max_output_tokens": 1000000,  # Maximum number of tokens allowed in the generated text
             "response_mime_type": "text/plain",  # Response format
         }
@@ -854,7 +854,7 @@ class GeminiCandlestick:
         generation_config = {
             "temperature": 1,  # Temperature controls the randomness of the generated text
             "top_p": 0.95,  # Top_p controls the diversity of the generated text
-            "top_k": 64,  # Top_k controls the number of possible next words considered
+            "top_k": 40,  # Top_k controls the number of possible next words considered
             "max_output_tokens": 168,  # Maximum number of tokens allowed in the generated text
             "response_mime_type": "text/plain",  # Response format
         }
