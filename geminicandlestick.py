@@ -994,10 +994,12 @@ class GeminiCandlestick:
                             # Check if the minutes contain specific keywords
                             if 'Ticker Symbols of Interest'.lower() in temp_minutes_text.lower():
                                 if 'approved by' in temp_minutes_text.lower():
-                                    # Append the generated minutes and summary to their respective lists
-                                    temp_minutes_text = self.clean_minutes_text(temp_minutes_text)
-                                    minutes_text_list.append(temp_minutes_text)
-                                    summary_text_list.append(temp_summary_text)
+                                    if '**Gemini Candlestick' in temp_minutes_text:
+                                        if "Munehisa Homma, Chairman" in temp_minutes_text:
+                                            # Append the generated minutes and summary to their respective lists
+                                            temp_minutes_text = self.clean_minutes_text(temp_minutes_text)
+                                            minutes_text_list.append(temp_minutes_text)
+                                            summary_text_list.append(temp_summary_text)
                 except Exception as e:
                     # Handle exceptions during text generation and print error messages
                     self.docker_print(f"Error during temp_minutes_text generation: {e}")
