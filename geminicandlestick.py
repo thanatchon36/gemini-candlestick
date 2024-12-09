@@ -837,7 +837,39 @@ class GeminiCandlestick:
         As an enhancer of Telegram messages, your objective is to captivate readers and amplify user input. By incorporating emojis, relevant symbols, and creative flair, you strive to ignite curiosity and inspire individuals to explore the original messages. You're limited to few sentences to write and wrap up the enhancements, making every word count.
         """
         return system_instructions
-    
+
+    def clean_minutes_text(self):
+        # Check for the first occurrence of either substring
+        start_index_1 = text.find("**Gemini Candlestick")
+        start_index_2 = text.find("##Gemini Candlestick")
+
+        # Find the first valid index
+        if start_index_1 != -1 and (start_index_2 == -1 or start_index_1 < start_index_2):
+            start_index = start_index_1
+        elif start_index_2 != -1:
+            start_index = start_index_2
+        else:
+            start_index = -1
+
+        # Extract the substring if one of the patterns is found
+        if start_index != -1:
+            updated_text = text[start_index:]
+        else:
+            updated_text = text  # Keep original if neither is found
+        text = updated_text
+
+        # Find the position of the substring "Munehisa Homma, Chairman"
+        marker = "Munehisa Homma, Chairman"
+        index = text.find(marker)
+        if index != -1:
+            # Get all text up to and including "Munehisa Homma, Chairman"
+            text_with_marker = text[:index + len(marker)]
+        else:
+            # Handle case where marker is not found
+            text_with_marker = text
+        text = text_with_marker
+        return text
+
     def get_generation_config_1(self):
         # Set up the model parameters for Gemini
         generation_config = {
@@ -963,6 +995,7 @@ class GeminiCandlestick:
                             if 'Ticker Symbols of Interest'.lower() in temp_minutes_text.lower():
                                 if 'approved by' in temp_minutes_text.lower():
                                     # Append the generated minutes and summary to their respective lists
+                                    temp_minutes_text = self.clean_minutes_text(temp_minutes_text)
                                     minutes_text_list.append(temp_minutes_text)
                                     summary_text_list.append(temp_summary_text)
                 except Exception as e:
