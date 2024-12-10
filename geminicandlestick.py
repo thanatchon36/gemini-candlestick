@@ -838,7 +838,7 @@ class GeminiCandlestick:
         """
         return system_instructions
 
-    def clean_minutes_text(self):
+    def clean_minutes_text(self, text):
         # Check for the first occurrence of either substring
         start_index_1 = text.find("**Gemini Candlestick")
         start_index_2 = text.find("##Gemini Candlestick")
