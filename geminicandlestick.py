@@ -728,9 +728,7 @@ class GeminiCandlestick:
         Returns:
             str: The comprehensive system instructions for the language model.
         """
-        system_instructions = f"""
-        {self.get_judge_instructions()}
-        
+        system_instructions = f"""        
         ## Gemini Candlestick Investment Fund Daily Meeting Summary - {self.current_meeting_date}
 
         You are provided with detailed minutes from the latest Gemini Candlestick Investment Fund meeting.  Your task is to analyze this information and create a concise and insightful summary for the fund's managers. 
