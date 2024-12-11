@@ -97,7 +97,7 @@ def main():
 
             # Calculate the sleep time until 0X:00 AM
             # The script aims to send reports and charts at this time
-            target_time_0X00 = 0.5 * 60 * 60  # 0X:00 AM in seconds (X.0 hours)
+            target_time_0X00 = 2.0 * 60 * 60  # 0X:00 AM in seconds (X.0 hours)
             target_time_0X00 = target_time_0X00 - generate_candlestick_runtime
 
             # Sleep until 0X:00 AM if there's time left after data generation

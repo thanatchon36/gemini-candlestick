@@ -639,7 +639,7 @@ class GeminiCandlestick:
         **Gemini Candlestick Investment Fund Daily Meeting Minutes Details:**
 
         * **Date:** {self.current_meeting_date}
-        * **Time:** 00:00 - 00:30
+        * **Time:** 00:00 - 02:00
         * **Location:** Google Meet
 
         **Stock Selection:**
@@ -714,7 +714,7 @@ class GeminiCandlestick:
         5. **Further Action:**
             * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
 
-        6. **Meeting Adjourned:** 00:30
+        6. **Meeting Adjourned:** 02:00
 
         7. **Approved by:**
             * Munehisa Homma, Chairman
@@ -835,11 +835,10 @@ class GeminiCandlestick:
         As an enhancer of Telegram messages, your objective is to captivate readers and amplify user input. By incorporating emojis, relevant symbols, and creative flair, you strive to ignite curiosity and inspire individuals to explore the original messages. You're limited to few sentences to write and wrap up the enhancements, making every word count.
         """
         return system_instructions
-
     def clean_minutes_text(self, text):
         # Check for the first occurrence of either substring
-        start_index_1 = text.find("**Gemini Candlestick")
-        start_index_2 = text.find("##Gemini Candlestick")
+        start_index_1 = text.find("**Gemini")
+        start_index_2 = text.find("## Gemini")
 
         # Find the first valid index
         if start_index_1 != -1 and (start_index_2 == -1 or start_index_1 < start_index_2):
@@ -992,7 +991,7 @@ class GeminiCandlestick:
                             # Check if the minutes contain specific keywords
                             if 'Ticker Symbols of Interest'.lower() in temp_minutes_text.lower():
                                 if 'approved by' in temp_minutes_text.lower():
-                                    if '**Gemini Candlestick' in temp_minutes_text:
+                                    if '**Gemini' in temp_minutes_text or '## Gemini' in temp_minutes_text:
                                         if "Munehisa Homma, Chairman" in temp_minutes_text:
                                             # Append the generated minutes and summary to their respective lists
                                             temp_minutes_text = self.clean_minutes_text(temp_minutes_text)
@@ -1133,29 +1132,30 @@ class GeminiCandlestick:
                     pass
 
             # Generate attached text with retries
-            for _ in tqdm(range(6), desc="Generating attached_text"):  # Try up to 6 times
-                try:
-                    time.sleep(4)  # Wait for 4 seconds before making the API call
+            # for _ in tqdm(range(6), desc="Generating attached_text"):  # Try up to 6 times
+            #     try:
+            #         time.sleep(4)  # Wait for 4 seconds before making the API call
 
-                    # Generate content using the Gemini Pro model
-                    genai_model = genai.GenerativeModel(
-                        model_name="gemini-1.5-flash-latest",  # Specify the Gemini Pro model
-                        generation_config=generation_config,
-                        system_instruction=self.get_system_instructions_6(),  # Set system instructions
-                        safety_settings=safety_settings
-                    )
-                    attached_text = str(genai_model.generate_content(
-                        self.get_system_instructions_5()  # Provide instructions for content generation
-                    ).text)
+            #         # Generate content using the Gemini Pro model
+            #         genai_model = genai.GenerativeModel(
+            #             model_name="gemini-1.5-flash-latest",  # Specify the Gemini Pro model
+            #             generation_config=generation_config,
+            #             system_instruction=self.get_system_instructions_6(),  # Set system instructions
+            #             safety_settings=safety_settings
+            #         )
+            #         attached_text = str(genai_model.generate_content(
+            #             self.get_system_instructions_5()  # Provide instructions for content generation
+            #         ).text)
 
-                    break  # Exit the loop if generation is successful
+            #         break  # Exit the loop if generation is successful
 
-                except Exception as e:
-                    self.docker_print(f"Error during attached_text generation: {e}")
-                    pass  # Continue to the next iteration if an error occurs
+            #     except Exception as e:
+            #         self.docker_print(f"Error during attached_text generation: {e}")
+            #         pass  # Continue to the next iteration if an error occurs
             
             # Convert the combined text to PDF and save it to the specified path.
-            self.markdown_to_pdf(minutes_text + '\n' + attached_text, 'data/pdf/minutes.pdf')
+            self.markdown_to_pdf(minutes_text, 'data/pdf/minutes.pdf')
+            # self.markdown_to_pdf(minutes_text + '\n' + attached_text, 'data/pdf/minutes.pdf')
 
             # Call the markdown_to_pdf method to convert the summary text to a PDF file
             self.markdown_to_pdf(summary_text, 'data/pdf/summary.pdf')
