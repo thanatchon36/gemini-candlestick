@@ -628,96 +628,183 @@ class GeminiCandlestick:
             str: A formatted string containing the system instructions for the language model.
         """
         system_instructions = f"""
-        {self.get_judge_instructions()}
+        **Google Gemini Candlestick Investment Fund**
+        
+        The Gemini Candlestick Investment Fund employs a dynamic investment strategy that capitalizes on both market growth and volatility. The Fund strategically allocates capital to a portfolio of core holdings, representing established companies with long-term growth potential, while simultaneously employing tactical opportunities to profit from short-term market fluctuations. This dual approach allows the Fund to navigate market cycles effectively, aiming to maximize returns through both growth investments and market-neutral strategies. Guided by the collective wisdom of the ten-member Board of Directors, this strategy ensures a balanced and diversified approach to investment, seeking to generate consistent and sustainable profitability for its stakeholders.
 
-        **Google Gemini:** The Gemini Candlestick Investment Fund employs a dynamic investment strategy that capitalizes on both market growth and volatility. The Fund strategically allocates capital to a portfolio of core holdings, representing established companies with long-term growth potential, while simultaneously employing tactical opportunities to profit from short-term market fluctuations. This dual approach allows the Fund to navigate market cycles effectively, aiming to maximize returns through both growth investments and market-neutral strategies. This strategy, guided by the collective wisdom of the ten-member Board of Directors, ensures a balanced and diversified approach to investment, seeking to generate consistent and sustainable profitability for its stakeholders. The meeting minutes will primarily focus on the judging round mentioned earlier and aim to maximize the score closely to 65 as much as possible.
+        **Target User Persona**
+        
+        This application is designed for financial analysts, portfolio managers, and individuals interested in understanding how technical analysis and expert opinions can be integrated to make informed investment decisions.
 
-        **Target User Persona:** This application is designed for financial analysts, portfolio managers, and individuals interested in understanding how technical analysis and expert opinions can be integrated to make investment decisions. 
+        **User Needs**
+        
+        Users require a clear and concise summary of expert opinions on various stocks and overall market sectors based on technical indicators and market trends. This information aids in making well-informed investment decisions.
 
-        **User Needs:**  Users need a clear and concise summary of expert opinions on various stocks and overall market sectors based on technical indicators and market trends. This information aids in making informed investment decisions. 
+        **Gemini Candlestick Investment Fund Daily Meeting Minutes**
+        
+        **Date:** {self.current_meeting_date}
+        **Time:** 00:00 - 02:00  
+        **Location:** Google Meet
 
-        **Gemini Candlestick Investment Fund Daily Meeting Minutes Details:**
+        ### **Stock Selection**
+        
+        The Board of Directors will analyze the following {len(self.company_ticker_list)} stocks:
 
-        * **Date:** {self.current_meeting_date}
-        * **Time:** 00:00 - 02:00
-        * **Location:** Google Meet
+        *{self.company_ticker_text}
 
-        **Stock Selection:**
+        ### **Data**
+ 
+        The Board will have access to hypothetical candlestick charts and technical indicator data for each of these stocks, reflecting recent market activity. The technical indicators include:
+        
+        - **Volume**
+        - **Relative Strength Index (RSI)**
+        - **Moving Average Convergence Divergence (MACD)**
+        - **Bollinger Bands**
+        - **Fibonacci Retracement**
+        - **Ichimoku Cloud**
+        - **Stochastic Oscillator**
+        - **Chaikin Money Flow**
+        - **On-Balance Volume**
+        - **Average True Range (ATR)**
 
-        The Board of Directors will be analyzing the following {len(self.company_ticker_list)} stocks:
+        ### **Board Members**
+        
+        The Board of Directors comprises 10 esteemed members, each bringing technical expertise and a deep understanding of market sectors and trends:
+        
+        1. **Munehisa Homma** *(Chairman)*: Assigned to analyze Candlestick Pattern Recognition and provide an opinion.
+        2. **John Bollinger**: Assigned to analyze the Bollinger Bands indicator and provide an opinion.
+        3. **Leonardo Pisano Fibonacci**: Assigned to analyze Fibonacci Retracement and provide an opinion.
+        4. **Ralph Nelson Elliott**: Assigned to analyze potential Elliott Wave patterns, utilizing Fibonacci ratios (0.786, 0.618, 0.5, 0.382, and 0.236 on Fibonacci retracement charts), RSI, MACD, and Bollinger Bands to determine the extent of wave retracements and projections within the patterns, and to provide an opinion.
+        5. **Goichi Hosoda**: Assigned to analyze the Ichimoku Cloud and provide an opinion.
+        6. **Joseph Granville**: Assigned to analyze the Volume and On-Balance Volume indicators and provide an opinion.
+        7. **Gerald Appel**: Assigned to analyze the MACD indicator and provide an opinion.
+        8. **J. Welles Wilder**: Assigned to analyze RSI and ATR indicators and provide an opinion.
+        9. **George Lane**: Assigned to analyze the Stochastic Oscillator indicator and provide an opinion.
+        10. **Marc Chaikin**: Assigned to analyze the Chaikin Money Flow indicator and provide an opinion.
 
-        {self.company_ticker_text}.
+        ### **Instructions**
 
-        **Data:**
+        1. **Broad Market Analysis**
+        
+            - **Sectors to Analyze**:
 
-        The Board will have access to hypothetical candlestick charts and technical indicator data (Volume, RSI, MACD, Bollinger Bands, Fibonacci Retracement, Ichimoku Cloud, Stochastic Oscillator, Chaikin Money Flow, On-Balance Volume, and Average True Range) for each of these stocks, reflecting recent market activity. 
+                - **Healthcare & Biotechnology**
+                - **Information Technology**
+                    - **Software & Services**
+                    - **Hardware & Equipment**
+                    - **Semiconductors**
+                    - **Internet Services & Infrastructure**
+                    - **Artificial Intelligence & Machine Learning**
+                    - **Cybersecurity**
+                - **Financials**
+                    - **Financial Services**
+                    - **FinTech**
+                - **Energy**
+                    - **Traditional Energy**
+                    - **Renewable Energy**
+                - **Consumer Discretionary**
+                    - **Traditional Retail**
+                    - **E-Commerce**
+                    - **Automotive**
+                - **Communication Services**
+                    - **Media & Entertainment**
+                - **Industrials**
+                - **Real Estate**
+                - **Transportation**
+                - **Materials**
+                - **Utilities**
+                - **Environmental, Social, and Governance (ESG) Focused Companies**
 
-        **Board Members:**
+            - **Guidelines**:
+ 
+                - Begin the meeting minutes with a concise analysis of each sector.
+                - Synthesize the Board's collective opinion on each sector, incorporating relevant technical indicator observations and potential trends.
+                - Utilize professional and business-oriented language, incorporating critical analysis that establishes connections among significant sectors.
+                - Generate critical thoughts on the interconnections between sectors in the Broad Market Analysis.
 
-        The Board of Directors comprises 10 preeminent members merging technical expertise with a deep understanding of market sectors and trends:
+        2. **Discussion**
 
-        1. Munehisa Homma, Chairman of the meeting:(assigned to analyze Candlestick Pattern Recognition and provide an opinion)
-        2. John Bollinger (assigned to analyze the BB indicator and provide an opinion)
-        3. Leonardo Pisano Fibonacci (assigned to analyze Fibonacci retracement and provide an opinion)
-        4. Ralph Nelson Elliott, assigned to analyze potential Elliott Wave patterns, utilized Fibonacci ratios (0.786, 0.618, 0.5, 0.382, and 0.236 on Fibonacci retracement charts), RSI, MACD, and Bollinger Bands to determine the extent of wave retracements and projections within the patterns, and to provide an opinion. 
-        5. Goichi Hosoda (assigned to analyze the Ichimoku Cloud and provide an opinion) 
-        6. Joseph Granville (assigned to analyze the Volume and On Balance Volume indicators and provide an opinion)
-        7. Gerald Appel (assigned to analyze the MACD indicator and provide an opinion)
-        8. J. Welles Wilder (assigned to analyze RSI and ATR indicators and provide an opinion)
-        9. George Lane (assigned to analyze the stochastic oscillator indicator and provide an opinion)
-        10. Marc Chaikin (assigned to analyze the Chaikin Money Flow indicator and provide an opinion)
+            - Following the broad market analysis, describe a hypothetical discussion flow focusing on specific stock analysis examples.
+            - **Technical Instances**:
+            
+                - For example, "{self.example_analysis_text}"
 
-        **Instructions:**
+            - **Guidelines**:
+ 
+                - Create a narrative for the meeting, incorporating various opinions and discussions, including agreements and disagreements among board members.
+                - Connect board member expertise with specific ticker symbols from the list.
+                - Highlight at least one stock from each market sector.
 
-        1. **Broad Market Analysis:**
-            * Begin the meeting minutes with a concise analysis of the following sectors:
-            {self.get_sector_text()}
-            *  Synthesize the Board's collective opinion on each sector, including relevant technical indicator observations and potential trends. 
-            *  Utilize a more professional and business-oriented language, incorporating critical analysis that establishes connections among significant sectors.
-            *  Link between sectors in Broad Market Analysis and generate critical thoughts on these links.
+        3. **Consensus & Action**
+ 
+            - **Market Sentiment**
+ 
+                - The Board assessed the overall market sentiment for relevant sectors, considering factors such as economic indicators, sector trends, and investor sentiment surveys.
+                - The Board's interpretation of these factors suggests a [**Bullish**/**Bearish**/**Neutral**] outlook for the near term.
 
-        2. **Discussion:**
-            * Following the broad market analysis, describe a hypothetical discussion flow focusing on specific stock analysis examples.
-            * **Technical Instances:** "{self.example_analysis_text}"
-            * Continue creating a narrative for the meeting, incorporating various opinions and disagreements, connecting board member expertise with specific ticker symbols from the list.
-            * Highlight at least one stock from each market sector.
+            - **Fund Position**
+ 
+                - **Based on the analysis of market sentiment and identified opportunities, the Board has determined the following strategy**:
+    
+                    - **Adopting bullish positions**: To capitalize on potential market growth.
+                    - **Executing a bearish strategy**: To take advantage of anticipated market declines.
+                    - **Maintaining a neutral stance**: To navigate uncertain market conditions.
+                    - **Focusing on specific sectors**: To maximize potential returns.
+                    - **Allocating capital proportionally** to the Board's confidence in each opportunity.
 
-        3. **Consensus & Action:**
+                - The Board will consider a carefully selected number of stocks for potential trading actions, prioritizing those with the highest conviction levels.
 
-        * **Market Sentiment:**
-            * The Board assessed the overall market sentiment for relevant sectors, considering: 
-                * [List specific factors analyzed, e.g., economic indicators, sector trends, investor sentiment surveys].
-            * The Board's interpretation of these factors suggests a [Bullish/Bearish/Neutral] outlook for the near term.
-        * **Fund Position:**
+                - **Position sizing** will be determined on a case-by-case basis, ensuring that capital is allocated based on the Board's confidence in each opportunity.
 
-        **Based on an analysis of market sentiment and identified opportunities, the Board has determined the following strategy:**
-            * **Adopting bullish positions:** To capitalize on potential market growth.
-            * **Executing a bearish strategy:** To take advantage of anticipated market declines.
-            * **Maintaining a neutral stance:** To navigate uncertain market conditions.
-            * **Focusing on specific sectors:** To maximize potential returns.
-            * **Allocating capital proportionally to the Board's confidence in each opportunity.**
-            **The Board will consider a carefully selected number of stocks for potential trading actions, prioritizing those with the highest conviction levels.**
-            **Position sizing will be determined on a case-by-case basis, ensuring that capital is allocated based on the Board's confidence in each opportunity.** 
+                - **Alternative Strategies Considered**
 
-        * **Alternative Strategies Considered:**
-            * [Briefly list alternative approaches that were discussed and the rationale for not selecting them at this time. This demonstrates thoroughness.]
-        * **Risk Management:**
-            * The Board acknowledges the inherent risks associated with the chosen strategy and has implemented appropriate measures to mitigate potential losses, such as:
-                * [List risk management techniques, e.g., stop-loss orders, diversification across sectors, hedging strategies, position limits]. 
-        * **Monitoring & Review:**
-            * The Board will actively monitor market conditions and the performance of selected positions.
-            * The Board will reconvene in [timeframe, e.g., one week, two weeks] to review the fund's position and make any necessary adjustments based on evolving market dynamics and new information.
+                    - Briefly list alternative approaches that were discussed and the rationale for not selecting them at this time, demonstrating thoroughness in the decision-making process.
 
-        4. **Ticker Symbols of Interest:**
-            * Based on the discussion, list a few of the ticker symbols that were highlighted (no more than 16 symbols) and provide reasons for their attention. These reasons should directly relate to the analysis conducted by the board members and should be proportionately diverse among technical Candlestick Pattern Recognition, BB indicator, analysis of Fibonacci retracement, analysis of potential Elliott Wave patterns, analysis of the Ichimoku Cloud, analysis of the Volume and On Balance Volume indicators, analysis of the MACD indicator, analysis of RSI and ATR indicators, stochastic oscillator indicator, and the Chaikin Money Flow indicator.
+                - **Risk Management**
 
-        5. **Further Action:**
-            * The Board instructed the Fund's management team to execute the agreed-upon market position and further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
+                    - The Board acknowledges the inherent risks associated with the chosen strategy and has implemented appropriate measures to mitigate potential losses, such as:
 
-        6. **Meeting Adjourned:** 02:00
+                        - Stop-loss orders
+                        - Diversification across sectors
+                        - Hedging strategies
+                        - Position limits
 
-        7. **Approved by:**
-            * Munehisa Homma, Chairman
+                - **Monitoring & Review**
+
+                    - The Board will actively monitor market conditions and the performance of selected positions.
+                    - The Board will reconvene in [**timeframe**, e.g., one week, two weeks] to review the Fund's positions and make any necessary adjustments based on evolving market dynamics and new information.
+
+        4. **Ticker Symbols of Interest**
+
+            - Based on the discussion, list a few of the ticker symbols that were highlighted (no more than 16 symbols).
+            - **Provide Reasons**:
+ 
+                - Each reason should directly relate to the analysis conducted by the board members.
+                - Ensure proportional diversity among the different technical analyses:
+ 
+                    - Candlestick Pattern Recognition
+                    - Bollinger Bands indicator
+                    - Fibonacci Retracement analysis
+                    - Elliott Wave patterns analysis
+                    - Ichimoku Cloud analysis
+                    - Volume and On-Balance Volume indicators
+                    - MACD indicator analysis
+                    - RSI and ATR indicators analysis
+                    - Stochastic Oscillator indicator
+                    - Chaikin Money Flow indicator
+
+        5. **Further Action**
+        
+            - The Board instructed the Fund's management team to execute the agreed-upon market positions.
+            - Further investigate the highlighted ticker symbols for potential investment actions aligned with the Fund's overall strategy.
+        
+        6. **Meeting Adjourned**
+        
+            - **Time**: 02:00
+        
+        7. **Approved by**
+        
+            - **Munehisa Homma**, Chairman
         """
         return system_instructions
     def get_system_instructions_2(self):
@@ -728,42 +815,87 @@ class GeminiCandlestick:
         Returns:
             str: The comprehensive system instructions for the language model.
         """
-        system_instructions = f"""        
-        ## Gemini Candlestick Investment Fund Daily Meeting Summary - {self.current_meeting_date}
+        system_instructions = f"""
+        **Gemini Candlestick Investment Fund Daily Meeting Summary**
+        **Date:** {self.current_meeting_date}
+        **Time:** 00:00 - 02:00
 
-        You are provided with detailed minutes from the latest Gemini Candlestick Investment Fund meeting.  Your task is to analyze this information and create a concise and insightful summary for the fund's managers. 
+        **Context:**
+        
+        You are provided with detailed minutes from the latest Gemini Candlestick Investment Fund meeting. Your task is to analyze this information and create a concise and insightful summary for the fund's managers.
 
-        **Meeting Minutes:** 
-        [Insert the transcript of the full meeting recorded in the user's initial input]
+        ### **Objective**
+        
+        - Summarize the provided meeting minutes, focusing on key decisions, market observations, and interconnections between sectors.
+        - Extract impactful insights relevant to the Gemini Candlestick Investment Fund's investment strategy.
 
-        **Objective:**  Summarize the provided meeting minutes, focusing on key decisions, market observations, and interconnections between sectors. Extract impactful insights relevant to the Gemini Candlestick Investment Fund's investment strategy.
+        ### **Instructions**
+        
+        1. **Executive Summary**
+        
+            Begin with a brief executive summary that encapsulates the overall meeting's key points:
 
-        **Instructions:**
+            - **Overall Market Sentiment:** Describe the general market outlook as discussed by the Board, including whether it is bullish, bearish, or neutral, and the rationale behind this sentiment.
+            - **Investment Strategy:** Summarize the Fund's chosen investment strategy moving forward, including any strategic shifts or continuations of current approaches, and justify why this strategy was selected.
+            - **Risk Management Measures:** Outline the risk management strategies being implemented to mitigate potential losses or capitalize on market movements.
 
-        1. **Concise Summary:**  Provide a clear and concise summary of the meeting's key discussions and decisions. This should include:
-            * Overall market sentiment and the rationale behind it.
-            * The fund's investment strategy and its justification.
-            * Risk management measures being implemented. 
+            
+        2. **Detailed Sector Analysis**
+ 
+            For each sector discussed, provide a structured analysis:
 
-        2. **Sector Analysis:**  Analyze the discussion around each sector. Highlight:
-            * The perceived strength or weakness of the sector.
-            * Key factors and technical indicators driving the assessment.
-            * Specific companies mentioned and the rationale for their inclusion.
+            - **Sector Overview:**
+                - **Perceived Strength or Weakness:** Summarize the Board's assessment of the sector's current performance and outlook.
+                - **Key Technical Indicators:** Highlight the specific technical indicators and patterns that influenced the Board's view (e.g., RSI, MACD, Bollinger Bands).
+            - **Companies of Interest:**
+                - **Specific Ticker Symbols Mentioned:** List the companies highlighted within the sector.
+                - **Rationale for Inclusion:** Provide reasons why these companies were discussed, including any significant candlestick patterns or indicator signals.
 
-        3. **Interconnected Insights:**  Identify and elaborate on the key interconnections observed between different sectors. Explain how these connections influence the fund's decisions.
+        3. **Interconnections Between Sectors**
+        
+            Analyze and explain the key interconnections observed between different sectors:
+        
+            - **Cross-Sector Influences:** Describe how developments in one sector may impact others (e.g., how advancements in Information Technology could influence Consumer Discretionary spending).
+            - **Market Dynamics:** Explain how these interconnections affect the Fund's investment decisions and strategies.
+            - **Economic Indicators:** Include any broader economic factors that interplay between sectors (e.g., interest rates, regulatory changes).
 
-        4. **Actionable Takeaways:**  Based on the meeting discussions, extract actionable takeaways and insights relevant to the fund's investment strategy. This might include:
-            * Emerging investment opportunities.
-            * Potential risks to be aware of.
-            * Key trends influencing market dynamics.
+        4. **Actionable Insights and Recommendations**
+        
+            Based on the meeting discussions, extract actionable takeaways:
+        
+            - **Emerging Investment Opportunities:** Identify sectors or companies that present potential growth opportunities.
+            - **Potential Risks:** Highlight any risks or challenges noted by the Board, including market volatility or unfavorable trends.
+            - **Strategic Adjustments:** Suggest any recommended adjustments to the Fund's portfolio or strategy, supported by the Board's analysis.
 
-        5. **Language:**  Use clear, professional, and business-oriented language. Avoid technical jargon where possible and explain any necessary technical terms in a way that is easy to understand.
+        5. **Language and Presentation**
+        
+            - **Clarity and Professionalism:** Use clear, professional, and business-oriented language suitable for senior fund managers.
+            - **Accessibility:** Avoid excessive technical jargon; where technical terms are necessary, provide brief explanations.
+            - **Conciseness:** Ensure the summary is succinct, focusing on the most critical and impactful information.
+            - **Structure:** Use headings, subheadings, and bullet points as appropriate to enhance readability.
 
-        **Example Insights:**
+        6. **Concluding Remarks**
+        
+            - Provide a brief conclusion that summarizes the Fund's strategic position and outlook.
+            - Reinforce the key messages and next steps for the management team.
 
-        * "The meeting highlighted a growing divergence between traditional utilities and renewable energy, indicating a potential shift in investor sentiment towards sustainable investments."
-        * "The strong performance of [INSERT_TICKET] suggests continued growth in the technology sector, potentially creating ripple effects in related industries like consumer electronics and e-commerce."
-        * "The fund's cautious optimism reflects a balanced approach, capitalizing on growth opportunities while acknowledging potential market risks." 
+        ### **Example Insights**
+        
+        - **Market Sentiment:** "The Board expresses a cautiously bullish outlook, driven by strong technical indicators in the Information Technology and Renewable Energy sectors, while remaining vigilant of potential volatility in the Financials sector."
+        
+        - **Sector Interconnection:** "Growth in the Renewable Energy sector is anticipated to benefit the Industrials sector, particularly companies involved in manufacturing components for sustainable technologies."
+        
+        - **Actionable Takeaway:** "The Fund should consider increasing exposure to semiconductor companies like **NVIDIA Corporation (NVDA)**, as technical analysis indicates a potential upward trend supported by robust RSI and MACD signals."
+
+        **Note:** Ensure that all insights and recommendations are directly supported by the discussion points and analyses presented in the meeting minutes.
+
+        ### **Additional Guidance**
+        
+        - **Confidentiality:** Maintain the confidentiality of sensitive information contained within the meeting minutes.
+        - **Accuracy:** Verify that all interpretations and summaries accurately reflect the Board's discussions and intentions.
+        - **Objective Tone:** Present the information objectively, without personal bias or unsupported opinions.
+
+        By following these instructions, you'll produce a comprehensive and actionable summary that equips the Fund's management team with the essential insights needed to make informed decisions aligned with the Gemini Candlestick Investment Fund's strategic objectives.
         """
         return system_instructions
     def get_system_instructions_3(self):
