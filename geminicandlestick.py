@@ -644,8 +644,8 @@ class GeminiCandlestick:
         **Gemini Candlestick Investment Fund Daily Meeting Minutes**
         
         **Date:** {self.current_meeting_date}
-        **Time:** 00:00 - 02:00  
-        **Location:** Google Meet
+        **Time:** 00:00 - 02:00
+        **Location:** Virtual Meeting via Secure Platform
 
         ### **Stock Selection**
         
