@@ -499,7 +499,8 @@ class GeminiCandlestick:
         self.sp500_df_dict = {}
 
         # Iterate over each ticker symbol
-        for each_ticker in tqdm(sp500_df['symbol'].values, desc="Iterate over each ticker symbol"):
+        # for each_ticker in tqdm(sp500_df['symbol'].values, desc="Iterate over each ticker symbol"):
+        for each_ticker in tqdm(sp500_df['symbol'].values[:20], desc="Iterate over each ticker symbol"):
             try:
                 # Create a temporary dictionary with candlestick data for the current ticker
                 temp_dict = {'Date': date_list,
@@ -969,16 +970,13 @@ class GeminiCandlestick:
         return system_instructions
     def clean_minutes_text(self, text):
         # Check for the first occurrence of either substring
-        start_index_1 = text.find("**Gemini")
-        start_index_2 = text.find("## Gemini")
+        start_index_list = [text.find(each) for each in self.text_start_index_list]
 
         # Find the first valid index
-        if start_index_1 != -1 and (start_index_2 == -1 or start_index_1 < start_index_2):
-            start_index = start_index_1
-        elif start_index_2 != -1:
-            start_index = start_index_2
-        else:
-            start_index = -1
+        start_index = -1
+        for index in start_index_list:
+            if index != -1 and (start_index == -1 or index < start_index):
+                start_index = index
 
         # Extract the substring if one of the patterns is found
         if start_index != -1:
@@ -988,7 +986,7 @@ class GeminiCandlestick:
         text = updated_text
 
         # Find the position of the substring "Munehisa Homma, Chairman"
-        marker = "Munehisa Homma, Chairman"
+        marker = ", Chairman"
         index = text.find(marker)
         if index != -1:
             # Get all text up to and including "Munehisa Homma, Chairman"
@@ -1123,8 +1121,10 @@ class GeminiCandlestick:
                             # Check if the minutes contain specific keywords
                             if 'Ticker Symbols of Interest'.lower() in temp_minutes_text.lower():
                                 if 'approved by' in temp_minutes_text.lower():
-                                    if '**Gemini' in temp_minutes_text or '## Gemini' in temp_minutes_text:
-                                        if "Munehisa Homma, Chairman" in temp_minutes_text:
+                                    self.text_start_index_list = ["**Gemini", "# Gemini", "## Gemini", "### Gemini"]
+                                    # Check if any of the items in self_text_start_index_list are in temp_minutes_text
+                                    if any(item in temp_minutes_text for item in self.text_start_index_list):
+                                        if ", Chairman" in temp_minutes_text:
                                             # Append the generated minutes and summary to their respective lists
                                             temp_minutes_text = self.clean_minutes_text(temp_minutes_text)
                                             minutes_text_list.append(temp_minutes_text)
