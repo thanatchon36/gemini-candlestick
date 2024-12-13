@@ -500,7 +500,7 @@ class GeminiCandlestick:
 
         # Iterate over each ticker symbol
         # for each_ticker in tqdm(sp500_df['symbol'].values, desc="Iterate over each ticker symbol"):
-        for each_ticker in tqdm(sp500_df['symbol'].values[:20], desc="Iterate over each ticker symbol"):
+        for each_ticker in tqdm(sp500_df['symbol'].values[:10], desc="Iterate over each ticker symbol"):
             try:
                 # Create a temporary dictionary with candlestick data for the current ticker
                 temp_dict = {'Date': date_list,
@@ -1134,28 +1134,39 @@ class GeminiCandlestick:
                     self.docker_print(f"Error during temp_minutes_text generation: {e}")
                     pass
 
+            # Zip the lists together, sort by the length of the text in minutes_text_list, and unzip
+            sorted_minutes_summary = sorted(zip(minutes_text_list, summary_text_list), key=lambda x: len(x[0]), reverse=True)
+            sorted_minutes_text_list, sorted_summary_text_list = zip(*sorted_minutes_summary)
+
+            # Convert the tuples back to lists (if needed)
+            sorted_minutes_text_list = list(sorted_minutes_text_list)
+            sorted_summary_text_list = list(sorted_summary_text_list)
+
+            minutes_text_list = sorted_minutes_text_list.copy()
+            summary_text_list = sorted_summary_text_list.copy()
+
             # Initialize empty lists to store filtered minutes and summaries
-            minutes_text_list_2 = []
-            summary_text_list_2 = []
+            # minutes_text_list_2 = []
+            # summary_text_list_2 = []
 
             # Iterate through each minute in the original list
-            for i_each_minutes, each_minutes in enumerate(minutes_text_list):
-                # Initialize a score to track the presence of sectors
-                sector_score = 0
+            # for i_each_minutes, each_minutes in enumerate(minutes_text_list):
+            #     # Initialize a score to track the presence of sectors
+            #     sector_score = 0
 
-                # Check if each sector is present in the minutes text
-                for each_sector in self.sector_list:
-                    if each_sector.lower() in each_minutes.lower():
-                        sector_score += 1
+            #     # Check if each sector is present in the minutes text
+            #     for each_sector in self.sector_list:
+            #         if each_sector.lower() in each_minutes.lower():
+            #             sector_score += 1
 
-                # If all sectors are present, add the minutes and corresponding summary to the filtered lists
-                if sector_score == len(self.sector_list):
-                    minutes_text_list_2.append(each_minutes)
-                    summary_text_list_2.append(summary_text_list[i_each_minutes])
+            #     # If all sectors are present, add the minutes and corresponding summary to the filtered lists
+            #     if sector_score == len(self.sector_list):
+            #         minutes_text_list_2.append(each_minutes)
+            #         summary_text_list_2.append(summary_text_list[i_each_minutes])
 
-            # Update the original lists with the filtered results
-            minutes_text_list = minutes_text_list_2.copy()
-            summary_text_list = summary_text_list_2.copy()
+            # # Update the original lists with the filtered results
+            # minutes_text_list = minutes_text_list_2.copy()
+            # summary_text_list = summary_text_list_2.copy()
 
             # Initialize an empty list to store ticker scores for each minute segment
             score_minutes_text_list = []
