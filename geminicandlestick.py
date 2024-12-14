@@ -1125,10 +1125,11 @@ class GeminiCandlestick:
                                     # Check if any of the items in self_text_start_index_list are in temp_minutes_text
                                     if any(item in temp_minutes_text for item in self.text_start_index_list):
                                         if ", Chairman" in temp_minutes_text:
-                                            # Append the generated minutes and summary to their respective lists
-                                            temp_minutes_text = self.clean_minutes_text(temp_minutes_text)
-                                            minutes_text_list.append(temp_minutes_text)
-                                            summary_text_list.append(temp_summary_text)
+                                            if "|" not in temp_minutes_text and "|" not in temp_summary_text:
+                                                # Append the generated minutes and summary to their respective lists
+                                                temp_minutes_text = self.clean_minutes_text(temp_minutes_text)
+                                                minutes_text_list.append(temp_minutes_text)
+                                                summary_text_list.append(temp_summary_text)
                 except Exception as e:
                     # Handle exceptions during text generation and print error messages
                     self.docker_print(f"Error during temp_minutes_text generation: {e}")
