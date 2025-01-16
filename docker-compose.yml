@@ -1,6 +1,6 @@
 services:
   # Define a service called Container01
-  Container01:
+  Container03:
     # Use the image 'autotrade_main_custom' if it exists
     image: gemini_candlestick_main_custom
     # If the image doesn't exist, build it
