@@ -499,8 +499,9 @@ class GeminiCandlestick:
         self.sp500_df_dict = {}
 
         # Iterate over each ticker symbol
-        # for each_ticker in tqdm(sp500_df['symbol'].values, desc="Iterate over each ticker symbol"):
-        for each_ticker in tqdm(sp500_df['symbol'].values[:10], desc="Iterate over each ticker symbol"):
+        for each_ticker in tqdm(sp500_df['symbol'].values, desc="Iterate over each ticker symbol"):
+        # debug
+        # for each_ticker in tqdm(sp500_df['symbol'].values[:10], desc="Iterate over each ticker symbol"):
             try:
                 # Create a temporary dictionary with candlestick data for the current ticker
                 temp_dict = {'Date': date_list,
