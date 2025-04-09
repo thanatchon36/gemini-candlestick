@@ -3,6 +3,7 @@ services:
   Container03:
     # Use the image 'autotrade_main_custom' if it exists
     image: gemini_candlestick_main_custom
+    restart: always
     # If the image doesn't exist, build it
     build:
       # Use the current directory as the build context
