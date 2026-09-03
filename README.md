@@ -74,7 +74,7 @@ To get the application up and running, follow these steps:
 
 1. **Clone the Repository:**
    ```bash
-   git clone https://github.com/your-username/gemini-candlestick.git
+   git clone https://github.com/thanatchon36/gemini-candlestick.git
    ```
 
 2. **Navigate to the Project Directory:**
