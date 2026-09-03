@@ -1,5 +1,12 @@
 # Gemini Candlestick Investment Fund Simulation
 
+[![Watch the Demo Video](https://img.youtube.com/vi/YOUR_YOUTUBE_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=YOUR_YOUTUBE_VIDEO_ID)
+
+> 🏆 **Google Gemini API Developer Competition Project:**  
+> Check out our submission page here: [https://ai.google.dev/competition/projects/gemini-candlestick](https://ai.google.dev/competition/projects/gemini-candlestick)
+
+---
+
 This repository hosts a Python application that simulates the investment decision-making process of the "Gemini Candlestick Investment Fund," a fictional investment board. The simulation employs candlestick chart analysis, technical indicators, and Google's Gemini large language model to inform investment strategies.
 
 ## Table of Contents
@@ -9,6 +16,7 @@ This repository hosts a Python application that simulates the investment decisio
 - [Use Cases](#use-cases)
 - [Getting Started](#getting-started)
 - [Configuration](#configuration)
+  - [How to get your Telegram Bot Token & Chat ID](#how-to-get-your-telegram-bot-token--chat-id)
 - [Structure](#structure)
 - [License](#license)
 - [Hardware Requirements](#hardware-requirements)
@@ -36,21 +44,21 @@ The esteemed board of directors comprises notable figures in the realm of financ
 
 - **Data Acquisition:** Efficiently retrieves historical candlestick data for selected stocks from the S&P 500 index utilizing the `yfinance` library.
 - **Technical Analysis:** Conducts a comprehensive analysis by computing various technical indicators, including:
-    - Relative Strength Index (RSI)
-    - Moving Average Convergence Divergence (MACD)
-    - Bollinger Bands
-    - Fibonacci Retracement Levels
-    - Ichimoku Cloud
-    - Stochastic Oscillator
-    - Chaikin Money Flow
-    - On-Balance Volume (OBV)
-    - Average True Range (ATR)
+  - Relative Strength Index (RSI)
+  - Moving Average Convergence Divergence (MACD)
+  - Bollinger Bands
+  - Fibonacci Retracement Levels
+  - Ichimoku Cloud
+  - Stochastic Oscillator
+  - Chaikin Money Flow
+  - On-Balance Volume (OBV)
+  - Average True Range (ATR)
 - **Candlestick Charting:** Generates detailed and visually appealing candlestick charts overlaid with technical indicators using `matplotlib` and `mplfinance`.
 - **Google Gemini Integration:** Utilizes Google's Gemini large language model to:
-    - Simulate discussions and analyses resembling those of board members.
-    - Generate comprehensive meeting minutes covering market observations, individual stock analyses, and investment rationale.
-    - Summarize actionable insights, key takeaways, and the fund's overall market strategy.
-    - Create engaging captions for charts and reports.
+  - Simulate discussions and analyses resembling those of board members.
+  - Generate comprehensive meeting minutes covering market observations, individual stock analyses, and investment rationale.
+  - Summarize actionable insights, key takeaways, and the fund's overall market strategy.
+  - Create engaging captions for charts and reports.
 - **Telegram Integration:** Automatically distributes daily reports, summaries, and highlighted candlestick charts to a designated Telegram chat via the Telegram Bot API.
 
 ## Use Cases
@@ -85,11 +93,26 @@ Before running the application, you need to configure the following environment 
 
 - **`GEMINI_KEY`:** Your Google Gemini API key. Replace `YOUR_GEMINI_API_KEY` with your actual key.
 - **`BOT_TOKEN`:** Your Telegram bot token. Replace `YOUR_TELEGRAM_BOT_TOKEN` with your bot's token.
-- **`CHAT_ID`:** The ID of your Telegram chat. Replace `YOUR_TELEGRAM_CHAT_ID` with your chat's ID.
+- **`CHAT_ID`:** The ID of your Telegram chat/channel. Replace `YOUR_TELEGRAM_CHAT_ID` with your chat's ID.
 
-**How to get your Telegram Bot Token & Chat ID: [https://www.youtube.com/watch?v=M1VOnJQ6-YE](https://www.youtube.com/watch?v=M1VOnJQ6-YE)**
+### How to get your Telegram Bot Token & Chat ID
 
-**Make sure to replace the placeholders with your actual credentials.**
+1. **Create a Bot and get `BOT_TOKEN`:**
+   - Open Telegram and search for `@BotFather`.
+   - Send `/newbot` and follow the prompts to choose a name and username for your bot.
+   - Copy the HTTP API access token provided by BotFather (e.g., `123456789:ABCdefGhIJKlmNoPQRsTUVwxyZ`).
+
+2. **Create a Channel and add your bot as an Administrator:**
+   - Create a new Telegram Channel.
+   - Go to Channel Info > **Administrators** > **Add Admin**.
+   - Search for your bot username and add it as an administrator.
+
+3. **Get your `CHAT_ID`:**
+   - Add `@RawDataBot` as an administrator to your channel temporarily.
+   - Post any test message in the channel.
+   - `@RawDataBot` will automatically reply with the Channel ID (usually starts with `-100...`).
+   - Copy the ID (e.g., `-1002161110558`) and set it as your `CHAT_ID`.
+   - You can remove `@RawDataBot` from the channel afterwards.
 
 ## Structure
 
