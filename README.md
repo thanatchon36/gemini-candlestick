@@ -1,6 +1,6 @@
 # Gemini Candlestick Investment Fund Simulation
 
-[![Watch the Demo Video](https://img.youtube.com/vi/YOUR_YOUTUBE_VIDEO_ID/maxresdefault.jpg)](https://www.youtube.com/watch?v=nJvH27cIxFo&t)
+[![Watch the Demo Video](https://img.youtube.com/vi/nJvH27cIxFo/maxresdefault.jpg)](https://www.youtube.com/watch?v=nJvH27cIxFo)
 
 > 🏆 **Google Gemini API Developer Competition Project:**  
 > Check out our submission page here: [https://ai.google.dev/competition/projects/gemini-candlestick](https://ai.google.dev/competition/projects/gemini-candlestick)
