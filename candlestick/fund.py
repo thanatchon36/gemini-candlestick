@@ -14,7 +14,6 @@ from candlestick.charts import draw_candlestick_chart
 from candlestick.config import CANDLESTICK_CHART_NO, DEFAULT_GEMINI_MODEL, FUTURE_CLOUD_NO, GRAPH_WIDTH
 from candlestick.gemini import LONG_OUTPUT_CONFIG, SHORT_OUTPUT_CONFIG, Gemini
 from candlestick.indicators import add_indicators
-from candlestick.log import log
 from candlestick.market_data import load_sp500
 from candlestick.parsing import MINUTES_START_MARKERS, clean_minutes_text, extract_json
 from candlestick.reports import images_to_pdf, markdown_to_pdf, merge_pdfs
@@ -120,7 +119,7 @@ class GeminiCandlestick:
                         break
                     except Exception as e:
                         # Log the error and continue to the next iteration without crashing
-                        log(f"Error during genai upload_file: {e}")
+                        logger.error(exc_info=True, msg=f"Error during genai upload_file: {e}")
                         # If an exception occurs, pass and try again (up to 6 times)
                         pass
 
@@ -170,7 +169,7 @@ class GeminiCandlestick:
                                                 summary_text_list.append(temp_summary_text)
                 except Exception as e:
                     # Handle exceptions during text generation and print error messages
-                    log(f"Error during temp_minutes_text generation: {e}")
+                    logger.error(exc_info=True, msg=f"Error during temp_minutes_text generation: {e}")
                     pass
 
             # Zip the lists together, sort by the length of the text in minutes_text_list, and unzip
@@ -268,7 +267,7 @@ class GeminiCandlestick:
                         break  # Exit the retry loop if successful
 
                     except Exception as e: 
-                        print(f"Error during ticker generation: {e}")
+                        logger.error(exc_info=True, msg=f"Error during ticker generation: {e}")
                         pass  # Continue to the next retry if an error occurs
 
             # Assign a score to each ticker in the list based on its length.
@@ -331,7 +330,7 @@ class GeminiCandlestick:
             #         break  # Exit the loop if generation is successful
 
             #     except Exception as e:
-            #         log(f"Error during attached_text generation: {e}")
+            #         logger.error(exc_info=True, msg=f"Error during attached_text generation: {e}")
             #         pass  # Continue to the next iteration if an error occurs
             
             # Convert the combined text to PDF and save it to the specified path.
@@ -367,7 +366,7 @@ class GeminiCandlestick:
 
                 except Exception as e: 
                     # Print error message if generation fails
-                    print(f"Error during telegram_minutes_text generation: {e}")
+                    logger.error(exc_info=True, msg=f"Error during telegram_minutes_text generation: {e}")
                     # Continue to the next iteration of the loop
                     pass
 
@@ -391,7 +390,7 @@ class GeminiCandlestick:
 
                 except Exception as e: 
                     # Log the error and continue to the next attempt.
-                    print(f"Error during telegram_summary_text generation: {e}")
+                    logger.error(exc_info=True, msg=f"Error during telegram_summary_text generation: {e}")
                     pass
 
             # Rename the meeting minutes and summary PDF files to include the date.
@@ -425,7 +424,7 @@ class GeminiCandlestick:
 
                     except Exception as e:
                         # Log the error and continue to the next retry attempt
-                        log(f"Error during genai upload_file: {e}")
+                        logger.error(exc_info=True, msg=f"Error during genai upload_file: {e}")
                         pass
             
             # Set up the model parameters for Gemini
@@ -452,7 +451,7 @@ class GeminiCandlestick:
 
                     # Catch any exceptions during generation
                     except Exception as e:
-                        log(f"Error generating caption: {e}")
+                        logger.error(exc_info=True, msg=f"Error generating caption: {e}")
                         # Continue to the next retry attempt
 
             # Set up the model parameters for Gemini
@@ -477,7 +476,7 @@ class GeminiCandlestick:
             exc_type, exc_obj, exc_tb = sys.exc_info()
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
             temp_msg = 'Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno)
-            log(temp_msg)  # Assuming 'docker_print' logs the error message
+            logger.error(exc_info=True, msg=temp_msg)
             try:
                 # Attempt to delete uploaded files from Gemini in case of an error
                 for each_prompt_part in tqdm(self.prompt_parts, desc="gemini.delete"):

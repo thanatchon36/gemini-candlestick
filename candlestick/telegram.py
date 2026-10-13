@@ -1,11 +1,10 @@
 """Sending messages, PDFs, and images to a Telegram chat via the Bot API."""
 import json
 import time
-
+import logging
 import requests
 
-from candlestick.log import log
-
+logger = logging.getLogger(__name__)
 
 class TelegramBot:
     """Sends content to one Telegram chat."""
@@ -38,10 +37,10 @@ class TelegramBot:
 
             if response.status_code == 200:
                 # If the status code is 200 (OK), the message was sent successfully
-                log("Message sent successfully!")
+                logger.info(msg="Message sent successfully!")
             else:
                 # If the status code is not 200, there was an error
-                log(f"Error: {response.status_code} - {response.text}")
+                logger.error(exc_info=True ,msg=f"Error: {response.status_code} - {response.text}")
                 # Print the error code and the error message from the Telegram API
 
     def send_pdfs(self, pdf_paths, caption_list):
@@ -60,13 +59,13 @@ class TelegramBot:
                 data = {"chat_id": self.CHAT_ID, "caption": caption_list[i]}  # Prepare the request data
                 with requests.post(url, files=files, data=data) as response:
                     # Send the POST request to the Telegram API
-                    log(f"Status Code for {pdf_file}: {response.status_code}")  # Print the status code for the request
+                    logger.info(f"Status Code for {pdf_file}: {response.status_code}")  # Print the status code for the request
                     if response.status_code == 200:
                         # If the status code is 200 (OK), the file was sent successfully
-                        log(f"File {pdf_file} sent successfully!")
+                        logger.info(f"File {pdf_file} sent successfully!")
                     else:
                         # If the status code is not 200, there was an error
-                        log(f"Error sending {pdf_file}: {response.status_code} - {response.text}")
+                        logger.error(exc_info=True, msg=f"Error sending {pdf_file}: {response.status_code} - {response.text}")
                         # Print the error code and the error message from the Telegram API
             time.sleep(168)  # Wait for 168 seconds
 
@@ -91,13 +90,13 @@ class TelegramBot:
 
         with requests.post(url, data=data, files={f'document{i}': open(pdf_path, 'rb') for i, pdf_path in enumerate(pdf_paths)}) as response:
             # Send the POST request to the Telegram API
-            log(f"Status Code: {response.status_code}")  # Print the status code for the request
+            logger.info(f"Status Code: {response.status_code}")  # Print the status code for the request
             if response.status_code == 200:
                 # If the status code is 200 (OK), the files were sent successfully
-                log("Files sent successfully!")
+                logger.info("Files sent successfully!")
             else:
                 # If the status code is not 200, there was an error
-                log(f"Error: {response.status_code} - {response.text}")
+                logger.error(exc_info=True, msg=f"Error: {response.status_code} - {response.text}")
                 # Print the error code and the error message from the Telegram API
 
     def send_images(self, image_paths, caption_list):
@@ -119,10 +118,10 @@ class TelegramBot:
                     # Send the POST request to the Telegram API
                     if response.status_code == 200:
                         # If the status code is 200 (OK), the image was sent successfully
-                        log(f"Image {photo_file} sent successfully!")
+                        logger.info(f"Image {photo_file} sent successfully!")
                     else:
                         # If the status code is not 200, there was an error
-                        log(f"Error sending {photo_file}: {response.status_code} - {response.text}")
+                        logger.error(exc_info=True, msg=f"Error sending {photo_file}: {response.status_code} - {response.text}")
                         # Print the error code and the error message from the Telegram API
 
     def send_group_images(self, image_paths, caption_list):
@@ -146,11 +145,11 @@ class TelegramBot:
 
         with requests.post(url, data=data, files={f'photo{i}': open(image_path, 'rb') for i, image_path in enumerate(image_paths)}) as response:
             # Send the POST request to the Telegram API
-            log(f"Status Code: {response.status_code}")  # Print the status code for the request
+            logger.info(f"Status Code: {response.status_code}")  # Print the status code for the request
             if response.status_code == 200:
                 # If the status code is 200 (OK), the images were sent successfully
-                log("Images sent successfully!")
+                logger.info("Images sent successfully!")
             else:
                 # If the status code is not 200, there was an error
-                log(f"Error: {response.status_code} - {response.text}")
+                logger.error(exc_info=True, msg=f"Error: {response.status_code} - {response.text}")
                 # Print the error code and the error message from the Telegram API

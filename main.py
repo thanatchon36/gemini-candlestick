@@ -8,15 +8,14 @@ import logging
 from candlestick import clock
 from candlestick.config import DATA_DIRECTORIES, DEFAULT_GEMINI_MODEL, MAX_MEDIA_GROUP_SIZE
 from candlestick.fund import GeminiCandlestick
-from candlestick.log import log
 from candlestick.telegram import TelegramBot
-
-# Print a message to indicate the script has started
-print('OK !', flush=True)
 
 # Configuration of Logger
 logging.basicConfig(format='%(asctime)s %(levelname)s %(name)s: %(message)s', level=logging.INFO)
+logger = logging.getLogger(__name__)
 
+# Print a message to indicate the script has started
+logger.info(msg='OK !')
 
 def send_reports(fund, telegram, batch_wait_sec):
     """
@@ -80,10 +79,10 @@ def main():
     telegram = TelegramBot(BOT_TOKEN, CHAT_ID)
 
     # First run: generate and send immediately
-    log(clock.today_time())
+    logger.info(msg=clock.today_time())
     fund.generate_gemini_candlestick()
     send_reports(fund, telegram, batch_wait_sec=168)
-    log(clock.today_time())
+    logger.info(msg=clock.today_time())
 
     # Wait until the next day at 00:00 before starting the main loop
     time.sleep(clock.until_next_day_sec())
@@ -101,7 +100,7 @@ def main():
             fund.generate_gemini_candlestick()
 
             # Log the current date and time
-            log(clock.today_time())
+            logger.info(msg=clock.today_time())
 
             # Sleep until 02:00, so reports are sent at the same time every day
             generate_candlestick_runtime = time.time() - start_time
@@ -117,7 +116,7 @@ def main():
             fname = os.path.split(exc_tb.tb_frame.f_code.co_filename)[1]
 
             # Log the formatted error message
-            log('Error !: {} {} {} {}'.format(e, exc_type, fname, exc_tb.tb_lineno))
+            logger.error(exc_info=True ,msg=f"Error !: {e}, {exc_type}, {fname}, {exc_tb.tb_lineno}")
 
         # Reset the outputs for the next iteration
         fund.telegram_minutes_text = ""
